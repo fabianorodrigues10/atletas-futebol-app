@@ -491,9 +491,41 @@ export default function AtletaFormScreen() {
           ...data,
         });
         
-        // DESABILITADO: Salvamento de vídeos ao editar foi desabilitado para evitar duplicação
-        // Para adicionar novos vídeos, o usuário deve criar um novo atleta
-        // Para remover vídeos, use o botão de exclusão na página de detalhes
+        // Salvar novos vídeos ao editar
+        if (videoLinks && videoLinks.length > 0) {
+          console.log("[DEBUG] Iniciando salvamento de vídeos na edição:", videoLinks);
+          try {
+            for (const videoUrl of videoLinks) {
+              if (videoUrl.trim()) {
+                console.log("[DEBUG] Salvando vídeo:", videoUrl);
+                const videoPayload = {
+                  atletaId: Number(id),
+                  tipo: 'video' as const,
+                  nome: `Vídeo - ${new Date().toLocaleString()}`,
+                  url: videoUrl.trim(),
+                  mimeType: 'video/youtube',
+                  tamanho: 0,
+                  descricao: 'Vídeo do YouTube',
+                };
+                console.log('[DEBUG] Payload do vídeo:', videoPayload);
+                try {
+                  const videoResult = await createVideoMutation.mutateAsync(videoPayload as any);
+                  console.log("[DEBUG] Vídeo salvo com sucesso:", videoResult);
+                } catch (videoError: any) {
+                  console.error("[DEBUG] Erro ao salvar vídeo individual:", videoError);
+                  console.error("[DEBUG] Detalhes do erro:", videoError.message || videoError);
+                  throw videoError;
+                }
+              }
+            }
+            console.log("[DEBUG] Todos os vídeos salvos com sucesso");
+            // Invalidar cache para refetch dos atletas
+            await queryClient.invalidateQueries();
+          } catch (error) {
+            console.error("[DEBUG] Erro ao salvar vídeos:", error);
+            Alert.alert("Erro ao salvar vídeos", `Não foi possível salvar os vídeos. Tente novamente. Erro: ${error}`);
+          }
+        }
         
         Alert.alert("Sucesso", "Atleta atualizado com sucesso");
       } else {
