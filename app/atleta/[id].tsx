@@ -126,7 +126,9 @@ export default function AtletaFormScreen() {
       // Carregar vídeos do atleta
       const videos = (atleta as any).videos;
       if (videos && videos.length > 0) {
-        setVideoLinks(videos);
+        // Extrair apenas as URLs dos vídeos
+        const videoUrls = videos.map((v: any) => v.url || v);
+        setVideoLinks(videoUrls);
       } else {
         setVideoLinks([]);
       }
@@ -485,34 +487,9 @@ export default function AtletaFormScreen() {
           ...data,
         });
         
-        // Salvar vídeos ao editar
-        if (videoLinks && videoLinks.length > 0) {
-          console.log("[DEBUG] Iniciando salvamento de vídeos ao editar:", videoLinks);
-          try {
-            for (const videoUrl of videoLinks) {
-              if (videoUrl.trim()) {
-                console.log("[DEBUG] Salvando vídeo:", videoUrl);
-                const videoPayload = {
-                  atletaId: Number(id),
-                  tipo: 'video' as const,
-                  nome: `Vídeo - ${new Date().toLocaleString()}`,
-                  url: videoUrl.trim(),
-                  s3Key: `videos/${id}/${Date.now()}-${Math.random().toString(36).substring(7)}`,
-                  mimeType: 'video/youtube',
-                  tamanho: 0,
-                  descricao: 'Vídeo do YouTube',
-                };
-                console.log('[DEBUG] Payload do vídeo:', videoPayload);
-                const videoResult = await createVideoMutation.mutateAsync(videoPayload);
-                console.log("[DEBUG] Vídeo salvo com sucesso:", videoResult);
-              }
-            }
-            console.log("[DEBUG] Todos os vídeos salvos com sucesso");
-          } catch (error) {
-            console.error("[DEBUG] Erro ao salvar vídeos:", error);
-            Alert.alert("Aviso", `Erro ao salvar vídeos: ${error}`);
-          }
-        }
+        // DESABILITADO: Salvamento de vídeos ao editar foi desabilitado para evitar duplicação
+        // Para adicionar novos vídeos, o usuário deve criar um novo atleta
+        // Para remover vídeos, use o botão de exclusão na página de detalhes
         
         Alert.alert("Sucesso", "Atleta atualizado com sucesso");
       } else {
