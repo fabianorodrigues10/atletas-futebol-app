@@ -84,7 +84,11 @@ export default function AtletaFormScreen() {
   const updateMutation = trpc.atletas.update.useMutation();
   const deleteMutation = trpc.atletas.delete.useMutation();
   const uploadMutation = trpc.midias.uploadFoto.useMutation();
-  const createVideoMutation = trpc.midias.create.useMutation();
+  const createVideoMutation = trpc.midias.create.useMutation({
+    onError: (error) => {
+      console.error("[MUTATION ERROR] Erro na criação de vídeo:", error);
+    },
+  });
 
   // Query para listar todos os atletas (para validar duplicatas)
   const { data: todosAtletas = [] } = trpc.atletas.list.useQuery(
@@ -528,29 +532,41 @@ export default function AtletaFormScreen() {
         // Salvar vídeos após criar o atleta
         if (videoLinks && videoLinks.length > 0 && result.id) {
           console.log("[DEBUG] Iniciando salvamento de vídeos:", videoLinks);
+          let videoSaveError = false;
           try {
             for (const videoUrl of videoLinks) {
               if (videoUrl.trim()) {
                 console.log("[DEBUG] Salvando vídeo:", videoUrl);
+                // Gerar s3Key único para cada vídeo
+                const s3Key = `videos/${result.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.mp4`;
                 const videoPayload = {
                   atletaId: result.id,
                   tipo: 'video' as const,
                   nome: `Vídeo - ${new Date().toLocaleString()}`,
                   url: videoUrl.trim(),
-                  s3Key: `videos/${result.id}/${Date.now()}-${Math.random().toString(36).substring(7)}`,
+                  s3Key: s3Key,
                   mimeType: 'video/youtube',
                   tamanho: 0,
                   descricao: 'Vídeo do YouTube',
                 };
                 console.log('[DEBUG] Payload do vídeo:', videoPayload);
-                const videoResult = await createVideoMutation.mutateAsync(videoPayload);
-                console.log("[DEBUG] Vídeo salvo com sucesso:", videoResult);
+                try {
+                  const videoResult = await createVideoMutation.mutateAsync(videoPayload);
+                  console.log("[DEBUG] Vídeo salvo com sucesso:", videoResult);
+                } catch (videoError) {
+                  console.error("[DEBUG] Erro ao salvar vídeo individual:", videoError);
+                  videoSaveError = true;
+                  throw videoError;
+                }
               }
             }
             console.log("[DEBUG] Todos os vídeos salvos com sucesso");
+            // Invalidar cache para refetch dos atletas
+            await queryClient.invalidateQueries();
           } catch (error) {
             console.error("[DEBUG] Erro ao salvar vídeos:", error);
-            Alert.alert("Aviso", `Erro ao salvar vídeos: ${error}`);
+            Alert.alert("Erro ao salvar vídeos", `Não foi possível salvar os vídeos. Tente novamente. Erro: ${error}`);
+            // Não retorna aqui para não bloquear o cadastro do atleta
           }
         } else {
           console.log("[DEBUG] Nenhum vídeo para salvar. videoLinks:", videoLinks, "result.id:", result.id);
