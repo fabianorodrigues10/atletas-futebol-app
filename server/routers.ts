@@ -439,7 +439,7 @@ export const appRouter = router({
           tipo: z.enum(["foto", "video", "documento"]),
           nome: z.string().min(1).max(255),
           url: z.string().url(),
-          s3Key: z.string().min(1).max(500),
+          s3Key: z.string().min(1).max(500).optional(), // Opcional para vídeos do YouTube
           mimeType: z.string().optional(),
           tamanho: z.number().optional(),
           descricao: z.string().optional(),
@@ -447,13 +447,15 @@ export const appRouter = router({
       )
       .mutation(async ({ ctx, input }) => {
         const userId = ctx.user?.id || 1;
+        // Para vídeos sem s3Key, gerar um s3Key sintético
+        const s3Key = input.s3Key || `videos/${userId}/${input.atletaId}/${Date.now()}-${Math.random().toString(36).substring(7)}.url`;
         const id = await db.createMidia({
           userId,
           atletaId: input.atletaId,
           tipo: input.tipo,
           nome: input.nome,
           url: input.url,
-          s3Key: input.s3Key,
+          s3Key: s3Key,
           mimeType: input.mimeType,
           tamanho: input.tamanho,
           descricao: input.descricao,
