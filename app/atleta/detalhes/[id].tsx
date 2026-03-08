@@ -314,19 +314,23 @@ export default function AtletaDetalhesScreen() {
               </Text>
             </View>
             {atleta.videos && atleta.videos.length > 0 ? (
-              atleta.videos.map((video, index) => (
-                <TouchableOpacity
-                  key={index}
-                  onPress={() => Linking.openURL(video)}
-                  className="bg-primary/10 rounded-xl p-3 flex-row items-center border border-primary/30 mb-2 last:mb-0"
-                >
-                  <IconSymbol name="play.fill" size={16} color={colors.primary} />
-                  <Text className="flex-1 text-primary ml-2 font-medium" numberOfLines={1}>
-                    Vídeo {index + 1}
-                  </Text>
-                  <IconSymbol name="chevron.right" size={16} color={colors.primary} />
-                </TouchableOpacity>
-              ))
+              atleta.videos.map((video: any, index: number) => {
+                // video pode ser string (URL) ou objeto com propriedade url
+                const videoUrl = typeof video === 'string' ? video : video?.url;
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    onPress={() => videoUrl && Linking.openURL(videoUrl)}
+                    className="bg-primary/10 rounded-xl p-3 flex-row items-center border border-primary/30 mb-2 last:mb-0"
+                  >
+                    <IconSymbol name="play.fill" size={16} color={colors.primary} />
+                    <Text className="flex-1 text-primary ml-2 font-medium" numberOfLines={1}>
+                      Vídeo {index + 1}
+                    </Text>
+                    <IconSymbol name="chevron.right" size={16} color={colors.primary} />
+                  </TouchableOpacity>
+                );
+              })
             ) : (
               <View className="bg-background rounded-xl p-4 border border-border/50">
                 <Text className="text-sm text-muted text-center italic">
