@@ -15,6 +15,7 @@ interface CompletudStatsModalProps {
   onClose: () => void;
   stats: CompletudeBracket[];
   totalAtletas: number;
+  onSelectBracket?: (min: number, max: number, label: string) => void;
 }
 
 export function CompletudStatsModal({
@@ -22,6 +23,7 @@ export function CompletudStatsModal({
   onClose,
   stats,
   totalAtletas,
+  onSelectBracket,
 }: CompletudStatsModalProps) {
   const colors = useColors();
 
@@ -62,6 +64,11 @@ export function CompletudStatsModal({
             </Text>
           </View>
 
+          {/* Instrução */}
+          <Text className="text-xs text-muted mb-4 text-center">
+            Clique em uma linha para filtrar atletas por faixa de completude
+          </Text>
+
           {/* Stats List */}
           <ScrollView showsVerticalScrollIndicator={false} className="max-h-80">
             <View className="gap-3">
@@ -70,7 +77,14 @@ export function CompletudStatsModal({
                 const isComplete = stat.min === 100;
 
                 return (
-                  <View key={index} className="mb-4">
+                  <TouchableOpacity
+                    key={index}
+                    onPress={() => {
+                      onSelectBracket?.(stat.min, stat.max, stat.label);
+                      onClose();
+                    }}
+                    className="mb-4 active:opacity-70"
+                  >
                     {/* Label e Count */}
                     <View className="flex-row justify-between items-center mb-2">
                       <Text className={`font-semibold ${isComplete ? "text-success" : "text-foreground"}`}>
@@ -101,7 +115,7 @@ export function CompletudStatsModal({
                         )}
                       </View>
                     </View>
-                  </View>
+                  </TouchableOpacity>
                 );
               })}
             </View>

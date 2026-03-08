@@ -44,6 +44,8 @@ export default function HomeScreen() {
   const [selectedIdadeFaixas, setSelectedIdadeFaixas] = useState<number[]>([]);
   const [selectedNaturalidades, setSelectedNaturalidades] = useState<string[]>([]);
   const [selectedPes, setSelectedPes] = useState<string[]>([]);
+  const [completudeFilterMin, setCompletudeFilterMin] = useState<number | null>(null);
+  const [completudeFilterMax, setCompletudeFilterMax] = useState<number | null>(null);
   
   // Seleção de atletas para relatório
   const [selectedAtletasIds, setSelectedAtletasIds] = useState<number[]>([]);
@@ -116,11 +118,18 @@ export default function HomeScreen() {
       if (selectedPes.length > 0 && !selectedPes.includes(atleta.pe || "")) {
         return false;
       }
+      // Filtro por faixa de completude
+      if (completudeFilterMin !== null && completudeFilterMax !== null) {
+        const completude = atleta.completude || 0;
+        if (completude < completudeFilterMin || completude > completudeFilterMax) {
+          return false;
+        }
+      }
       return true;
     });
-  }, [atletas, searchQuery, selectedPosicoes, selectedClubes, selectedIdadeFaixas, selectedNaturalidades, selectedPes]);
+  }, [atletas, searchQuery, selectedPosicoes, selectedClubes, selectedIdadeFaixas, selectedNaturalidades, selectedPes, completudeFilterMin, completudeFilterMax]);
 
-  const activeFilterCount = selectedPosicoes.length + selectedClubes.length + selectedIdadeFaixas.length + selectedNaturalidades.length + selectedPes.length;
+  const activeFilterCount = selectedPosicoes.length + selectedClubes.length + selectedIdadeFaixas.length + selectedNaturalidades.length + selectedPes.length + (completudeFilterMin !== null ? 1 : 0);
 
   const clearFilters = () => {
     setSelectedPosicoes([]);
@@ -128,7 +137,15 @@ export default function HomeScreen() {
     setSelectedIdadeFaixas([]);
     setSelectedNaturalidades([]);
     setSelectedPes([]);
+    setCompletudeFilterMin(null);
+    setCompletudeFilterMax(null);
     setSelectedAtletasIds([]);
+  };
+
+  const handleSelectCompletudeBracket = (min: number, max: number, label: string) => {
+    setCompletudeFilterMin(min);
+    setCompletudeFilterMax(max);
+    setShowStatsModal(false);
   };
   
   const toggleAtletaSelection = (id: number) => {
@@ -355,7 +372,7 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
     </View>
-  ), [showFilters, posicoes, selectedPosicoes, selectedIdadeFaixas, clubes, selectedClubes, naturalidades, selectedNaturalidades, pes, selectedPes, sortBy, colors, generatingExcel]);
+  ), [showFilters, posicoes, selectedPosicoes, selectedIdadeFaixas, clubes, selectedClubes, naturalidades, selectedNaturalidades, pes, selectedPes, sortBy, colors, generatingExcel, completudeFilterMin]);
 
   return (
     <ScreenContainer className="bg-background p-0">
@@ -648,9 +665,10 @@ export default function HomeScreen() {
             onClose={() => setShowStatsModal(false)}
             stats={stats}
             totalAtletas={atletas.length}
+            onSelectBracket={handleSelectCompletudeBracket}
           />
         );
-      }, [atletas, showStatsModal])}
+      }, [atletas, showStatsModal, handleSelectCompletudeBracket])}
 
     </ScreenContainer>
   );
