@@ -58,6 +58,7 @@ export default function AtletaFormScreen() {
   const [valencia, setValencia] = useState("");
   const [naturalidade, setNaturalidade] = useState("");
   const [videoLinks, setVideoLinks] = useState<string[]>([]);
+  const [originalVideoLinks, setOriginalVideoLinks] = useState<string[]>([]);
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [videoInputValue, setVideoInputValue] = useState("");
   const [ogolLoading, setOgolLoading] = useState(false);
@@ -133,8 +134,11 @@ export default function AtletaFormScreen() {
         // Extrair apenas as URLs dos vídeos
         const videoUrls = videos.map((v: any) => v.url || v);
         setVideoLinks(videoUrls);
+        // Armazenar os vídeos originais para comparação
+        setOriginalVideoLinks(videoUrls);
       } else {
         setVideoLinks([]);
+        setOriginalVideoLinks([]);
       }
     }
   }, [atleta]);
@@ -491,39 +495,52 @@ export default function AtletaFormScreen() {
           ...data,
         });
         
-        // Salvar novos vídeos ao editar
+        // Salvar apenas vídeos NOVOS (que não estavam salvos antes)
         if (videoLinks && videoLinks.length > 0) {
-          console.log("[DEBUG] Iniciando salvamento de vídeos na edição:", videoLinks);
-          try {
-            for (const videoUrl of videoLinks) {
-              if (videoUrl.trim()) {
-                console.log("[DEBUG] Salvando vídeo:", videoUrl);
-                const videoPayload = {
-                  atletaId: Number(id),
-                  tipo: 'video' as const,
-                  nome: `Vídeo - ${new Date().toLocaleString()}`,
-                  url: videoUrl.trim(),
-                  mimeType: 'video/youtube',
-                  tamanho: 0,
-                  descricao: 'Vídeo do YouTube',
-                };
-                console.log('[DEBUG] Payload do vídeo:', videoPayload);
-                try {
-                  const videoResult = await createVideoMutation.mutateAsync(videoPayload as any);
-                  console.log("[DEBUG] Vídeo salvo com sucesso:", videoResult);
-                } catch (videoError: any) {
-                  console.error("[DEBUG] Erro ao salvar vídeo individual:", videoError);
-                  console.error("[DEBUG] Detalhes do erro:", videoError.message || videoError);
-                  throw videoError;
+          console.log("[DEBUG] videoLinks atuais:", videoLinks);
+          console.log("[DEBUG] videoLinks originais:", originalVideoLinks);
+          
+          // Encontrar apenas os vídeos novos (que não estão em originalVideoLinks)
+          const novosVideos = videoLinks.filter(
+            (url) => !originalVideoLinks.includes(url.trim())
+          );
+          
+          console.log("[DEBUG] Vídeos novos para salvar:", novosVideos);
+          
+          if (novosVideos.length > 0) {
+            try {
+              for (const videoUrl of novosVideos) {
+                if (videoUrl.trim()) {
+                  console.log("[DEBUG] Salvando vídeo novo:", videoUrl);
+                  const videoPayload = {
+                    atletaId: Number(id),
+                    tipo: 'video' as const,
+                    nome: `Vídeo - ${new Date().toLocaleString()}`,
+                    url: videoUrl.trim(),
+                    mimeType: 'video/youtube',
+                    tamanho: 0,
+                    descricao: 'Vídeo do YouTube',
+                  };
+                  console.log('[DEBUG] Payload do vídeo:', videoPayload);
+                  try {
+                    const videoResult = await createVideoMutation.mutateAsync(videoPayload as any);
+                    console.log("[DEBUG] Vídeo salvo com sucesso:", videoResult);
+                  } catch (videoError: any) {
+                    console.error("[DEBUG] Erro ao salvar vídeo individual:", videoError);
+                    console.error("[DEBUG] Detalhes do erro:", videoError.message || videoError);
+                    throw videoError;
+                  }
                 }
               }
+              console.log("[DEBUG] Todos os vídeos novos salvos com sucesso");
+              // Invalidar cache para refetch dos atletas
+              await queryClient.invalidateQueries();
+            } catch (error) {
+              console.error("[DEBUG] Erro ao salvar vídeos:", error);
+              Alert.alert("Erro ao salvar vídeos", `Não foi possível salvar os vídeos. Tente novamente. Erro: ${error}`);
             }
-            console.log("[DEBUG] Todos os vídeos salvos com sucesso");
-            // Invalidar cache para refetch dos atletas
-            await queryClient.invalidateQueries();
-          } catch (error) {
-            console.error("[DEBUG] Erro ao salvar vídeos:", error);
-            Alert.alert("Erro ao salvar vídeos", `Não foi possível salvar os vídeos. Tente novamente. Erro: ${error}`);
+          } else {
+            console.log("[DEBUG] Nenhum vídeo novo para salvar");
           }
         }
         
