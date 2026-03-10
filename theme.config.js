@@ -1,13 +1,14 @@
 /** @type {const} */
 const themeColors = {
-  primary: { light: '#FF8C00', dark: '#FF9F1C' },
+  // Marcílio Dias colors: Rubro-anil (red and blue)
+  primary: { light: '#DF101A', dark: '#DF101A' },
   background: { light: '#FFFFFF', dark: '#0F0F0F' },
   surface: { light: '#F8F8F8', dark: '#1A1A1A' },
-  foreground: { light: '#1A1A1A', dark: '#F5F5F5' },
+  foreground: { light: '#1E2073', dark: '#E8EAFF' },
   muted: { light: '#666666', dark: '#999999' },
   border: { light: '#E0E0E0', dark: '#333333' },
-  success: { light: '#10B981', dark: '#34D399' },
-  warning: { light: '#F59E0B', dark: '#FBBF24' },
+  success: { light: '#1E2073', dark: '#34D399' },
+  warning: { light: '#F9B00D', dark: '#FBBF24' },
   error: { light: '#EF4444', dark: '#F87171' },
 };
 

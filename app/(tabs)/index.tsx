@@ -381,13 +381,13 @@ export default function HomeScreen() {
         <View className="flex-row justify-between items-center mb-4">
           <View className="flex-row items-center gap-3 flex-1">
             <Image
-              source={require("@/assets/images/fabiano-scout-logo.png")}
+              source={require("@/assets/images/icon.png")}
               style={{ width: 48, height: 48 }}
               resizeMode="contain"
             />
             <View>
-              <Text className="text-2xl font-bold text-primary">Fabiano Scout</Text>
-              <Text className="text-xs text-muted mt-0.5">Análise de Atletas</Text>
+              <Text className="text-2xl font-bold text-primary">Dados do Marinheiro</Text>
+              <Text className="text-xs text-muted mt-0.5">Marcílio Dias</Text>
             </View>
           </View>
           <View className="flex-row gap-2">
