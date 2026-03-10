@@ -136,7 +136,7 @@ export async function gerarRelatorioPDF(
       });
 
       // Rodapé
-      doc.fontSize(8).font("Helvetica").text("Relatório gerado automaticamente por Dados do Marinheiro - Marcílio Dias", 40, 750, {
+      doc.fontSize(8).font("Helvetica").text("Relatório gerado automaticamente por BDMD - Banco de Dados Marcílio Dias", 40, 750, {
         align: "center",
       });
 

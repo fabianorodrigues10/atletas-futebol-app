@@ -1,5 +1,5 @@
 /**
- * Gerador de Relatório Excel - Dados do Marinheiro
+ * Gerador de Relatório Excel - BDMD
  * Gera planilha profissional com dados de atletas usando ExcelJS.
  */
 import ExcelJS from "exceljs";
@@ -136,7 +136,7 @@ export function registerExcelRoutes(app: any) {
       const buffer = await workbook.xlsx.writeBuffer() as any;
 
       res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-      res.setHeader("Content-Disposition", `attachment; filename="Atletas_Marcilio_Dias.xlsx"`);
+      res.setHeader("Content-Disposition", `attachment; filename="Atletas_BDMD.xlsx"`);
       res.setHeader("Content-Length", (buffer as any).length);
       res.send(buffer);
     } catch (error: any) {

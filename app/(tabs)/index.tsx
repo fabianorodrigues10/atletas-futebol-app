@@ -386,8 +386,8 @@ export default function HomeScreen() {
               resizeMode="contain"
             />
             <View>
-              <Text className="text-2xl font-bold text-primary">Dados do Marinheiro</Text>
-              <Text className="text-xs text-muted mt-0.5">Marcílio Dias</Text>
+              <Text className="text-2xl font-bold text-primary">BDMD</Text>
+              <Text className="text-xs text-muted mt-0.5">Banco de Dados Marcílio Dias</Text>
             </View>
           </View>
           <View className="flex-row gap-2">
