@@ -1,5 +1,5 @@
 /**
- * Gerador de Relatório Excel - Fabiano Scout
+ * Gerador de Relatório Excel - Dados do Marinheiro
  * Gera planilha profissional com dados de atletas usando ExcelJS.
  */
 import ExcelJS from "exceljs";
@@ -112,7 +112,7 @@ export function registerExcelRoutes(app: any) {
 
       const summaryHeader = summarySheet.getRow(1);
       summaryHeader.font = { bold: true, color: { argb: "FFFFFFFF" } };
-      summaryHeader.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE8930C" } } as any;
+      summaryHeader.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFDF101A" } } as any;
 
       const summaryData = [
         { metric: "Total de Atletas", value: data.length },
@@ -136,7 +136,7 @@ export function registerExcelRoutes(app: any) {
       const buffer = await workbook.xlsx.writeBuffer() as any;
 
       res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-      res.setHeader("Content-Disposition", `attachment; filename="Atletas_Fabiano_Scout.xlsx"`);
+      res.setHeader("Content-Disposition", `attachment; filename="Atletas_Marcilio_Dias.xlsx"`);
       res.setHeader("Content-Length", (buffer as any).length);
       res.send(buffer);
     } catch (error: any) {

@@ -65,12 +65,12 @@ async function downloadNative(blob: Blob, fileName: string) {
   if (await Sharing.isAvailableAsync()) {
     await Sharing.shareAsync(fileUri, {
       mimeType: "application/pdf",
-      dialogTitle: "Relatório Fabiano Scout",
+      dialogTitle: "Relatório Dados do Marinheiro",
     });
   }
 }
 
-export async function downloadPdf(blob: Blob, fileName: string = "Relatorio_Fabiano_Scout.pdf"): Promise<void> {
+export async function downloadPdf(blob: Blob, fileName: string = "Relatorio_Dados_do_Marinheiro.pdf"): Promise<void> {
   if (Platform.OS === "web") {
     await downloadWeb(blob, fileName);
   } else {

@@ -35,7 +35,7 @@ async function downloadWeb(response: Response) {
   const blobUrl = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = blobUrl;
-  a.download = "Relatorio_Fabiano_Scout.pdf";
+  a.download = "Relatorio_Dados_do_Marinheiro.pdf";
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -54,7 +54,7 @@ async function downloadNative(response: Response) {
   }
   const base64 = btoa(binary);
 
-  const fileUri = FileSystem.documentDirectory + "Relatorio_Fabiano_Scout.pdf";
+  const fileUri = FileSystem.documentDirectory + "Relatorio_Dados_do_Marinheiro.pdf";
   await FileSystem.writeAsStringAsync(fileUri, base64, {
     encoding: FileSystem.EncodingType.Base64,
   });
@@ -62,7 +62,7 @@ async function downloadNative(response: Response) {
   if (await Sharing.isAvailableAsync()) {
     await Sharing.shareAsync(fileUri, {
       mimeType: "application/pdf",
-      dialogTitle: "Relatório Fabiano Scout",
+      dialogTitle: "Relatório Dados do Marinheiro",
     });
   }
 }
@@ -90,7 +90,7 @@ async function downloadWebExcel(response: Response) {
   const blobUrl = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = blobUrl;
-  a.download = "Atletas_Fabiano_Scout.xlsx";
+  a.download = "Atletas_Marcilio_Dias.xlsx";
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -109,7 +109,7 @@ async function downloadNativeExcel(response: Response) {
   }
   const base64 = btoa(binary);
 
-  const fileUri = FileSystem.documentDirectory + "Atletas_Fabiano_Scout.xlsx";
+  const fileUri = FileSystem.documentDirectory + "Atletas_Marcilio_Dias.xlsx";
   await FileSystem.writeAsStringAsync(fileUri, base64, {
     encoding: FileSystem.EncodingType.Base64,
   });
@@ -117,7 +117,7 @@ async function downloadNativeExcel(response: Response) {
   if (await Sharing.isAvailableAsync()) {
     await Sharing.shareAsync(fileUri, {
       mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      dialogTitle: "Atletas Fabiano Scout",
+      dialogTitle: "Atletas Marcílio Dias",
     });
   }
 }

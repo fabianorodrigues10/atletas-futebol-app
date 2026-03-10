@@ -109,7 +109,7 @@ export async function gerarRelatorioPDF(
         }
         
         if (linksText.length > 0) {
-          doc.fontSize(8).font("Helvetica").fillColor("#0066cc");
+          doc.fontSize(8).font("Helvetica").fillColor("#DF101A");
           linksText.forEach(link => {
             doc.text(link, { underline: true });
           });
@@ -136,7 +136,7 @@ export async function gerarRelatorioPDF(
       });
 
       // Rodapé
-      doc.fontSize(8).font("Helvetica").text("Relatório gerado automaticamente pelo Fabiano Scout", 40, 750, {
+      doc.fontSize(8).font("Helvetica").text("Relatório gerado automaticamente por Dados do Marinheiro - Marcílio Dias", 40, 750, {
         align: "center",
       });
 
