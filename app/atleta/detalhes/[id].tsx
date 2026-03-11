@@ -413,14 +413,14 @@ function InfoCard({
   const colors = useColors();
 
   return (
-    <View className="py-3 border-b border-border/50 last:border-b-0">
-      <View className="flex-row items-start gap-3">
-        <View className="w-5 pt-0.5">
+    <View style={{ paddingVertical: 12, borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+        <View style={{ width: 20, marginRight: 12, marginTop: 2 }}>
           <IconSymbol name={icon as any} size={16} color={colors.muted} />
         </View>
-        <View className="flex-1">
-          <Text className="text-xs text-muted mb-1">{label}</Text>
-          <Text className="text-sm text-foreground font-semibold">
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>{label}</Text>
+          <Text style={{ fontSize: 14, color: colors.foreground, fontWeight: '600' }}>
             {value}
           </Text>
         </View>
