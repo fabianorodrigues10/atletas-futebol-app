@@ -173,7 +173,7 @@ export default function HomeScreen() {
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const [generatingExcel, setGeneratingExcel] = useState(false);
   const [showReportConfirm, setShowReportConfirm] = useState(false);
-  const [sortBy, setSortBy] = useState<"nome" | "idade" | "altura">("nome");
+  const [sortBy, setSortBy] = useState<"nome">("nome");
   const [showStatsModal, setShowStatsModal] = useState(false);
 
   const handleAddAtleta = () => {
@@ -239,15 +239,10 @@ export default function HomeScreen() {
 
   const sortedAtletas = useMemo(() => {
     const sorted = [...filteredAtletas];
-    if (sortBy === "nome") {
-      sorted.sort((a, b) => a.nome.localeCompare(b.nome));
-    } else if (sortBy === "idade") {
-      sorted.sort((a, b) => Number(b.idade ?? 0) - Number(a.idade ?? 0));
-    } else if (sortBy === "altura") {
-      sorted.sort((a, b) => Number(b.altura ?? 0) - Number(a.altura ?? 0));
-    }
+    // Sempre ordenar alfabeticamente por nome
+    sorted.sort((a, b) => a.nome.localeCompare(b.nome));
     return sorted;
-  }, [filteredAtletas, sortBy]);
+  }, [filteredAtletas]);
 
   // Renderizar header da FlatList (SEM o TextInput de busca)
   const renderHeader = useCallback(() => (
@@ -320,49 +315,8 @@ export default function HomeScreen() {
         </ScrollView>
       )}
 
-      {/* Seção de Ordenação e Exportação */}
+      {/* Seção de Exportação */}
       <View className="px-4 py-3 flex-row justify-between items-center border-b border-border">
-        <View className="flex-row gap-2 flex-1">
-          <TouchableOpacity
-            onPress={() => setSortBy("nome")}
-            style={{
-              backgroundColor: sortBy === "nome" ? colors.primary : colors.surface,
-              borderWidth: sortBy === "nome" ? 0 : 1,
-              borderColor: colors.border,
-              paddingHorizontal: 12,
-              paddingVertical: 6,
-              borderRadius: 16,
-            }}
-          >
-            <Text style={{ color: sortBy === "nome" ? "white" : colors.foreground, fontSize: 12, fontWeight: "600" }}>Nome</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setSortBy("idade")}
-            style={{
-              backgroundColor: sortBy === "idade" ? colors.primary : colors.surface,
-              borderWidth: sortBy === "idade" ? 0 : 1,
-              borderColor: colors.border,
-              paddingHorizontal: 12,
-              paddingVertical: 6,
-              borderRadius: 16,
-            }}
-          >
-            <Text style={{ color: sortBy === "idade" ? "white" : colors.foreground, fontSize: 12, fontWeight: "600" }}>Idade</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setSortBy("altura")}
-            style={{
-              backgroundColor: sortBy === "altura" ? colors.primary : colors.surface,
-              borderWidth: sortBy === "altura" ? 0 : 1,
-              borderColor: colors.border,
-              paddingHorizontal: 12,
-              paddingVertical: 6,
-              borderRadius: 16,
-            }}
-          >
-            <Text style={{ color: sortBy === "altura" ? "white" : colors.foreground, fontSize: 12, fontWeight: "600" }}>Altura</Text>
-          </TouchableOpacity>
-        </View>
         <TouchableOpacity
           onPress={handleExcelPress}
           disabled={generatingExcel}
