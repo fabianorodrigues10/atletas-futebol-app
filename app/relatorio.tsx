@@ -74,7 +74,7 @@ export default function RelatorioScreen() {
   const pesPreferencial = useMemo(() => {
     const set = new Set<string>();
     atletas.forEach((a: any) => {
-      if (a.pePreferencial) set.add(a.pePreferencial);
+      if (a.pe) set.add(a.pe);
     });
     return Array.from(set).sort();
   }, [atletas]);
@@ -94,7 +94,7 @@ export default function RelatorioScreen() {
       if (selectedEscalas.length > 0 && !selectedEscalas.includes(atleta.escala || "")) {
         return false;
       }
-      if (selectedPesPreferencial.length > 0 && !selectedPesPreferencial.includes(atleta.pePreferencial || "")) {
+      if (selectedPesPreferencial.length > 0 && !selectedPesPreferencial.includes(atleta.pe || "")) {
         return false;
       }
       if (selectedIdadeFaixas.length > 0) {
@@ -143,7 +143,7 @@ export default function RelatorioScreen() {
         posicao: selectedPosicoes.length > 0 ? selectedPosicoes.join(", ") : "Todas",
         faixaIdade: selectedIdadeFaixas.length > 0 ? selectedIdadeFaixas.map(i => FAIXAS_IDADE[i].label).join(", ") : "Todas",
         clube: selectedClubes.length > 0 ? selectedClubes.join(", ") : "Todos",
-        pePreferencial: selectedPesPreferencial.length > 0 ? selectedPesPreferencial.join(", ") : "Todos",
+        pe: selectedPesPreferencial.length > 0 ? selectedPesPreferencial.join(", ") : "Todos",
         busca: searchQuery || undefined,
       };
       const blob = await generateReportWithPreview(selectedAtletasIds, filters);
@@ -174,7 +174,7 @@ export default function RelatorioScreen() {
         posicao: selectedPosicoes.length > 0 ? selectedPosicoes.join(", ") : "Todas",
         faixaIdade: selectedIdadeFaixas.length > 0 ? selectedIdadeFaixas.map(i => FAIXAS_IDADE[i].label).join(", ") : "Todas",
         clube: selectedClubes.length > 0 ? selectedClubes.join(", ") : "Todos",
-        pePreferencial: selectedPesPreferencial.length > 0 ? selectedPesPreferencial.join(", ") : "Todos",
+        pe: selectedPesPreferencial.length > 0 ? selectedPesPreferencial.join(", ") : "Todos",
         busca: searchQuery || undefined,
       };
       await generateExcel(selectedAtletasIds, filters);
