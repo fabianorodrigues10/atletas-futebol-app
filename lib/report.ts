@@ -9,6 +9,7 @@ interface ReportFilters {
   posicao?: string | null;
   faixaIdade?: string | null;
   clube?: string | null;
+  pe?: string | null;
   busca?: string | null;
 }
 

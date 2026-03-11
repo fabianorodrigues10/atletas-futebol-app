@@ -159,7 +159,7 @@ export default function RelatorioScreen() {
 
   const handleDownloadPdf = async () => {
     if (!pdfBlob) return;
-    await downloadPdf(pdfBlob, "Relatorio_Fabiano_Scout.pdf");
+    await downloadPdf(pdfBlob, "Relatorio_BDMD.pdf");
   };
 
   const handleGenerateExcel = async () => {
@@ -411,7 +411,7 @@ export default function RelatorioScreen() {
         pdfBlob={pdfBlob}
         onClose={() => setShowPdfPreview(false)}
         onDownload={handleDownloadPdf}
-        fileName="Relatorio_Fabiano_Scout.pdf"
+        fileName="Relatorio_BDMD.pdf"
       />
     </ScreenContainer>
   );
