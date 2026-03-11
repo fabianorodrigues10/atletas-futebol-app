@@ -45,6 +45,7 @@ export default function RelatorioScreen() {
   const [selectedClubes, setSelectedClubes] = useState<string[]>([]);
   const [selectedIdadeFaixas, setSelectedIdadeFaixas] = useState<number[]>([]);
   const [selectedEscalas, setSelectedEscalas] = useState<string[]>([]);
+  const [selectedPesPreferencial, setSelectedPesPreferencial] = useState<string[]>([]);
   const [selectedAtletasIds, setSelectedAtletasIds] = useState<number[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState(false);
@@ -70,6 +71,14 @@ export default function RelatorioScreen() {
     return Array.from(set).sort();
   }, [atletas]);
 
+  const pesPreferencial = useMemo(() => {
+    const set = new Set<string>();
+    atletas.forEach((a: any) => {
+      if (a.pePreferencial) set.add(a.pePreferencial);
+    });
+    return Array.from(set).sort();
+  }, [atletas]);
+
   // Filtrar atletas
   const filteredAtletas = useMemo(() => {
     return atletas.filter((atleta: any) => {
@@ -85,6 +94,9 @@ export default function RelatorioScreen() {
       if (selectedEscalas.length > 0 && !selectedEscalas.includes(atleta.escala || "")) {
         return false;
       }
+      if (selectedPesPreferencial.length > 0 && !selectedPesPreferencial.includes(atleta.pePreferencial || "")) {
+        return false;
+      }
       if (selectedIdadeFaixas.length > 0) {
         const idade = atleta.idade ?? 0;
         const matchesFaixa = selectedIdadeFaixas.some((faixaIdx) => {
@@ -97,7 +109,7 @@ export default function RelatorioScreen() {
       }
       return true;
     });
-  }, [atletas, searchQuery, selectedPosicoes, selectedClubes, selectedIdadeFaixas, selectedEscalas]);
+  }, [atletas, searchQuery, selectedPosicoes, selectedClubes, selectedIdadeFaixas, selectedEscalas, selectedPesPreferencial]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -131,6 +143,7 @@ export default function RelatorioScreen() {
         posicao: selectedPosicoes.length > 0 ? selectedPosicoes.join(", ") : "Todas",
         faixaIdade: selectedIdadeFaixas.length > 0 ? selectedIdadeFaixas.map(i => FAIXAS_IDADE[i].label).join(", ") : "Todas",
         clube: selectedClubes.length > 0 ? selectedClubes.join(", ") : "Todos",
+        pePreferencial: selectedPesPreferencial.length > 0 ? selectedPesPreferencial.join(", ") : "Todos",
         busca: searchQuery || undefined,
       };
       const blob = await generateReportWithPreview(selectedAtletasIds, filters);
@@ -161,6 +174,7 @@ export default function RelatorioScreen() {
         posicao: selectedPosicoes.length > 0 ? selectedPosicoes.join(", ") : "Todas",
         faixaIdade: selectedIdadeFaixas.length > 0 ? selectedIdadeFaixas.map(i => FAIXAS_IDADE[i].label).join(", ") : "Todas",
         clube: selectedClubes.length > 0 ? selectedClubes.join(", ") : "Todos",
+        pePreferencial: selectedPesPreferencial.length > 0 ? selectedPesPreferencial.join(", ") : "Todos",
         busca: searchQuery || undefined,
       };
       await generateExcel(selectedAtletasIds, filters);
@@ -222,6 +236,18 @@ export default function RelatorioScreen() {
         onToggleOption={(escala) =>
           setSelectedEscalas((prev) =>
             prev.includes(escala) ? prev.filter((e) => e !== escala) : [...prev, escala]
+          )
+        }
+      />
+
+      {/* Filtro de Pé Preferencial */}
+      <FilterDropdown
+        title="Pé Preferencial"
+        options={pesPreferencial}
+        selectedOptions={selectedPesPreferencial}
+        onToggleOption={(pe) =>
+          setSelectedPesPreferencial((prev) =>
+            prev.includes(pe) ? prev.filter((p) => p !== pe) : [...prev, pe]
           )
         }
       />
