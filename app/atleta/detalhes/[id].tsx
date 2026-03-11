@@ -413,12 +413,18 @@ function InfoCard({
   const colors = useColors();
 
   return (
-    <View className="flex-row items-center py-3 border-b border-border/50 last:border-b-0">
-      <IconSymbol name={icon as any} size={16} color={colors.muted} />
-      <Text className="text-sm text-muted flex-1 ml-3">{label}</Text>
-      <Text className="text-sm text-foreground font-semibold flex-1 text-right">
-        {value}
-      </Text>
+    <View className="py-3 border-b border-border/50 last:border-b-0">
+      <View className="flex-row items-start gap-3">
+        <View className="w-5 pt-0.5">
+          <IconSymbol name={icon as any} size={16} color={colors.muted} />
+        </View>
+        <View className="flex-1">
+          <Text className="text-xs text-muted mb-1">{label}</Text>
+          <Text className="text-sm text-foreground font-semibold">
+            {value}
+          </Text>
+        </View>
+      </View>
     </View>
   );
 }
