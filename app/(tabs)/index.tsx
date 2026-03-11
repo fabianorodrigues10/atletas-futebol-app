@@ -9,6 +9,7 @@ import {
   RefreshControl,
   Platform,
   Image,
+  Pressable,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/screen-container";
@@ -395,14 +396,19 @@ export default function HomeScreen() {
             )}
           </View>
 
-          <TouchableOpacity
+          <Pressable
             onPress={() => setShowFilters(!showFilters)}
             style={{
               backgroundColor: activeFilterCount > 0 ? colors.primary : colors.surface,
               borderWidth: activeFilterCount > 0 ? 0 : 1,
               borderColor: colors.border,
-            }}
-            className="rounded-full w-12 h-12 justify-center items-center"
+              borderRadius: 24,
+              width: 48,
+              height: 48,
+              justifyContent: 'center',
+              alignItems: 'center',
+              cursor: 'pointer',
+            } as any}
           >
             <IconSymbol
               name="slider.horizontal.3"
@@ -411,13 +417,22 @@ export default function HomeScreen() {
             />
             {activeFilterCount > 0 && (
               <View
-                className="absolute -top-1 -right-1 w-5 h-5 rounded-full justify-center items-center"
-                style={{ backgroundColor: colors.error }}
+                style={{
+                  position: 'absolute',
+                  top: -4,
+                  right: -4,
+                  width: 20,
+                  height: 20,
+                  borderRadius: 10,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  backgroundColor: colors.error,
+                }}
               >
-                <Text className="text-white text-xs font-bold">{activeFilterCount}</Text>
+                <Text style={{ color: 'white', fontSize: 12, fontWeight: 'bold' }}>{activeFilterCount}</Text>
               </View>
             )}
-          </TouchableOpacity>
+          </Pressable>
         </View>
 
         {/* Contador de Resultados */}
