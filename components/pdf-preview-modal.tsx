@@ -1,8 +1,7 @@
-import { View, Text, TouchableOpacity, Modal, ActivityIndicator, Alert } from "react-native";
+import { View, Text, TouchableOpacity, Modal, ActivityIndicator, Alert, Platform } from "react-native";
 import { useColors } from "@/hooks/use-colors";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useState, useEffect } from "react";
-import { Platform } from "react-native";
 
 interface PDFPreviewModalProps {
   visible: boolean;
@@ -17,14 +16,14 @@ export function PDFPreviewModal({
   pdfBlob,
   onClose,
   onDownload,
-  fileName = "Relatorio_Fabiano_Scout.pdf",
+  fileName = "Relatorio_BDMD.pdf",
 }: PDFPreviewModalProps) {
   const colors = useColors();
   const [isDownloading, setIsDownloading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    if (visible && pdfBlob) {
+    if (visible && pdfBlob && Platform.OS === "web") {
       const url = URL.createObjectURL(pdfBlob);
       setPreviewUrl(url);
       return () => URL.revokeObjectURL(url);
