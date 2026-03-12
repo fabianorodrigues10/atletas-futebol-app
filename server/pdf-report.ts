@@ -1,5 +1,5 @@
 /**
- * Gerador de Relatório PDF - Fabiano Scout
+ * Gerador de Relatório PDF - BDMD
  * Gera PDF profissional com dados de atletas usando PDFKit.
  */
 import PDFDocument from "pdfkit";
@@ -8,10 +8,10 @@ import { getDb } from "./db";
 import { atletas, midias } from "../drizzle/schema";
 import { eq, inArray, and } from "drizzle-orm";
 
-// Cores
+// Cores - Marcílio Dias
 type RGB = [number, number, number];
-const PRIMARY: RGB = [232, 147, 12]; // #E8930C
-const DARK: RGB = [26, 26, 46]; // #1A1A2E
+const PRIMARY: RGB = [223, 16, 26]; // #DF101A (Vermelho Marcílio)
+const DARK: RGB = [30, 32, 115]; // #1E2073 (Azul Marcílio)
 const GRAY: RGB = [104, 112, 118]; // #687076
 const LIGHT_GRAY: RGB = [245, 245, 245]; // #F5F5F5
 const BORDER: RGB = [229, 231, 235]; // #E5E7EB
@@ -45,8 +45,8 @@ function formatDate(dateStr: string | Date | null): string {
 
 function drawHeader(doc: PDFKit.PDFDocument, count: number, filters: any) {
   // Título
-  doc.fontSize(28).fillColor(PRIMARY).font("Helvetica-Bold").text("Fabiano Scout", 40, 30);
-  doc.fontSize(12).fillColor(GRAY).font("Helvetica").text("Relatório de Atletas", 40, 62);
+  doc.fontSize(28).fillColor(PRIMARY).font("Helvetica-Bold").text("BDMD", 40, 30);
+  doc.fontSize(12).fillColor(GRAY).font("Helvetica").text("Banco de Dados Marcílio Dias", 40, 62);
 
   // Linha separadora
   doc.moveTo(40, 82).lineTo(555, 82).strokeColor(PRIMARY).lineWidth(3).stroke();
@@ -220,7 +220,7 @@ function drawFooter(doc: PDFKit.PDFDocument) {
   for (let i = range.start; i < range.start + range.count; i++) {
     doc.switchToPage(i);
     doc.fontSize(8).fillColor(GRAY).font("Helvetica").text(
-      "Fabiano Scout  •  Relatório gerado automaticamente  •  Confidencial",
+      "BDMD - Banco de Dados Marcílio Dias  •  Relatório gerado automaticamente  •  Confidencial",
       40, 770,
       { width: 515, align: "center" }
     );
@@ -286,7 +286,7 @@ export function registerPdfRoutes(app: any) {
       doc.on("end", () => {
         const pdfBuffer = Buffer.concat(chunks);
         res.setHeader("Content-Type", "application/pdf");
-        res.setHeader("Content-Disposition", `attachment; filename="Relatorio_Fabiano_Scout.pdf"`);
+        res.setHeader("Content-Disposition", `attachment; filename="Relatorio_BDMD.pdf"`);
         res.setHeader("Content-Length", pdfBuffer.length);
         res.send(pdfBuffer);
       });
