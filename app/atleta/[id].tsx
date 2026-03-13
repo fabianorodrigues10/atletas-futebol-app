@@ -490,10 +490,17 @@ export default function AtletaFormScreen() {
       };
       
       if (isEdit) {
-        await updateMutation.mutateAsync({
-          id: Number(id),
-          ...data,
-        });
+        try {
+          await updateMutation.mutateAsync({
+            id: Number(id),
+            ...data,
+          });
+        } catch (error: any) {
+          console.error("[ERROR] Erro ao atualizar atleta:", error);
+          const errorMessage = error?.message || JSON.stringify(error);
+          Alert.alert("Erro ao atualizar", `Não foi possível atualizar o atleta. Erro: ${errorMessage}`);
+          throw error;
+        }
         
         // Salvar apenas vídeos NOVOS (que não estavam salvos antes)
         if (videoLinks && videoLinks.length > 0) {
