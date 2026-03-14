@@ -66,6 +66,33 @@ async function startServer() {
     res.json({ ok: true, timestamp: Date.now() });
   });
 
+  // Middleware para interceptar e converter requisições POST para /api/trpc/:path
+  // para o formato batch esperado pelo tRPC
+  app.use((req, res, next) => {
+    // Se for POST para /api/trpc com um caminho específico
+    if (req.method === "POST" && req.path.startsWith("/api/trpc/") && req.body && !Array.isArray(req.body)) {
+      // Extrair o caminho (ex: /api/trpc/atletas.update -> atletas.update)
+      const path = req.path.replace("/api/trpc/", "");
+      
+      console.log("[tRPC Middleware] Convertendo POST com caminho");
+      console.log("[tRPC Middleware] Caminho:", path);
+      
+      // Converter para o formato batch do tRPC
+      req.body = [
+        {
+          "0": req.body,
+          "1": path,
+        },
+      ];
+      
+      // Mudar a URL para /api/trpc
+      req.url = "/api/trpc";
+      
+      console.log("[tRPC Middleware] Convertido para batch");
+    }
+    next();
+  });
+
   app.use(
     "/api/trpc",
     createExpressMiddleware({

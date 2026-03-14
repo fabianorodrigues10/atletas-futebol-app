@@ -491,13 +491,32 @@ export default function AtletaFormScreen() {
       
       if (isEdit) {
         try {
+          console.log("[DEBUG] Enviando dados de atualização:", {
+            id: Number(id),
+            ...data,
+          });
           await updateMutation.mutateAsync({
             id: Number(id),
             ...data,
           });
         } catch (error: any) {
           console.error("[ERROR] Erro ao atualizar atleta:", error);
-          const errorMessage = error?.message || JSON.stringify(error);
+          console.error("[ERROR] Tipo de erro:", error?.constructor?.name);
+          console.error("[ERROR] Status:", error?.status);
+          console.error("[ERROR] Data:", error?.data);
+          
+          let errorMessage = "Erro desconhecido";
+          
+          if (error?.message) {
+            errorMessage = error.message;
+          } else if (error?.data?.message) {
+            errorMessage = error.data.message;
+          } else if (typeof error === 'string') {
+            errorMessage = error;
+          } else {
+            errorMessage = JSON.stringify(error);
+          }
+          
           Alert.alert("Erro ao atualizar", `Não foi possível atualizar o atleta. Erro: ${errorMessage}`);
           throw error;
         }
