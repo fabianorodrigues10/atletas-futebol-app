@@ -9,6 +9,7 @@ import { registerExcelRoutes } from "../excel-report";
 import { registerOgolRoutes } from "../ogol-scraper";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
+import * as db from "../db";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise((resolve) => {
@@ -64,6 +65,31 @@ async function startServer() {
 
   app.get("/api/health", (_req, res) => {
     res.json({ ok: true, timestamp: Date.now() });
+  });
+
+  // Endpoint direto para atualizar atleta (bypass do tRPC batch)
+  app.post("/api/atletas/:id", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const userId = 1; // Usar userId fixo para testes
+      const data = req.body;
+      
+      console.log("[API] Atualizando atleta:", id);
+      console.log("[API] Dados:", data);
+      
+      // Converter altura para string se fornecida
+      const updateData: any = { ...data };
+      if (data.altura !== undefined) {
+        updateData.altura = data.altura.toString();
+      }
+      
+      await db.updateAtleta(id, userId, updateData);
+      
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("[API] Erro ao atualizar atleta:", error);
+      res.status(500).json({ error: error.message });
+    }
   });
 
   // Middleware para interceptar e converter requisições POST para /api/trpc/:path

@@ -495,10 +495,24 @@ export default function AtletaFormScreen() {
             id: Number(id),
             ...data,
           });
-          await updateMutation.mutateAsync({
-            id: Number(id),
-            ...data,
+          
+          // Usar o novo endpoint REST em vez do tRPC
+          const response = await fetch(`${getApiBaseUrl()}/api/atletas/${id}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+            credentials: 'include',
           });
+          
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Erro ao atualizar atleta');
+          }
+          
+          const result = await response.json();
+          console.log("[DEBUG] Atleta atualizado com sucesso:", result);
         } catch (error: any) {
           console.error("[ERROR] Erro ao atualizar atleta:", error);
           console.error("[ERROR] Tipo de erro:", error?.constructor?.name);
