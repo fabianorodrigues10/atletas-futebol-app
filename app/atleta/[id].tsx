@@ -772,15 +772,33 @@ export default function AtletaFormScreen() {
       
       // Para atleta existente, fazer upload imediatamente
       const atletaId = Number(id);
-      const result = await uploadMutation.mutateAsync({
-        atletaId,
-        fileName,
-        mimeType,
-        base64Data,
-      });
       
-      setFotoUri(result.url);
-      Alert.alert("Sucesso", "Foto adicionada com sucesso");
+      try {
+        const fotoResponse = await fetch(`${getApiBaseUrl()}/api/atletas/${atletaId}/foto`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            fileName,
+            mimeType,
+            base64Data,
+          }),
+          credentials: 'include',
+        });
+        
+        if (!fotoResponse.ok) {
+          const errorData = await fotoResponse.json();
+          throw new Error(errorData.error || 'Erro ao fazer upload de foto');
+        }
+        
+        const result = await fotoResponse.json();
+        setFotoUri(result.s3Key);
+        Alert.alert("Sucesso", "Foto adicionada com sucesso");
+      } catch (error: any) {
+        console.error("[DEBUG] Erro ao fazer upload de foto:", error);
+        throw error;
+      }
     } catch (error) {
       console.error("Erro ao fazer upload:", error);
       Alert.alert("Erro", "Erro ao fazer upload da foto");
