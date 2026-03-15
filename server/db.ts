@@ -216,30 +216,21 @@ export async function getAtletaById(id: number, userId: number) {
   
   const atleta = result[0];
   
-  // Buscar foto do atleta
-  const fotos = await db
+  // Buscar todas as mídias do atleta
+  const todasMidias = await db
     .select()
     .from(midias)
-    .where(and(
-      eq(midias.atletaId, id),
-      eq(midias.tipo, "foto")
-    ))
-    .orderBy(desc(midias.createdAt))
-    .limit(1);
-  
-  // Buscar vídeos do atleta
-  const videosData = await db
-    .select()
-    .from(midias)
-    .where(and(
-      eq(midias.atletaId, id),
-      eq(midias.tipo, "video")
-    ))
+    .where(eq(midias.atletaId, id))
     .orderBy(desc(midias.createdAt));
+  
+  // Separar fotos e vídeos
+  const fotos = todasMidias.filter((m: any) => m.tipo === 'foto');
+  const videosData = todasMidias.filter((m: any) => m.tipo === 'video');
   
   return {
     ...atleta,
     fotoUrl: fotos[0]?.url || null,
+    midias: todasMidias,
     videos: videosData.map((v: any) => v.url)
   };
 }
