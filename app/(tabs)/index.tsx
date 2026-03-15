@@ -57,15 +57,13 @@ export default function HomeScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchPage, setSearchPage] = useState(1);
-  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const refetch = useCallback(async (page = 1) => {
+
+  const refetch = useCallback(async () => {
     try {
-      page === 1 ? setIsLoading(true) : setIsLoadingMore(true);
+      setIsLoading(true);
       const baseUrl = getApiBaseUrl();
-      const url = `${baseUrl}/api/atletas?page=${page}`;
+      const url = `${baseUrl}/api/atletas`;
       console.log('[DEBUG] Iniciando fetch de atletas...');
       console.log('[DEBUG] URL:', url);
       const response = await fetch(url);
@@ -78,105 +76,34 @@ export default function HomeScreen() {
       const data = await response.json();
       console.log('[DEBUG] Dados recebidos:', data);
       console.log('[DEBUG] Total:', data.total, 'Atletas:', (data.data || data).length);
-      if (page === 1) {
-        setAtletas(data.data || data);
-      } else {
-        setAtletas(prev => [...prev, ...(data.data || data)]);
-      }
+      setAtletas(data.data || data);
       setTotalAtletas(data.total || (data.data || data).length);
-      setCurrentPage(page);
     } catch (error) {
       console.error('[ERROR] Erro ao carregar atletas:', error);
       console.error('[ERROR] Tipo de erro:', error instanceof Error ? error.message : String(error));
     } finally {
-      page === 1 ? setIsLoading(false) : setIsLoadingMore(false);
+      setIsLoading(false);
     }
   }, []);
 
   // Refetch automático ao voltar para a tela principal
   useFocusEffect(
     useCallback(() => {
-      refetch(1);
+      refetch();
     }, [refetch])
   );
 
   // Carregar atletas na primeira vez
   useEffect(() => {
-    refetch(1);
+    refetch();
   }, [refetch]);
 
-  // Função para buscar atletas por nome
-  const searchAtletas = useCallback(async (query: string, page = 1) => {
-    if (!query.trim()) {
-      // Se a busca estiver vazia, voltar para lista normal
-      setSearchQuery("");
-      setCurrentPage(1);
-      await refetch(1);
-      return;
-    }
 
-    try {
-      page === 1 ? setIsLoading(true) : setIsSearching(true);
-      const baseUrl = getApiBaseUrl();
-      const encodedQuery = encodeURIComponent(query);
-      const url = `${baseUrl}/api/atletas/search/${encodedQuery}?page=${page}`;
-      console.log('[DEBUG] Buscando atletas:', url);
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`Erro ao buscar atletas: ${response.status}`);
-      }
-      const data = await response.json();
-      console.log('[DEBUG] Resultados da busca:', data.total);
-      if (page === 1) {
-        setAtletas(data.data || data);
-      } else {
-        setAtletas(prev => [...prev, ...(data.data || data)]);
-      }
-      setTotalAtletas(data.total || (data.data || data).length);
-      setSearchPage(page);
-    } catch (error) {
-      console.error('[ERROR] Erro ao buscar atletas:', error);
-    } finally {
-      page === 1 ? setIsLoading(false) : setIsSearching(false);
-    }
-  }, [refetch]);
 
-  // Debounce para busca em tempo real
-  const handleSearchChange = useCallback((text: string) => {
-    setSearchQuery(text);
-    
-    // Limpar timeout anterior
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
-    
-    // Definir novo timeout
-    searchTimeoutRef.current = setTimeout(() => {
-      if (text.trim().length > 0) {
-        searchAtletas(text, 1);
-      } else {
-        // Se vazio, voltar para lista normal
-        setCurrentPage(1);
-        refetch(1);
-      }
-    }, 300); // 300ms de debounce
-  }, [searchAtletas, refetch]);
-
-  // Função para carregar mais atletas
+  // Função para carregar mais atletas (não faz nada, pois todos são carregados de uma vez)
   const loadMore = useCallback(() => {
-    const isSearchActive = searchQuery.trim().length > 0;
-    const currentPageToUse = isSearchActive ? searchPage : currentPage;
-    const isLoadingState = isSearchActive ? isSearching : isLoadingMore;
-    const totalToCheck = totalAtletas;
-    
-    if (!isLoadingState && atletas.length < totalToCheck) {
-      if (isSearchActive) {
-        searchAtletas(searchQuery, currentPageToUse + 1);
-      } else {
-        refetch(currentPageToUse + 1);
-      }
-    }
-  }, [isLoadingMore, isSearching, atletas.length, totalAtletas, currentPage, searchPage, searchQuery, refetch, searchAtletas]);
+    // Todos os atletas são carregados de uma vez, sem paginação
+  }, []);
 
   // Extrair posições e clubes únicos dos dados
   const posicoes = useMemo(() => {
@@ -206,6 +133,10 @@ export default function HomeScreen() {
   // Filtragem combinada (multi-seleção)
   const filteredAtletas = useMemo(() => {
     return atletas.filter((atleta) => {
+      // Busca por nome (local, nos atletas carregados)
+      if (searchQuery && !atleta.nome.toLowerCase().includes(searchQuery.toLowerCase())) {
+        return false;
+      }
       // Filtro por posição (múltiplas)
       if (selectedPosicoes.length > 0 && !selectedPosicoes.includes(atleta.posicao || "")) {
         return false;
@@ -242,7 +173,7 @@ export default function HomeScreen() {
       }
       return true;
     });
-  }, [atletas, selectedPosicoes, selectedClubes, selectedIdadeFaixas, selectedNaturalidades, selectedPes, completudeFilterMin, completudeFilterMax]);
+  }, [atletas, searchQuery, selectedPosicoes, selectedClubes, selectedIdadeFaixas, selectedNaturalidades, selectedPes, completudeFilterMin, completudeFilterMax]);
 
   const activeFilterCount = selectedPosicoes.length + selectedClubes.length + selectedIdadeFaixas.length + selectedNaturalidades.length + selectedPes.length + (completudeFilterMin !== null ? 1 : 0);
 
@@ -279,10 +210,9 @@ export default function HomeScreen() {
     setSelectedAtletasIds([]);
   };
 
-  const onRefresh = useCallback(async () => {
+  const onRefresh = useCallback(() => {
     setRefreshing(true);
-    await refetch(1);
-    setRefreshing(false);
+    refetch().then(() => setRefreshing(false));
   }, [refetch]);
 
   const [generatingPdf, setGeneratingPdf] = useState(false);
@@ -496,7 +426,7 @@ export default function HomeScreen() {
               placeholder="Buscar atleta..."
               placeholderTextColor={colors.muted}
               value={searchQuery}
-              onChangeText={handleSearchChange}
+              onChangeText={setSearchQuery}
               className="flex-1 ml-2 text-foreground"
               style={{ color: colors.foreground, outlineStyle: "none" } as any}
               returnKeyType="done"
@@ -504,7 +434,7 @@ export default function HomeScreen() {
               autoCapitalize="none"
             />
             {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => handleSearchChange("")}>
+              <TouchableOpacity onPress={() => setSearchQuery("")}>
                 <IconSymbol name="xmark.circle.fill" size={18} color={colors.muted} />
               </TouchableOpacity>
             )}
@@ -567,9 +497,7 @@ export default function HomeScreen() {
         ListHeaderComponent={renderHeader}
         data={sortedAtletas}
         keyExtractor={(item) => item.id.toString()}
-        ListFooterComponent={isLoadingMore ? <ActivityIndicator size="large" color={colors.primary} style={{ marginVertical: 20 }} /> : null}
-        onEndReached={loadMore}
-        onEndReachedThreshold={0.5}
+
         renderItem={({ item }: { item: any }) => {
           const isSelected = selectedAtletasIds.includes(item.id);
           return (

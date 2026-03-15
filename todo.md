@@ -268,10 +268,11 @@
 - [x] Adicionar ListFooterComponent com spinner enquanto carrega mais
 - [x] Testar carregamento incremental de todos os 1716 atletas
 
-## Feature: Busca em Tempo Real em Todos os Atletas
+## Feature: Busca em Tempo Real em Todos os Atletas (REMOVIDA - Preferência do usuário)
 - [x] Criar endpoint GET /api/atletas/search/:query no servidor
 - [x] Implementar busca por nome no banco de dados (case-insensitive)
 - [x] Implementar busca com paginação para resultados grandes
 - [x] Atualizar cliente para usar novo endpoint ao digitar na busca
 - [x] Adicionar debounce para evitar muitas requisições
 - [x] Testar busca com nomes como "Edinho" em todos os 1716 atletas
+- [x] Remover busca em tempo real - usuário prefere todos os 1716 em ordem alfabética
