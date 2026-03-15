@@ -75,10 +75,24 @@ export default function AtletaFormScreen() {
   const queryClient = useQueryClient();
   
   // Query para buscar atleta (se editando)
-  const { data: atleta, isLoading: loadingAtleta } = trpc.atletas.getById.useQuery(
-    { id: Number(id) },
-    { enabled: Boolean(isAuthenticated && isEdit) }
-  );
+  const [atleta, setAtleta] = useState<any>(null);
+  const [loadingAtleta, setLoadingAtleta] = useState(false);
+  
+  useEffect(() => {
+    if (isEdit && id) {
+      setLoadingAtleta(true);
+      fetch(`/api/atletas/${id}`)
+        .then(res => res.json())
+        .then(data => {
+          setAtleta(data);
+          setLoadingAtleta(false);
+        })
+        .catch(error => {
+          console.error("[DEBUG] Erro ao carregar atleta:", error);
+          setLoadingAtleta(false);
+        });
+    }
+  }, [isEdit, id]);
   
   // Mutations
   const createMutation = trpc.atletas.create.useMutation();

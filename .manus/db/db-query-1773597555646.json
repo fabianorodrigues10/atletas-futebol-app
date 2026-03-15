@@ -1,0 +1,80 @@
+{
+  "query": "SELECT * FROM midias WHERE atletaId = 90886 AND tipo = 'foto' ORDER BY createdAt DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT * FROM midias WHERE atletaId = 90886 AND tipo = 'foto' ORDER BY createdAt DESC LIMIT 5;",
+  "rows": [
+    {
+      "id": "2550014",
+      "userId": "1",
+      "atletaId": "90886",
+      "tipo": "foto",
+      "nome": "foto-1773597461379.jpg",
+      "url": "fotos/90886/1773597460868-foto-1773597461379.jpg",
+      "s3Key": "fotos/90886/1773597460868-foto-1773597461379.jpg",
+      "mimeType": "text/html",
+      "tamanho": "38243",
+      "descricao": "Foto do atleta",
+      "createdAt": "2026-03-15 17:57:40",
+      "updatedAt": "2026-03-15 17:57:40"
+    },
+    {
+      "id": "2550013",
+      "userId": "1",
+      "atletaId": "90886",
+      "tipo": "foto",
+      "nome": "foto-1773597455979.jpg",
+      "url": "fotos/90886/1773597455692-foto-1773597455979.jpg",
+      "s3Key": "fotos/90886/1773597455692-foto-1773597455979.jpg",
+      "mimeType": "image/jpeg",
+      "tamanho": "29036",
+      "descricao": "Foto do atleta",
+      "createdAt": "2026-03-15 17:57:35",
+      "updatedAt": "2026-03-15 17:57:35"
+    },
+    {
+      "id": "2550012",
+      "userId": "1",
+      "atletaId": "90886",
+      "tipo": "foto",
+      "nome": "foto-1773596800976.jpg",
+      "url": "fotos/90886/1773596800408-foto-1773596800976.jpg",
+      "s3Key": "fotos/90886/1773596800408-foto-1773596800976.jpg",
+      "mimeType": "text/html",
+      "tamanho": "38243",
+      "descricao": "Foto do atleta",
+      "createdAt": "2026-03-15 17:46:40",
+      "updatedAt": "2026-03-15 17:46:40"
+    },
+    {
+      "id": "2550011",
+      "userId": "1",
+      "atletaId": "90886",
+      "tipo": "foto",
+      "nome": "foto-1773596795261.jpg",
+      "url": "fotos/90886/1773596794690-foto-1773596795261.jpg",
+      "s3Key": "fotos/90886/1773596794690-foto-1773596795261.jpg",
+      "mimeType": "image/jpeg",
+      "tamanho": "29036",
+      "descricao": "Foto do atleta",
+      "createdAt": "2026-03-15 17:46:34",
+      "updatedAt": "2026-03-15 17:46:34"
+    },
+    {
+      "id": "2550010",
+      "userId": "1",
+      "atletaId": "90886",
+      "tipo": "foto",
+      "nome": "foto-1773596503419.jpg",
+      "url": "fotos/90886/1773596502582-foto-1773596503419.jpg",
+      "s3Key": "fotos/90886/1773596502582-foto-1773596503419.jpg",
+      "mimeType": "text/html",
+      "tamanho": "38243",
+      "descricao": "Foto do atleta",
+      "createdAt": "2026-03-15 17:41:42",
+      "updatedAt": "2026-03-15 17:41:42"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tuserId\tatletaId\ttipo\tnome\turl\ts3Key\tmimeType\ttamanho\tdescricao\tcreatedAt\tupdatedAt\n2550014\t1\t90886\tfoto\tfoto-1773597461379.jpg\tfotos/90886/1773597460868-foto-1773597461379.jpg\tfotos/90886/1773597460868-foto-1773597461379.jpg\ttext/html\t38243\tFoto do atleta\t2026-03-15 17:57:40\t2026-03-15 17:57:40\n2550013\t1\t90886\tfoto\tfoto-1773597455979.jpg\tfotos/90886/1773597455692-foto-1773597455979.jpg\tfotos/90886/1773597455692-foto-1773597455979.jpg\timage/jpeg\t29036\tFoto do atleta\t2026-03-15 17:57:35\t2026-03-15 17:57:35\n2550012\t1\t90886\tfoto\tfoto-1773596800976.jpg\tfotos/90886/1773596800408-foto-1773596800976.jpg\tfotos/90886/1773596800408-foto-1773596800976.jpg\ttext/html\t38243\tFoto do atleta\t2026-03-15 17:46:40\t2026-03-15 17:46:40\n2550011\t1\t90886\tfoto\tfoto-1773596795261.jpg\tfotos/90886/1773596794690-foto-1773596795261.jpg\tfotos/90886/1773596794690-foto-1773596795261.jpg\timage/jpeg\t29036\tFoto do atleta\t2026-03-15 17:46:34\t2026-03-15 17:46:34\n2550010\t1\t90886\tfoto\tfoto-1773596503419.jpg\tfotos/90886/1773596502582-foto-1773596503419.jpg\tfotos/90886/1773596502582-foto-1773596503419.jpg\ttext/html\t38243\tFoto do atleta\t2026-03-15 17:41:42\t2026-03-15 17:41:42\n",
+  "stderr": "",
+  "execution_time_ms": 121
+}

@@ -68,6 +68,27 @@ async function startServer() {
     res.json({ ok: true, timestamp: Date.now() });
   });
 
+  // Endpoint para obter atleta por ID
+  app.get("/api/atletas/:id", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const userId = 1; // Usar userId fixo para testes
+      
+      console.log("[API] Obtendo atleta:", id);
+      
+      const atleta = await db.getAtletaById(id, userId);
+      
+      if (!atleta) {
+        return res.status(404).json({ error: "Atleta nao encontrado" });
+      }
+      
+      res.json(atleta);
+    } catch (error: any) {
+      console.error("[API] Erro ao obter atleta:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Endpoint direto para atualizar atleta (bypass do tRPC batch)
   app.post("/api/atletas/:id", async (req, res) => {
     try {
@@ -205,6 +226,27 @@ async function startServer() {
       req.url = "/api/trpc";
       
       console.log("[tRPC Middleware] Convertido para batch");
+    }
+    next();
+  });
+
+  // Middleware para converter POST /api/trpc/procedimento para formato batch
+  app.use("/api/trpc", (req, res, next) => {
+    if (req.method === "POST" && req.path && req.path !== "/" && req.path !== "") {
+      // Extrair o procedimento da URL (ex: /atletas.getById -> atletas.getById)
+      const procedimento = req.path.substring(1); // Remove leading slash
+      console.log("[tRPC Middleware] Convertendo URL para batch:", procedimento);
+      
+      // Converter para formato batch do tRPC
+      const batchData = [{
+        0: req.body,
+        1: "query",
+        2: procedimento
+      }];
+      
+      req.body = batchData;
+      // Reescrever a URL para raiz
+      (req as any).url = "/api/trpc/";
     }
     next();
   });
