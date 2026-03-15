@@ -58,11 +58,8 @@ export default function HomeScreen() {
   const refetch = useCallback(async () => {
     try {
       setIsLoading(true);
-      const baseUrl = typeof window !== "undefined" 
-        ? `${window.location.protocol}//${window.location.hostname}:${window.location.port === "8081" ? "3000" : window.location.port}`
-        : "http://127.0.0.1:3000";
-      const response = await fetch(`${baseUrl}/api/atletas`);
-      console.log('[DEBUG] Status:', response.status, 'URL:', `${baseUrl}/api/atletas`);
+      const response = await fetch(`http://localhost:3000/api/atletas`);
+      console.log('[DEBUG] Status:', response.status, 'URL:', `http://localhost:3000/api/atletas`);
       if (!response.ok) {
         const errorText = await response.text();
         console.log('[DEBUG] Erro:', errorText);
@@ -271,7 +268,7 @@ export default function HomeScreen() {
   const sortedAtletas = useMemo(() => {
     const sorted = [...filteredAtletas];
     // Sempre ordenar alfabeticamente por nome
-    sorted.sort((a, b) => a.nome.localeCompare(b.nome));
+    sorted.sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
     return sorted;
   }, [filteredAtletas]);
 
