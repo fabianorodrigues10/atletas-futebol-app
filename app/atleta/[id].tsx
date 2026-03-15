@@ -572,6 +572,8 @@ export default function AtletaFormScreen() {
               console.error("[DEBUG] Erro ao fazer upload de foto:", errorData);
             } else {
               console.log("[DEBUG] Foto salva com sucesso");
+              // Invalidar cache para refetch dos dados
+              await queryClient.invalidateQueries();
             }
           } catch (error) {
             console.error("[DEBUG] Erro ao fazer upload da foto:", error);
@@ -794,6 +796,8 @@ export default function AtletaFormScreen() {
         
         const result = await fotoResponse.json();
         setFotoUri(result.s3Key);
+        // Invalidar cache para refetch dos dados
+        await queryClient.invalidateQueries();
         Alert.alert("Sucesso", "Foto adicionada com sucesso");
       } catch (error: any) {
         console.error("[DEBUG] Erro ao fazer upload de foto:", error);

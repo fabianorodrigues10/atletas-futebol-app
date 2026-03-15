@@ -107,15 +107,21 @@ async function startServer() {
       }
       
       // Converter base64 para buffer
+      console.log("[API] Convertendo base64 para buffer");
       const buffer = Buffer.from(base64Data, 'base64');
+      console.log("[API] Buffer criado com tamanho:", buffer.length);
       
       // Gerar s3Key
       const s3Key = `fotos/${id}/${Date.now()}-${fileName}`;
+      console.log("[API] S3Key gerado:", s3Key);
       
       // Fazer upload para S3
+      console.log("[API] Iniciando upload para S3...");
       await storagePut(s3Key, buffer, mimeType);
+      console.log("[API] Upload para S3 concluído com sucesso");
       
       // Salvar referência no banco de dados
+      console.log("[API] Preparando payload para salvar no banco de dados");
       const fotoPayload = {
         userId: userId,
         atletaId: id,
@@ -127,8 +133,11 @@ async function startServer() {
         tamanho: buffer.length,
         descricao: 'Foto do atleta',
       };
+      console.log("[API] Payload:", fotoPayload);
       
+      console.log("[API] Salvando no banco de dados...");
       await db.createMidia(fotoPayload as any);
+      console.log("[API] Foto salva no banco de dados com sucesso");
       
       res.json({ success: true, s3Key });
     } catch (error: any) {
