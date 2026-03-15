@@ -68,6 +68,30 @@ async function startServer() {
     res.json({ ok: true, timestamp: Date.now() });
   });
 
+  // Endpoint para listar atletas
+  app.get("/api/atletas", async (req, res) => {
+    try {
+      const userId = 1;
+      const atletas = await db.getAtletas(userId);
+      
+      // Converter URLs S3 em URLs completas
+      const atletasComUrls = atletas.map((atleta: any) => {
+        if (atleta.midias && Array.isArray(atleta.midias)) {
+          atleta.midias = atleta.midias.map((midia: any) => ({
+            ...midia,
+            url: midia.s3Key ? `https://manus-storage.s3.amazonaws.com/${midia.s3Key}` : midia.url,
+          }));
+        }
+        return atleta;
+      });
+      
+      res.json(atletasComUrls);
+    } catch (error: any) {
+      console.error("[API] Erro ao listar atletas:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Endpoint para obter atleta por ID
   app.get("/api/atletas/:id", async (req, res) => {
     try {
@@ -80,6 +104,14 @@ async function startServer() {
       
       if (!atleta) {
         return res.status(404).json({ error: "Atleta nao encontrado" });
+      }
+      
+      // Converter URLs S3 em URLs completas
+      if (atleta.midias && Array.isArray(atleta.midias)) {
+        atleta.midias = atleta.midias.map((midia: any) => ({
+          ...midia,
+          url: midia.s3Key ? `https://manus-storage.s3.amazonaws.com/${midia.s3Key}` : midia.url,
+        }));
       }
       
       res.json(atleta);

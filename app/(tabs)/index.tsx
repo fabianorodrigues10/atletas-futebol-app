@@ -51,7 +51,22 @@ export default function HomeScreen() {
   // Seleção de atletas para relatório
   const [selectedAtletasIds, setSelectedAtletasIds] = useState<number[]>([]);
 
-  const { data: atletas = [], isLoading, refetch } = trpc.atletas.list.useQuery();
+  const [atletas, setAtletas] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const refetch = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`http://localhost:3000/api/atletas`);
+      if (!response.ok) throw new Error('Erro ao carregar atletas');
+      const data = await response.json();
+      setAtletas(data);
+    } catch (error) {
+      console.error('Erro ao carregar atletas:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   // Refetch automático ao voltar para a tela principal
   useFocusEffect(
@@ -59,6 +74,11 @@ export default function HomeScreen() {
       refetch();
     }, [refetch])
   );
+
+  // Carregar atletas na primeira vez
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
 
   // Extrair posições e clubes únicos dos dados
   const posicoes = useMemo(() => {

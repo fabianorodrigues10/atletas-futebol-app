@@ -1,0 +1,50 @@
+{
+  "query": "SELECT id, atletaId, tipo, url, s3Key, mimeType FROM midias WHERE atletaId = 90886 AND tipo = 'foto' LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT id, atletaId, tipo, url, s3Key, mimeType FROM midias WHERE atletaId = 90886 AND tipo = 'foto' LIMIT 5;",
+  "rows": [
+    {
+      "id": "879",
+      "atletaId": "90886",
+      "tipo": "foto",
+      "url": "https://www.ogol.com.br/new/94/57/709457_edinho_20250108013627.jpg",
+      "s3Key": "ogol/90886/foto.jpg",
+      "mimeType": "image/jpeg"
+    },
+    {
+      "id": "2550005",
+      "atletaId": "90886",
+      "tipo": "foto",
+      "url": "fotos/90886/1773596149046-foto-1773596149643.jpg",
+      "s3Key": "fotos/90886/1773596149046-foto-1773596149643.jpg",
+      "mimeType": "image/jpeg"
+    },
+    {
+      "id": "2550006",
+      "atletaId": "90886",
+      "tipo": "foto",
+      "url": "fotos/90886/1773596155355-foto-1773596155944.jpg",
+      "s3Key": "fotos/90886/1773596155355-foto-1773596155944.jpg",
+      "mimeType": "text/html"
+    },
+    {
+      "id": "2550009",
+      "atletaId": "90886",
+      "tipo": "foto",
+      "url": "fotos/90886/1773596497687-foto-1773596498286.jpg",
+      "s3Key": "fotos/90886/1773596497687-foto-1773596498286.jpg",
+      "mimeType": "image/jpeg"
+    },
+    {
+      "id": "2550010",
+      "atletaId": "90886",
+      "tipo": "foto",
+      "url": "fotos/90886/1773596502582-foto-1773596503419.jpg",
+      "s3Key": "fotos/90886/1773596502582-foto-1773596503419.jpg",
+      "mimeType": "text/html"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tatletaId\ttipo\turl\ts3Key\tmimeType\n879\t90886\tfoto\thttps://www.ogol.com.br/new/94/57/709457_edinho_20250108013627.jpg\togol/90886/foto.jpg\timage/jpeg\n2550005\t90886\tfoto\tfotos/90886/1773596149046-foto-1773596149643.jpg\tfotos/90886/1773596149046-foto-1773596149643.jpg\timage/jpeg\n2550006\t90886\tfoto\tfotos/90886/1773596155355-foto-1773596155944.jpg\tfotos/90886/1773596155355-foto-1773596155944.jpg\ttext/html\n2550009\t90886\tfoto\tfotos/90886/1773596497687-foto-1773596498286.jpg\tfotos/90886/1773596497687-foto-1773596498286.jpg\timage/jpeg\n2550010\t90886\tfoto\tfotos/90886/1773596502582-foto-1773596503419.jpg\tfotos/90886/1773596502582-foto-1773596503419.jpg\ttext/html\n",
+  "stderr": "",
+  "execution_time_ms": 201
+}
