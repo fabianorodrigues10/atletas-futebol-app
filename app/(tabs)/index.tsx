@@ -52,6 +52,7 @@ export default function HomeScreen() {
   const [selectedAtletasIds, setSelectedAtletasIds] = useState<number[]>([]);
 
   const [atletas, setAtletas] = useState<any[]>([]);
+  const [totalAtletas, setTotalAtletas] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   const refetch = useCallback(async () => {
@@ -69,6 +70,7 @@ export default function HomeScreen() {
       }
       const data = await response.json();
       setAtletas(data.data || data);
+      setTotalAtletas(data.total || (data.data || data).length);
     } catch (error) {
       console.error('Erro ao carregar atletas:', error);
     } finally {
@@ -466,7 +468,7 @@ export default function HomeScreen() {
         {/* Contador de Resultados */}
         <View className="flex-row justify-between items-center mt-3">
           <Text className="text-sm text-muted">
-            {filteredAtletas.length} atleta{filteredAtletas.length !== 1 ? "s" : ""} encontrado{filteredAtletas.length !== 1 ? "s" : ""}
+            {totalAtletas} atleta{totalAtletas !== 1 ? "s" : ""} encontrado{totalAtletas !== 1 ? "s" : ""}
           </Text>
           {activeFilterCount > 0 && (
             <TouchableOpacity onPress={clearFilters}>
