@@ -57,10 +57,18 @@ export default function HomeScreen() {
   const refetch = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`http://localhost:3000/api/atletas`);
-      if (!response.ok) throw new Error('Erro ao carregar atletas');
+      const baseUrl = typeof window !== "undefined" 
+        ? `${window.location.protocol}//${window.location.hostname}:${window.location.port === "8081" ? "3000" : window.location.port}`
+        : "http://127.0.0.1:3000";
+      const response = await fetch(`${baseUrl}/api/atletas`);
+      console.log('[DEBUG] Status:', response.status, 'URL:', `${baseUrl}/api/atletas`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log('[DEBUG] Erro:', errorText);
+        throw new Error(`Erro ao carregar atletas: ${response.status}`);
+      }
       const data = await response.json();
-      setAtletas(data);
+      setAtletas(data.data || data);
     } catch (error) {
       console.error('Erro ao carregar atletas:', error);
     } finally {

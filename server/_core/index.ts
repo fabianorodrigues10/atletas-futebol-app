@@ -72,10 +72,16 @@ async function startServer() {
   app.get("/api/atletas", async (req, res) => {
     try {
       const userId = 1;
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 50;
+      const skip = (page - 1) * limit;
+      
       const atletas = await db.getAtletas(userId);
+      const total = atletas.length;
+      const paginatedAtletas = atletas.slice(skip, skip + limit);
       
       // Converter URLs S3 em URLs completas
-      const atletasComUrls = atletas.map((atleta: any) => {
+      const atletasComUrls = paginatedAtletas.map((atleta: any) => {
         if (atleta.midias && Array.isArray(atleta.midias)) {
           atleta.midias = atleta.midias.map((midia: any) => ({
             ...midia,
@@ -85,7 +91,13 @@ async function startServer() {
         return atleta;
       });
       
-      res.json(atletasComUrls);
+      res.json({
+        data: atletasComUrls,
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit)
+      });
     } catch (error: any) {
       console.error("[API] Erro ao listar atletas:", error);
       res.status(500).json({ error: error.message });
