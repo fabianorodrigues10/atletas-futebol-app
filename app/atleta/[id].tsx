@@ -128,18 +128,6 @@ export default function AtletaFormScreen() {
       setEscala(atleta.escala || "");
       setValencia(atleta.valencia || "");
       setNaturalidade(atleta.naturalidade || "");
-      
-      // Carregar foto do atleta
-      const midias = (atleta as any).midias;
-      if (midias && midias.length > 0) {
-        // Procurar pela primeira foto
-        const foto = midias.find((m: any) => m.tipo === 'foto');
-        if (foto && foto.s3Key) {
-          console.log("[DEBUG] Foto encontrada:", foto.s3Key);
-          setFotoUri(foto.s3Key);
-        }
-      }
-      
       // Carregar vídeos do atleta
       const videos = (atleta as any).videos;
       if (videos && videos.length > 0) {
