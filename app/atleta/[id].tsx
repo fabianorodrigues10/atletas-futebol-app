@@ -535,6 +535,49 @@ export default function AtletaFormScreen() {
           throw error;
         }
         
+        // Salvar foto se houver
+        if (fotoUri && !fotoUri.startsWith('http')) {
+          try {
+            console.log("[DEBUG] Fazendo upload de foto para edição");
+            const base64DataUrl = fotoUri.startsWith('data:') 
+              ? fotoUri 
+              : await fetch(fotoUri).then(res => res.blob()).then(blob => {
+                  return new Promise<string>((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result as string);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                  });
+                });
+            
+            const base64Data = base64DataUrl.split(',')[1];
+            const mimeType = base64DataUrl.split(';')[0].replace('data:', '');
+            const fileName = `foto-${Date.now()}.jpg`;
+            
+            const fotoResponse = await fetch(`${getApiBaseUrl()}/api/atletas/${id}/foto`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                fileName,
+                mimeType,
+                base64Data,
+              }),
+              credentials: 'include',
+            });
+            
+            if (!fotoResponse.ok) {
+              const errorData = await fotoResponse.json();
+              console.error("[DEBUG] Erro ao fazer upload de foto:", errorData);
+            } else {
+              console.log("[DEBUG] Foto salva com sucesso");
+            }
+          } catch (error) {
+            console.error("[DEBUG] Erro ao fazer upload da foto:", error);
+          }
+        }
+        
         // Salvar apenas vídeos NOVOS (que não estavam salvos antes)
         if (videoLinks && videoLinks.length > 0) {
           console.log("[DEBUG] videoLinks atuais:", videoLinks);
@@ -552,24 +595,28 @@ export default function AtletaFormScreen() {
               for (const videoUrl of novosVideos) {
                 if (videoUrl.trim()) {
                   console.log("[DEBUG] Salvando vídeo novo:", videoUrl);
-                  const videoPayload = {
-                    atletaId: Number(id),
-                    tipo: 'video' as const,
-                    nome: `Vídeo - ${new Date().toLocaleString()}`,
-                    url: videoUrl.trim(),
-                    mimeType: 'video/youtube',
-                    tamanho: 0,
-                    descricao: 'Vídeo do YouTube',
-                  };
-                  console.log('[DEBUG] Payload do vídeo:', videoPayload);
-                  try {
-                    const videoResult = await createVideoMutation.mutateAsync(videoPayload as any);
-                    console.log("[DEBUG] Vídeo salvo com sucesso:", videoResult);
-                  } catch (videoError: any) {
-                    console.error("[DEBUG] Erro ao salvar vídeo individual:", videoError);
-                    console.error("[DEBUG] Detalhes do erro:", videoError.message || videoError);
-                    throw videoError;
+                  
+                  const videoResponse = await fetch(`${getApiBaseUrl()}/api/atletas/${id}/video`, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      url: videoUrl.trim(),
+                      nome: `Vídeo - ${new Date().toLocaleString()}`,
+                      descricao: 'Vídeo do YouTube',
+                    }),
+                    credentials: 'include',
+                  });
+                  
+                  if (!videoResponse.ok) {
+                    const errorData = await videoResponse.json();
+                    console.error("[DEBUG] Erro ao salvar vídeo:", errorData);
+                    throw new Error(errorData.error || 'Erro ao salvar vídeo');
                   }
+                  
+                  const videoResult = await videoResponse.json();
+                  console.log("[DEBUG] Vídeo salvo com sucesso:", videoResult);
                 }
               }
               console.log("[DEBUG] Todos os vídeos novos salvos com sucesso");

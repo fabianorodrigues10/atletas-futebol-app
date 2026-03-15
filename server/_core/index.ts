@@ -10,6 +10,7 @@ import { registerOgolRoutes } from "../ogol-scraper";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import * as db from "../db";
+import { storagePut } from "../storage";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise((resolve) => {
@@ -88,6 +89,86 @@ async function startServer() {
       res.json({ success: true });
     } catch (error: any) {
       console.error("[API] Erro ao atualizar atleta:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Endpoint para upload de foto
+  app.post("/api/atletas/:id/foto", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const userId = 1;
+      const { fileName, mimeType, base64Data } = req.body;
+      
+      console.log("[API] Fazendo upload de foto para atleta:", id);
+      
+      if (!fileName || !mimeType || !base64Data) {
+        return res.status(400).json({ error: "Dados de foto inválidos" });
+      }
+      
+      // Converter base64 para buffer
+      const buffer = Buffer.from(base64Data, 'base64');
+      
+      // Gerar s3Key
+      const s3Key = `fotos/${id}/${Date.now()}-${fileName}`;
+      
+      // Fazer upload para S3
+      await storagePut(s3Key, buffer, mimeType);
+      
+      // Salvar referência no banco de dados
+      const fotoPayload = {
+        userId: userId,
+        atletaId: id,
+        tipo: 'foto' as const,
+        nome: fileName,
+        url: s3Key,
+        s3Key: s3Key,
+        mimeType: mimeType,
+        tamanho: buffer.length,
+        descricao: 'Foto do atleta',
+      };
+      
+      await db.createMidia(fotoPayload as any);
+      
+      res.json({ success: true, s3Key });
+    } catch (error: any) {
+      console.error("[API] Erro ao fazer upload de foto:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Endpoint para upload de vídeo
+  app.post("/api/atletas/:id/video", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const userId = 1;
+      const { url, nome, descricao } = req.body;
+      
+      console.log("[API] Salvando vídeo para atleta:", id);
+      
+      if (!url) {
+        return res.status(400).json({ error: "URL do vídeo é obrigatória" });
+      }
+      
+      // Salvar vídeo no banco de dados
+      const s3Key = `videos/${id}/${Date.now()}-${Math.random().toString(36).substring(7)}.mp4`;
+      const videoPayload = {
+        userId: userId,
+        atletaId: id,
+        tipo: 'video' as const,
+        nome: nome || `Vídeo - ${new Date().toLocaleString()}`,
+        url: url.trim(),
+        s3Key: s3Key,
+        mimeType: 'video/youtube',
+        tamanho: 0,
+        descricao: descricao || 'Vídeo do YouTube',
+      };
+      
+      const result = await db.createMidia(videoPayload as any);
+      
+      res.json({ success: true, result });
+    } catch (error: any) {
+      console.error("[API] Erro ao salvar vídeo:", error);
       res.status(500).json({ error: error.message });
     }
   });
