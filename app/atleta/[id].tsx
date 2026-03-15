@@ -67,6 +67,8 @@ export default function AtletaFormScreen() {
   const [fotoFileName, setFotoFileName] = useState<string>("");
   const [fotoMimeType, setFotoMimeType] = useState<string>("");
   const [fotoLoading, setFotoLoading] = useState(false);
+  const [todasAsFotos, setTodasAsFotos] = useState<any[]>([]);
+  const [fotoSelecionada, setFotoSelecionada] = useState<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Estado para WebView scraper
@@ -143,12 +145,14 @@ export default function AtletaFormScreen() {
       setValencia(atleta.valencia || "");
       setNaturalidade(atleta.naturalidade || "");
       
-      // Carregar foto do atleta
+      // Carregar todas as fotos do atleta
       const midias = (atleta as any).midias;
       if (midias && midias.length > 0) {
-        const foto = midias.find((m: any) => m.tipo === 'foto');
-        if (foto && foto.url) {
-          setFotoUri(foto.url);
+        const fotos = midias.filter((m: any) => m.tipo === 'foto');
+        if (fotos.length > 0) {
+          setTodasAsFotos(fotos);
+          setFotoSelecionada(0);
+          setFotoUri(fotos[0].url);
         }
       }
       
@@ -463,9 +467,12 @@ export default function AtletaFormScreen() {
 
   const handleDeletarFoto = async () => {
     try {
-      if (!id) return;
+      if (!id || todasAsFotos.length === 0) return;
       
-      const response = await fetch(`${getApiBaseUrl()}/api/atletas/${id}/foto`, {
+      const fotoAtual = todasAsFotos[fotoSelecionada];
+      if (!fotoAtual) return;
+      
+      const response = await fetch(`${getApiBaseUrl()}/api/atletas/${id}/foto/${fotoAtual.id}`, {
         method: 'DELETE',
       });
       
@@ -474,7 +481,18 @@ export default function AtletaFormScreen() {
         throw new Error(error.error || 'Erro ao deletar foto');
       }
       
-      setFotoUri(null);
+      const novasFotos = todasAsFotos.filter((_, index) => index !== fotoSelecionada);
+      setTodasAsFotos(novasFotos);
+      
+      if (novasFotos.length === 0) {
+        setFotoUri(null);
+        setFotoSelecionada(0);
+      } else {
+        const novoIndex = fotoSelecionada >= novasFotos.length ? novasFotos.length - 1 : fotoSelecionada;
+        setFotoSelecionada(novoIndex);
+        setFotoUri(novasFotos[novoIndex].url);
+      }
+      
       Alert.alert('Sucesso', 'Foto deletada com sucesso');
     } catch (error: any) {
       console.error('[DEBUG] Erro ao deletar foto:', error);
@@ -1298,6 +1316,29 @@ export default function AtletaFormScreen() {
                 onChange={handleFileChange}
                 style={{ display: "none" }}
               />
+            )}
+            
+            {todasAsFotos.length > 1 && (
+              <View className="mt-4">
+                <Text className="text-xs text-muted mb-2">Todas as fotos ({todasAsFotos.length})</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row gap-2">
+                  {todasAsFotos.map((foto, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      onPress={() => {
+                        setFotoSelecionada(index);
+                        setFotoUri(foto.url);
+                      }}
+                      className={`rounded-lg border-2 ${fotoSelecionada === index ? 'border-primary' : 'border-border'}`}
+                    >
+                      <Image
+                        source={{ uri: foto.url }}
+                        style={{ width: 60, height: 60, borderRadius: 6 }}
+                      />
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
             )}
           </View>
           

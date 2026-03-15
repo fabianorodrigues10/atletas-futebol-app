@@ -168,27 +168,17 @@ async function startServer() {
   });
 
   // Endpoint para deletar foto
-  app.delete("/api/atletas/:id/foto", async (req, res) => {
+  app.delete("/api/atletas/:id/foto/:fotoId", async (req, res) => {
     try {
       const id = Number(req.params.id);
+      const fotoId = Number(req.params.fotoId);
       const userId = 1;
       
-      console.log("[API] Deletando foto do atleta:", id);
-      
-      // Buscar a foto mais recente
-      const fotos = await db.getMidiasDoAtleta(id, userId);
-      const foto = fotos.find((m: any) => m.tipo === 'foto');
-      
-      if (!foto) {
-        return res.status(404).json({ error: "Foto não encontrada" });
-      }
-      
-      // Deletar do S3 (apenas remover do banco, o S3 será limpo depois)
-      // Nota: storageDelete não está exportado, então apenas deletamos do banco
+      console.log("[API] Deletando foto:", fotoId, "do atleta:", id);
       
       // Deletar do banco de dados
-      await db.deleteMidia(foto.id, userId);
-      console.log("[API] Foto deletada do banco de dados:", foto.id);
+      await db.deleteMidia(fotoId, userId);
+      console.log("[API] Foto deletada do banco de dados:", fotoId);
       
       res.json({ success: true });
     } catch (error: any) {
