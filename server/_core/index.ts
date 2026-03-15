@@ -231,6 +231,51 @@ async function startServer() {
     }
   });
 
+  // Endpoint para buscar atletas por nome
+  app.get("/api/atletas/search/:query", async (req, res) => {
+    try {
+      const userId = 1;
+      const query = req.params.query as string;
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 50;
+      const skip = (page - 1) * limit;
+      
+      console.log("[API] Buscando atletas com query:", query);
+      
+      const atletas = await db.getAtletas(userId);
+      
+      // Filtrar por nome (case-insensitive)
+      const filtered = atletas.filter((atleta: any) => 
+        atleta.nome && atleta.nome.toLowerCase().includes(query.toLowerCase())
+      );
+      
+      const total = filtered.length;
+      const paginatedAtletas = filtered.slice(skip, skip + limit);
+      
+      // Converter URLs S3 em URLs completas
+      const atletasComUrls = paginatedAtletas.map((atleta: any) => {
+        if (atleta.midias && Array.isArray(atleta.midias)) {
+          atleta.midias = atleta.midias.map((midia: any) => ({
+            ...midia,
+            url: midia.s3Key ? `https://manus-storage.s3.amazonaws.com/${midia.s3Key}` : midia.url,
+          }));
+        }
+        return atleta;
+      });
+      
+      res.json({
+        data: atletasComUrls,
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit)
+      });
+    } catch (error: any) {
+      console.error("[API] Erro ao buscar atletas:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Endpoint para upload de vídeo
   app.post("/api/atletas/:id/video", async (req, res) => {
     try {
