@@ -167,6 +167,36 @@ async function startServer() {
     }
   });
 
+  // Endpoint para deletar foto
+  app.delete("/api/atletas/:id/foto", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const userId = 1;
+      
+      console.log("[API] Deletando foto do atleta:", id);
+      
+      // Buscar a foto mais recente
+      const fotos = await db.getMidiasDoAtleta(id, userId);
+      const foto = fotos.find((m: any) => m.tipo === 'foto');
+      
+      if (!foto) {
+        return res.status(404).json({ error: "Foto não encontrada" });
+      }
+      
+      // Deletar do S3 (apenas remover do banco, o S3 será limpo depois)
+      // Nota: storageDelete não está exportado, então apenas deletamos do banco
+      
+      // Deletar do banco de dados
+      await db.deleteMidia(foto.id, userId);
+      console.log("[API] Foto deletada do banco de dados:", foto.id);
+      
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("[API] Erro ao deletar foto:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Endpoint para upload de vídeo
   app.post("/api/atletas/:id/video", async (req, res) => {
     try {

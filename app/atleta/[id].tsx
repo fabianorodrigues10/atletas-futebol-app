@@ -142,6 +142,16 @@ export default function AtletaFormScreen() {
       setEscala(atleta.escala || "");
       setValencia(atleta.valencia || "");
       setNaturalidade(atleta.naturalidade || "");
+      
+      // Carregar foto do atleta
+      const midias = (atleta as any).midias;
+      if (midias && midias.length > 0) {
+        const foto = midias.find((m: any) => m.tipo === 'foto');
+        if (foto && foto.url) {
+          setFotoUri(foto.url);
+        }
+      }
+      
       // Carregar vídeos do atleta
       const videos = (atleta as any).videos;
       if (videos && videos.length > 0) {
@@ -449,6 +459,27 @@ export default function AtletaFormScreen() {
   const handleCancelarVideo = () => {
     setVideoInputValue("");
     setShowVideoModal(false);
+  };
+
+  const handleDeletarFoto = async () => {
+    try {
+      if (!id) return;
+      
+      const response = await fetch(`${getApiBaseUrl()}/api/atletas/${id}/foto`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Erro ao deletar foto');
+      }
+      
+      setFotoUri(null);
+      Alert.alert('Sucesso', 'Foto deletada com sucesso');
+    } catch (error: any) {
+      console.error('[DEBUG] Erro ao deletar foto:', error);
+      Alert.alert('Erro', error.message || 'Erro ao deletar foto');
+    }
   };
 
   const handleRemoverVideo = (index: number) => {
@@ -1245,6 +1276,9 @@ export default function AtletaFormScreen() {
                   <Image source={{ uri: fotoUri }} style={{ width: 100, height: 100, borderRadius: 8, marginBottom: 8 }} />
                   <Text className="text-sm text-primary font-semibold">Foto adicionada</Text>
                   <Text className="text-xs text-muted mt-1">Toque para trocar</Text>
+                  <TouchableOpacity onPress={handleDeletarFoto} className="mt-2 p-2">
+                    <IconSymbol name="trash" size={20} color={colors.error} />
+                  </TouchableOpacity>
                 </View>
               ) : fotoLoading ? (
                 <ActivityIndicator color={colors.primary} />
