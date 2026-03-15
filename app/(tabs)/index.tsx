@@ -22,6 +22,7 @@ import { FilterDropdown } from "@/components/filter-dropdown";
 import { CompletudStatsModal } from "@/components/completude-stats-modal";
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useFocusEffect } from "expo-router";
+import { getApiBaseUrl } from "@/constants/oauth";
 
 const FAIXAS_IDADE = [
   { label: "Todas", min: 0, max: 99 },
@@ -58,18 +59,25 @@ export default function HomeScreen() {
   const refetch = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`http://localhost:3000/api/atletas`);
-      console.log('[DEBUG] Status:', response.status, 'URL:', `http://localhost:3000/api/atletas`);
+      const baseUrl = getApiBaseUrl();
+      const url = `${baseUrl}/api/atletas`;
+      console.log('[DEBUG] Iniciando fetch de atletas...');
+      console.log('[DEBUG] URL:', url);
+      const response = await fetch(url);
+      console.log('[DEBUG] Status:', response.status, 'URL:', url);
       if (!response.ok) {
         const errorText = await response.text();
         console.log('[DEBUG] Erro:', errorText);
         throw new Error(`Erro ao carregar atletas: ${response.status}`);
       }
       const data = await response.json();
+      console.log('[DEBUG] Dados recebidos:', data);
+      console.log('[DEBUG] Total:', data.total, 'Atletas:', (data.data || data).length);
       setAtletas(data.data || data);
       setTotalAtletas(data.total || (data.data || data).length);
     } catch (error) {
-      console.error('Erro ao carregar atletas:', error);
+      console.error('[ERROR] Erro ao carregar atletas:', error);
+      console.error('[ERROR] Tipo de erro:', error instanceof Error ? error.message : String(error));
     } finally {
       setIsLoading(false);
     }
