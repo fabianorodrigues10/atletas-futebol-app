@@ -260,3 +260,10 @@
 ## Feature: Atualização Automática de Dados
 - [x] Implementar refetch automático ao voltar para tela principal
 - [x] Garantir que mudanças feitas em detalhes/edição apareçam imediatamente
+
+## Feature: Scroll Infinito para Carregar Todos os Atletas
+- [x] Implementar paginação no endpoint /api/atletas (50 atletas por página)
+- [x] Adicionar estado de página atual e indicador de carregamento
+- [x] Implementar função loadMore() para carregar próxima página ao rolar
+- [x] Adicionar ListFooterComponent com spinner enquanto carrega mais
+- [x] Testar carregamento incremental de todos os 1716 atletas

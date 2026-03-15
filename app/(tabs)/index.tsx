@@ -55,12 +55,14 @@ export default function HomeScreen() {
   const [atletas, setAtletas] = useState<any[]>([]);
   const [totalAtletas, setTotalAtletas] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  const refetch = useCallback(async () => {
+  const refetch = useCallback(async (page = 1) => {
     try {
-      setIsLoading(true);
+      page === 1 ? setIsLoading(true) : setIsLoadingMore(true);
       const baseUrl = getApiBaseUrl();
-      const url = `${baseUrl}/api/atletas`;
+      const url = `${baseUrl}/api/atletas?page=${page}`;
       console.log('[DEBUG] Iniciando fetch de atletas...');
       console.log('[DEBUG] URL:', url);
       const response = await fetch(url);
@@ -73,27 +75,39 @@ export default function HomeScreen() {
       const data = await response.json();
       console.log('[DEBUG] Dados recebidos:', data);
       console.log('[DEBUG] Total:', data.total, 'Atletas:', (data.data || data).length);
-      setAtletas(data.data || data);
+      if (page === 1) {
+        setAtletas(data.data || data);
+      } else {
+        setAtletas(prev => [...prev, ...(data.data || data)]);
+      }
       setTotalAtletas(data.total || (data.data || data).length);
+      setCurrentPage(page);
     } catch (error) {
       console.error('[ERROR] Erro ao carregar atletas:', error);
       console.error('[ERROR] Tipo de erro:', error instanceof Error ? error.message : String(error));
     } finally {
-      setIsLoading(false);
+      page === 1 ? setIsLoading(false) : setIsLoadingMore(false);
     }
   }, []);
 
   // Refetch automático ao voltar para a tela principal
   useFocusEffect(
     useCallback(() => {
-      refetch();
+      refetch(1);
     }, [refetch])
   );
 
   // Carregar atletas na primeira vez
   useEffect(() => {
-    refetch();
+    refetch(1);
   }, [refetch]);
+
+  // Função para carregar mais atletas
+  const loadMore = useCallback(() => {
+    if (!isLoadingMore && atletas.length < totalAtletas) {
+      refetch(currentPage + 1);
+    }
+  }, [isLoadingMore, atletas.length, totalAtletas, currentPage, refetch]);
 
   // Extrair posições e clubes únicos dos dados
   const posicoes = useMemo(() => {
@@ -202,7 +216,7 @@ export default function HomeScreen() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await refetch();
+    await refetch(1);
     setRefreshing(false);
   }, [refetch]);
 
@@ -488,6 +502,9 @@ export default function HomeScreen() {
         ListHeaderComponent={renderHeader}
         data={sortedAtletas}
         keyExtractor={(item) => item.id.toString()}
+        ListFooterComponent={isLoadingMore ? <ActivityIndicator size="large" color={colors.primary} style={{ marginVertical: 20 }} /> : null}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
         renderItem={({ item }: { item: any }) => {
           const isSelected = selectedAtletasIds.includes(item.id);
           return (
