@@ -475,28 +475,35 @@ export default function HomeScreen() {
               }}
             >
 
-              {item.fotoUrl ? (
-                <Image
-                  source={{ uri: item.fotoUrl }}
-                  style={{ width: 56, height: 56, borderRadius: 28, marginRight: 16 }}
-                  resizeMode="cover"
-                  progressiveRenderingEnabled={true}
-                />
-              ) : (
-                <View style={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: 28,
-                  backgroundColor: colors.primary + "20",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  marginRight: 16,
-                }}>
-                  <Text style={{ color: colors.primary, fontWeight: "bold", fontSize: 18 }}>
-                    {item.nome?.charAt(0).toUpperCase() || "?"}
-                  </Text>
-                </View>
-              )}
+              {(() => {
+                const fotoUrl = item.fotoUrl || (item.midias && item.midias.find((m: any) => m.tipo === 'foto')?.url);
+                if (fotoUrl) {
+                  return (
+                    <Image
+                      source={{ uri: fotoUrl }}
+                      style={{ width: 56, height: 56, borderRadius: 28, marginRight: 16 }}
+                      resizeMode="cover"
+                      progressiveRenderingEnabled={true}
+                    />
+                  );
+                }
+                return (
+                  <View style={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: 28,
+                    backgroundColor: colors.primary + "20",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    marginRight: 16,
+                  }}>
+                    <Text style={{ color: colors.primary, fontWeight: "bold", fontSize: 18 }}>
+                      {item.nome?.charAt(0).toUpperCase() || "?"}
+                    </Text>
+                  </View>
+                );
+              })()}
+
 
               <TouchableOpacity
                 onPress={() => handleAtletaPress(item.id)}

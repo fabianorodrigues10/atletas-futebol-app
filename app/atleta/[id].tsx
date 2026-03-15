@@ -81,7 +81,7 @@ export default function AtletaFormScreen() {
   useEffect(() => {
     if (isEdit && id) {
       setLoadingAtleta(true);
-      fetch(`/api/atletas/${id}`)
+      fetch(`${getApiBaseUrl()}/api/atletas/${id}`)
         .then(res => res.json())
         .then(data => {
           setAtleta(data);
