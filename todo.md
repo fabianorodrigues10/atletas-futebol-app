@@ -290,3 +290,11 @@
 - [x] Verificar se há erro no console
 - [x] Corrigir bug de cadastro - uploadMutation não existia, agora usa fetch direto
 - [x] Testar cadastro de novo atleta
+
+
+## Bug: tRPC Middleware Destruindo Mecanismo Nativo
+- [x] Identificar que middlewares de conversão estavam destruindo o mecanismo do tRPC
+- [x] Remover middlewares que reescreviam req.url e req.body
+- [x] Testar cadastro no Expo Go - FUNCIONANDO
+- [x] Testar cadastro na web - FUNCIONANDO
+- [x] Testar upload de foto no cadastro - FUNCIONANDO

@@ -305,53 +305,9 @@ async function startServer() {
     }
   });
 
-  // Middleware para interceptar e converter requisições POST para /api/trpc/:path
-  // para o formato batch esperado pelo tRPC
-  app.use((req, res, next) => {
-    // Se for POST para /api/trpc com um caminho específico
-    if (req.method === "POST" && req.path.startsWith("/api/trpc/") && req.body && !Array.isArray(req.body)) {
-      // Extrair o caminho (ex: /api/trpc/atletas.update -> atletas.update)
-      const path = req.path.replace("/api/trpc/", "");
-      
-      console.log("[tRPC Middleware] Convertendo POST com caminho");
-      console.log("[tRPC Middleware] Caminho:", path);
-      
-      // Converter para o formato batch do tRPC
-      req.body = [
-        {
-          "0": req.body,
-          "1": path,
-        },
-      ];
-      
-      // Mudar a URL para /api/trpc
-      req.url = "/api/trpc";
-      
-      console.log("[tRPC Middleware] Convertido para batch");
-    }
-    next();
-  });
+  // Middleware removido - tRPC trabalha nativamente com batch
 
-  // Middleware para converter POST /api/trpc/procedimento para formato batch
-  app.use("/api/trpc", (req, res, next) => {
-    if (req.method === "POST" && req.path && req.path !== "/" && req.path !== "") {
-      // Extrair o procedimento da URL (ex: /atletas.getById -> atletas.getById)
-      const procedimento = req.path.substring(1); // Remove leading slash
-      console.log("[tRPC Middleware] Convertendo URL para batch:", procedimento);
-      
-      // Converter para formato batch do tRPC
-      const batchData = [{
-        0: req.body,
-        1: "query",
-        2: procedimento
-      }];
-      
-      req.body = batchData;
-      // Reescrever a URL para raiz
-      (req as any).url = "/api/trpc/";
-    }
-    next();
-  });
+  // Middleware removido - tRPC trabalha nativamente com batch
 
   app.use(
     "/api/trpc",

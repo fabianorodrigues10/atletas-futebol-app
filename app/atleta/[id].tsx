@@ -339,10 +339,12 @@ export default function AtletaFormScreen() {
   };
   
   const handleSalvar = async () => {
+    console.log("[DEBUG] handleSalvar chamado");
     if (!nome.trim()) {
       Alert.alert("Erro", "O nome do atleta é obrigatório");
       return;
     }
+    console.log("[DEBUG] Nome válido, continuando...");
     
     // Validar e formatar clube (NOME/XX ou XX-XXX)
     let clubeFormatado = "";
@@ -442,6 +444,7 @@ export default function AtletaFormScreen() {
       }
     }
     
+    console.log("[DEBUG] Chamando executarCadastro com clubeFormatado:", clubeFormatado);
     executarCadastro(clubeFormatado);
   };
 
@@ -698,7 +701,18 @@ export default function AtletaFormScreen() {
         
         Alert.alert("Sucesso", "Atleta atualizado com sucesso");
       } else {
-        const result = await createMutation.mutateAsync(data);
+        console.log("[DEBUG] Criando novo atleta com dados:", data);
+        let result;
+        try {
+          result = await createMutation.mutateAsync(data);
+          console.log("[DEBUG] Atleta criado com sucesso:", result);
+        } catch (createError: any) {
+          console.error("[ERROR] Erro ao criar atleta:", createError);
+          console.error("[ERROR] Tipo de erro:", createError?.constructor?.name);
+          console.error("[ERROR] Status:", createError?.status);
+          console.error("[ERROR] Data:", createError?.data);
+          throw createError;
+        }
         
         // Se houver foto, fazer upload após criar o atleta
         if (fotoUri && result.id) {

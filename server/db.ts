@@ -317,8 +317,13 @@ export async function createAtleta(data: InsertAtleta) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
+  console.log("[DB] Criando atleta com dados:", data);
   const result = await db.insert(atletas).values(data);
-  return Number(result[0].insertId);
+  console.log("[DB] Resultado do insert:", result);
+  console.log("[DB] insertId:", result[0]?.insertId);
+  const id = Number(result[0]?.insertId);
+  console.log("[DB] ID convertido:", id);
+  return id;
 }
 
 /**
