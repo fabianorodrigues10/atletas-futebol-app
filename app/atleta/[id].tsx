@@ -433,7 +433,7 @@ export default function AtletaFormScreen() {
               text: "Sim, cadastrar mesmo assim",
               onPress: () => {
                 // Continuar com o cadastro
-                executarCadastro();
+                executarCadastro(clubeFormatado);
               },
             },
           ]
@@ -718,12 +718,23 @@ export default function AtletaFormScreen() {
             const mimeType = base64DataUrl.split(';')[0].replace('data:', '');
             const fileName = `foto-${Date.now()}.jpg`;
             
-            await uploadMutation.mutateAsync({
-              atletaId: result.id,
-              fileName,
-              mimeType,
-              base64Data,
+            const fotoResponse = await fetch(`${getApiBaseUrl()}/api/atletas/${result.id}/foto`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                fileName,
+                mimeType,
+                base64Data,
+              }),
+              credentials: 'include',
             });
+            
+            if (!fotoResponse.ok) {
+              const errorData = await fotoResponse.json();
+              throw new Error(errorData.error || 'Erro ao fazer upload de foto');
+            }
           } catch (error) {
             console.error("Erro ao fazer upload da foto:", error);
             // Não falha o cadastro se a foto não for salva

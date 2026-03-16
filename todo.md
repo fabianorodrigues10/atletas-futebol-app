@@ -283,3 +283,10 @@
 - [x] Verificar se a URL da foto é retornada corretamente
 - [x] Corrigir exibição de fotos anexadas - convertendo s3Key para URL completa
 - [x] Testar upload e exibição de fotos
+
+## Bug: Cadastro de Novo Atleta Não Funciona
+- [x] Investigar por que o botão salvar não funciona
+- [x] Verificar validação do formulário
+- [x] Verificar se há erro no console
+- [x] Corrigir bug de cadastro - uploadMutation não existia, agora usa fetch direto
+- [x] Testar cadastro de novo atleta
