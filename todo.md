@@ -276,3 +276,10 @@
 - [x] Adicionar debounce para evitar muitas requisições
 - [x] Testar busca com nomes como "Edinho" em todos os 1716 atletas
 - [x] Remover busca em tempo real - usuário prefere todos os 1716 em ordem alfabética
+
+## Bug: Upload e Exibição de Fotos
+- [x] Investigar fluxo de upload de fotos
+- [x] Verificar se a foto é salva no banco de dados
+- [x] Verificar se a URL da foto é retornada corretamente
+- [x] Corrigir exibição de fotos anexadas - convertendo s3Key para URL completa
+- [x] Testar upload e exibição de fotos

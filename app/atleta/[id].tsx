@@ -858,7 +858,9 @@ export default function AtletaFormScreen() {
         }
         
         const result = await fotoResponse.json();
-        setFotoUri(result.s3Key);
+        // Converter s3Key para URL completa
+        const fotoUrl = `https://manus-storage.s3.amazonaws.com/${result.s3Key}`;
+        setFotoUri(fotoUrl);
         // Invalidar cache para refetch dos dados
         await queryClient.invalidateQueries();
         Alert.alert("Sucesso", "Foto adicionada com sucesso");
