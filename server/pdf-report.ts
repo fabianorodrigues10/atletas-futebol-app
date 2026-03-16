@@ -44,9 +44,16 @@ function formatDate(dateStr: string | Date | null): string {
 }
 
 function drawHeader(doc: PDFKit.PDFDocument, count: number, filters: any) {
-  // Título
-  doc.fontSize(28).fillColor(PRIMARY).font("Helvetica-Bold").text("BDMD", 40, 30);
-  doc.fontSize(12).fillColor(GRAY).font("Helvetica").text("Banco de Dados Marcílio Dias", 40, 62);
+  // Logo/Escudo - usar imagem em vez de texto
+  try {
+    const shieldPath = require.resolve("../assets/images/marcilio-dias-shield.png");
+    doc.image(shieldPath, 40, 20, { width: 60, height: 60 });
+    doc.fontSize(12).fillColor(GRAY).font("Helvetica").text("Banco de Dados Marcílio Dias", 110, 45);
+  } catch (e) {
+    // Fallback se imagem não existir
+    doc.fontSize(28).fillColor(PRIMARY).font("Helvetica-Bold").text("BDMD", 40, 30);
+    doc.fontSize(12).fillColor(GRAY).font("Helvetica").text("Banco de Dados Marcílio Dias", 40, 62);
+  }
 
   // Linha separadora
   doc.moveTo(40, 82).lineTo(555, 82).strokeColor(PRIMARY).lineWidth(3).stroke();

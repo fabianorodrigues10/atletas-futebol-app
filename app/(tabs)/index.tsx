@@ -380,37 +380,64 @@ export default function HomeScreen() {
         <View className="flex-row justify-between items-center mb-4">
           <View className="flex-row items-center gap-3 flex-1">
             <Image
-              source={require("@/assets/images/icon.png")}
-              style={{ width: 48, height: 48 }}
+              source={require("@/assets/images/marcilio-dias-shield.png")}
+              style={{ width: 56, height: 56 }}
               resizeMode="contain"
             />
             <View>
-              <Text className="text-2xl font-bold text-primary">BDMD</Text>
-              <Text className="text-xs text-muted mt-0.5">Banco de Dados Marcílio Dias</Text>
+              <Text className="text-xs text-muted">Banco de Dados Marcílio Dias</Text>
             </View>
           </View>
-          <View className="flex-row gap-2">
+          <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
             <TouchableOpacity
               onPress={handleAddAtleta}
-              className="w-10 h-10 rounded-full bg-primary justify-center items-center"
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor: colors.primary,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
             >
               <IconSymbol name="plus" size={20} color="white" />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => setShowStatsModal(true)}
-              className="w-10 h-10 rounded-full bg-primary/20 justify-center items-center"
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor: colors.primary + '33',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
             >
               <IconSymbol name="chart.bar.fill" size={20} color={colors.primary} />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => router.push("/relatorio")}
-              className="w-10 h-10 rounded-full bg-primary/20 justify-center items-center"
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor: colors.primary + '33',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
             >
               <IconSymbol name="doc.text" size={20} color={colors.primary} />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => router.push("/(tabs)/settings")}
-              className="w-10 h-10 rounded-full bg-primary/20 justify-center items-center"
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor: colors.primary + '33',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
             >
               <IconSymbol name="gearshape.fill" size={20} color={colors.primary} />
             </TouchableOpacity>

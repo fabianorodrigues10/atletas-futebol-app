@@ -298,3 +298,8 @@
 - [x] Testar cadastro no Expo Go - FUNCIONANDO
 - [x] Testar cadastro na web - FUNCIONANDO
 - [x] Testar upload de foto no cadastro - FUNCIONANDO
+
+
+## Bug: Alinhamento de Ícones no Header
+- [ ] Corrigir alinhamento dos ícones (gráfico, documento, engrenagem, busca) no header
+- [ ] Ícones devem estar alinhados horizontalmente em uma linha
