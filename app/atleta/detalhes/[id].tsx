@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import {
   View,
@@ -9,6 +9,7 @@ import {
   Linking,
   Alert,
   Image,
+  StyleSheet,
 } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -71,7 +72,7 @@ export default function AtletaDetalhesScreen() {
 
   if (isLoading) {
     return (
-      <ScreenContainer className="justify-center items-center">
+      <ScreenContainer style={{ justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" color={colors.primary} />
       </ScreenContainer>
     );
@@ -79,126 +80,147 @@ export default function AtletaDetalhesScreen() {
 
   if (!atleta) {
     return (
-      <ScreenContainer className="justify-center items-center p-6">
+      <ScreenContainer style={{ justifyContent: "center", alignItems: "center", padding: 24 }}>
         <IconSymbol name="person.crop.circle.badge.exclamationmark" size={64} color={colors.error} />
-        <Text className="text-lg font-bold text-foreground text-center mt-4 mb-2">
+        <Text style={{ fontSize: 18, fontWeight: "700", color: colors.foreground, textAlign: "center", marginTop: 16, marginBottom: 8 }}>
           Atleta não encontrado
         </Text>
-        <Text className="text-sm text-muted text-center mb-6">
+        <Text style={{ fontSize: 14, color: colors.muted, textAlign: "center", marginBottom: 24 }}>
           Este atleta pode ter sido deletado
         </Text>
         <TouchableOpacity
           onPress={() => router.back()}
-          className="bg-primary rounded-lg px-6 py-3"
+          style={{ backgroundColor: colors.primary, borderRadius: 8, paddingHorizontal: 24, paddingVertical: 12 }}
         >
-          <Text className="text-white font-semibold">Voltar</Text>
+          <Text style={{ color: "white", fontWeight: "600" }}>Voltar</Text>
         </TouchableOpacity>
       </ScreenContainer>
     );
   }
 
   return (
-    <ScreenContainer>
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        {/* Header com Foto e Nome */}
-        <View className="bg-gradient-to-b from-primary/20 to-background pt-4 pb-6 px-4">
-          <View className="flex-row justify-between items-start mb-4">
+    <ScreenContainer style={{ padding: 0 }}>
+      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+
+        {/* Header com botões Voltar / Editar / Excluir */}
+        <View style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          paddingHorizontal: 16,
+          paddingTop: 14,
+          paddingBottom: 12,
+          backgroundColor: colors.background,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+        }}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={{
+              padding: 8,
+              borderRadius: 20,
+              backgroundColor: colors.surface,
+              borderWidth: 1,
+              borderColor: colors.border,
+            }}
+          >
+            <IconSymbol
+              name="chevron.right"
+              size={20}
+              color={colors.foreground}
+              style={{ transform: [{ rotate: "180deg" }] }}
+            />
+          </TouchableOpacity>
+
+          <View style={{ flexDirection: "row", gap: 10 }}>
             <TouchableOpacity
-              onPress={() => router.back()}
-              className="bg-background rounded-full p-2 border border-border"
+              onPress={handleEditar}
+              style={{
+                padding: 8,
+                borderRadius: 20,
+                backgroundColor: colors.primary,
+              }}
             >
-              <IconSymbol
-                name="chevron.right"
-                size={20}
-                color={colors.foreground}
-                style={{ transform: [{ rotate: "180deg" }] }}
-              />
+              <IconSymbol name="pencil" size={18} color="white" />
             </TouchableOpacity>
-
-            <View className="flex-row gap-2">
-              <TouchableOpacity
-                onPress={handleEditar}
-                className="bg-primary rounded-full p-2"
-              >
-                <IconSymbol name="pencil" size={18} color="white" />
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handleExcluir}
-                disabled={isDeleting}
-                className="bg-error rounded-full p-2"
-              >
-                <IconSymbol name="trash" size={18} color="white" />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Foto ou Avatar */}
-          <View className="items-center mb-4">
-            {atleta.fotoUrl ? (
-              <Image
-                source={{ uri: atleta.fotoUrl }}
-                style={{ width: 200, height: 200, borderRadius: 20, marginBottom: 16 }}
-                resizeMode="cover"
-                defaultSource={require("@/assets/images/fabiano-scout-logo.png")}
-                progressiveRenderingEnabled={true}
-              />
-            ) : (
-              <View className="w-24 h-24 rounded-full bg-primary/30 justify-center items-center mb-3 border-2 border-primary">
-                <IconSymbol name="person.fill" size={48} color={colors.primary} />
-              </View>
-            )}
-            <Text className="text-2xl font-bold text-foreground text-center">
-              {atleta.nome}
-            </Text>
-            {atleta.posicao && (
-              <Text className="text-base text-primary font-semibold mt-1">
-                {atleta.posicao}
-              </Text>
-            )}
+            <TouchableOpacity
+              onPress={handleExcluir}
+              disabled={isDeleting}
+              style={{
+                padding: 8,
+                borderRadius: 20,
+                backgroundColor: colors.error,
+                opacity: isDeleting ? 0.5 : 1,
+              }}
+            >
+              <IconSymbol name="trash" size={18} color="white" />
+            </TouchableOpacity>
           </View>
         </View>
 
-        {/* Conteúdo Principal */}
-        <View className="px-4 pb-8">
-          {/* Card: ID e Informações Básicas */}
-          <View className="bg-surface rounded-2xl p-4 mb-4 border border-border shadow-sm">
-            <View className="flex-row items-center mb-4">
-              <View className="w-10 h-10 rounded-full bg-primary/20 justify-center items-center mr-3">
-                <IconSymbol name="person.fill" size={20} color={colors.primary} />
-              </View>
-              <Text className="text-lg font-bold text-foreground">
-                Informações Básicas
-              </Text>
+        {/* Foto e Nome centralizados */}
+        <View style={{
+          alignItems: "center",
+          paddingTop: 24,
+          paddingBottom: 24,
+          paddingHorizontal: 16,
+          backgroundColor: colors.background,
+        }}>
+          {atleta.fotoUrl ? (
+            <Image
+              source={{ uri: atleta.fotoUrl }}
+              style={{ width: 180, height: 180, borderRadius: 16, marginBottom: 16 }}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={{
+              width: 100,
+              height: 100,
+              borderRadius: 50,
+              backgroundColor: colors.primary + "30",
+              justifyContent: "center",
+              alignItems: "center",
+              marginBottom: 12,
+              borderWidth: 2,
+              borderColor: colors.primary,
+            }}>
+              <IconSymbol name="person.fill" size={48} color={colors.primary} />
             </View>
+          )}
+          <Text style={{ fontSize: 24, fontWeight: "700", color: colors.foreground, textAlign: "center" }}>
+            {atleta.nome}
+          </Text>
+          {atleta.posicao && (
+            <Text style={{ fontSize: 16, color: colors.primary, fontWeight: "600", marginTop: 4 }}>
+              {atleta.posicao}
+            </Text>
+          )}
+        </View>
 
-            <InfoCard icon="number" label="ID" value={String(atleta.id)} />
-            <InfoCard icon="person.fill" label="Nome" value={atleta.nome} />
+        {/* Conteúdo Principal */}
+        <View style={{ paddingHorizontal: 16, paddingBottom: 32 }}>
+
+          {/* Card: Informações Básicas */}
+          <SectionCard title="Informações Básicas" iconName="person.fill" iconColor={colors.primary} colors={colors}>
+            <InfoRow icon="number" label="ID" value={String(atleta.id)} colors={colors} />
+            <InfoRow icon="person.fill" label="Nome" value={atleta.nome} colors={colors} />
             {atleta.posicao && (
-              <InfoCard icon="target" label="Posição Principal" value={atleta.posicao} />
+              <InfoRow icon="target" label="Posição Principal" value={atleta.posicao} colors={colors} />
             )}
             {atleta.segundaPosicao && (
-              <InfoCard icon="target" label="Segunda Posição" value={atleta.segundaPosicao} />
+              <InfoRow icon="target" label="Segunda Posição" value={atleta.segundaPosicao} colors={colors} />
             )}
             {atleta.clube && (
-              <InfoCard icon="building.2.fill" label="Clube" value={atleta.clube} />
+              <InfoRow icon="building.2.fill" label="Clube" value={atleta.clube} colors={colors} />
             )}
-            <InfoCard icon="map.pin.circle.fill" label="Naturalidade" value={atleta.naturalidade || "Não informado"} />
-          </View>
+            <InfoRow icon="map.pin.circle.fill" label="Naturalidade" value={atleta.naturalidade || "Não informado"} colors={colors} isLast />
+          </SectionCard>
 
           {/* Card: Dados Físicos */}
           {(atleta.dataNascimento || atleta.idade || atleta.altura || atleta.pe) && (
-            <View className="bg-surface rounded-2xl p-4 mb-4 border border-border shadow-sm">
-              <View className="flex-row items-center mb-4">
-                <View className="w-10 h-10 rounded-full bg-success/20 justify-center items-center mr-3">
-                  <IconSymbol name="heart.fill" size={20} color={colors.success} />
-                </View>
-                <Text className="text-lg font-bold text-foreground">
-                  Dados Físicos
-                </Text>
-              </View>
-
+            <SectionCard title="Dados Físicos" iconName="heart.fill" iconColor={colors.success} colors={colors}>
               {atleta.dataNascimento != null && (
-                <InfoCard
+                <InfoRow
                   icon="calendar"
                   label="Data de Nascimento"
                   value={(() => {
@@ -208,123 +230,115 @@ export default function AtletaDetalhesScreen() {
                     const yy = String(d.getFullYear()).slice(-2);
                     return `${dd}/${mm}/${yy}`;
                   })()}
+                  colors={colors}
                 />
               )}
               {atleta.idade != null && atleta.idade > 0 && (
-                <InfoCard
-                  icon="number"
-                  label="Idade"
-                  value={`${atleta.idade} anos`}
-                />
+                <InfoRow icon="number" label="Idade" value={`${atleta.idade} anos`} colors={colors} />
               )}
               {atleta.altura != null && (
-                <InfoCard
-                  icon="ruler"
-                  label="Altura"
-                  value={`${Number(atleta.altura).toFixed(2)} m`}
-                />
+                <InfoRow icon="ruler" label="Altura" value={`${Number(atleta.altura).toFixed(2)} m`} colors={colors} />
               )}
               {atleta.pe && (
-                <InfoCard
+                <InfoRow
                   icon="figure.walk"
                   label="Pé Preferencial"
                   value={atleta.pe.charAt(0).toUpperCase() + atleta.pe.slice(1)}
+                  colors={colors}
+                  isLast
                 />
               )}
-            </View>
+            </SectionCard>
           )}
 
-          {/* Card: Escala */}
+          {/* Card: Avaliação/Escala */}
           {atleta.escala && (
-            <View className="bg-surface rounded-2xl p-4 mb-4 border border-border shadow-sm">
-              <View className="flex-row items-center mb-4">
-                <View className="w-10 h-10 rounded-full bg-warning/20 justify-center items-center mr-3">
-                  <IconSymbol name="star.fill" size={20} color={colors.warning} />
-                </View>
-                <Text className="text-lg font-bold text-foreground">
-                  Avaliação
-                </Text>
-              </View>
-              <InfoCard
-                icon="chart.bar.fill"
-                label="Escala"
-                value={atleta.escala}
-              />
-            </View>
+            <SectionCard title="Avaliação" iconName="star.fill" iconColor={colors.warning} colors={colors}>
+              <InfoRow icon="chart.bar.fill" label="Escala" value={atleta.escala} colors={colors} isLast />
+            </SectionCard>
           )}
 
-          {/* Card: Valências - sempre visível */}
-          <View className="bg-surface rounded-2xl p-4 mb-4 border border-border shadow-sm">
-            <View className="flex-row items-center mb-4">
-              <View className="w-10 h-10 rounded-full bg-primary/20 justify-center items-center mr-3">
-                <IconSymbol name="bolt.fill" size={20} color={colors.primary} />
-              </View>
-              <Text className="text-lg font-bold text-foreground">
-                Valências
-              </Text>
-            </View>
+          {/* Card: Valências */}
+          <SectionCard title="Valências" iconName="bolt.fill" iconColor={colors.primary} colors={colors}>
             {atleta.valencia ? (
-              <Text className="text-sm text-foreground leading-relaxed">
+              <Text style={{ fontSize: 14, color: colors.foreground, lineHeight: 22 }}>
                 {atleta.valencia}
               </Text>
             ) : (
-              <View className="bg-background rounded-xl p-4 border border-border/50">
-                <Text className="text-sm text-muted text-center italic">
+              <View style={{
+                backgroundColor: colors.background,
+                borderRadius: 10,
+                padding: 16,
+                borderWidth: 1,
+                borderColor: colors.border,
+              }}>
+                <Text style={{ fontSize: 13, color: colors.muted, textAlign: "center", fontStyle: "italic" }}>
                   Sem descrição de valências. Toque em editar para adicionar.
                 </Text>
               </View>
             )}
-          </View>
+          </SectionCard>
 
-          {/* Card: Galeria de Fotos */}
-          <View className="bg-surface rounded-2xl p-4 mb-4 border border-border shadow-sm">
-            <View className="flex-row items-center mb-4">
-              <View className="w-10 h-10 rounded-full bg-primary/20 justify-center items-center mr-3">
-                <IconSymbol name="photo.fill" size={20} color={colors.primary} />
-              </View>
-              <Text className="text-lg font-bold text-foreground flex-1">
-                Fotos
-              </Text>
+          {/* Card: Fotos */}
+          <SectionCard title="Fotos" iconName="photo.fill" iconColor={colors.primary} colors={colors}
+            headerRight={
               <TouchableOpacity
                 onPress={handleAdicionarFoto}
-                className="bg-primary rounded-full p-2"
+                style={{
+                  padding: 6,
+                  borderRadius: 16,
+                  backgroundColor: colors.primary,
+                }}
               >
                 <IconSymbol name="plus" size={16} color="white" />
               </TouchableOpacity>
-            </View>
+            }
+          >
             <TouchableOpacity
               onPress={handleAdicionarFoto}
-              className="bg-primary/10 rounded-xl p-4 border border-primary/30 items-center"
+              style={{
+                backgroundColor: colors.primary + "18",
+                borderRadius: 10,
+                padding: 16,
+                borderWidth: 1,
+                borderColor: colors.primary + "50",
+                alignItems: "center",
+              }}
             >
               <IconSymbol name="photo.fill" size={32} color={colors.primary} />
-              <Text className="text-sm text-primary font-medium mt-2">
+              <Text style={{ fontSize: 13, color: colors.primary, fontWeight: "500", marginTop: 8 }}>
                 Adicionar Fotos
               </Text>
             </TouchableOpacity>
-          </View>
+          </SectionCard>
 
-          {/* Card: Vídeos do YouTube - SEMPRE VISÍVEL */}
-          <View className="bg-surface rounded-2xl p-4 mb-4 border border-border shadow-sm">
-            <View className="flex-row items-center mb-4">
-              <View className="w-10 h-10 rounded-full bg-primary/20 justify-center items-center mr-3">
-                <IconSymbol name="play.fill" size={20} color={colors.primary} />
-              </View>
-              <Text className="text-lg font-bold text-foreground">
-                Vídeos {atleta.videos && atleta.videos.length > 0 ? `(${atleta.videos.length})` : "(0)"}
-              </Text>
-            </View>
+          {/* Card: Vídeos */}
+          <SectionCard
+            title={`Vídeos ${atleta.videos && atleta.videos.length > 0 ? `(${atleta.videos.length})` : "(0)"}`}
+            iconName="play.fill"
+            iconColor={colors.primary}
+            colors={colors}
+          >
             {atleta.videos && atleta.videos.length > 0 ? (
               atleta.videos.map((video: any, index: number) => {
-                // video pode ser string (URL) ou objeto com propriedade url
                 const videoUrl = typeof video === 'string' ? video : video?.url;
                 return (
                   <TouchableOpacity
                     key={index}
                     onPress={() => videoUrl && Linking.openURL(videoUrl)}
-                    className="bg-primary/10 rounded-xl p-3 flex-row items-center border border-primary/30 mb-2 last:mb-0"
+                    style={{
+                      backgroundColor: colors.primary + "18",
+                      borderRadius: 10,
+                      padding: 12,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      borderWidth: 1,
+                      borderColor: colors.primary + "50",
+                      marginBottom: index < atleta.videos.length - 1 ? 8 : 0,
+                    }}
                   >
                     <IconSymbol name="play.fill" size={16} color={colors.primary} />
-                    <Text className="flex-1 text-primary ml-2 font-medium" numberOfLines={1}>
+                    <Text style={{ flex: 1, color: colors.primary, marginLeft: 8, fontWeight: "500" }} numberOfLines={1}>
                       Vídeo {index + 1}
                     </Text>
                     <IconSymbol name="chevron.right" size={16} color={colors.primary} />
@@ -332,98 +346,162 @@ export default function AtletaDetalhesScreen() {
                 );
               })
             ) : (
-              <View className="bg-background rounded-xl p-4 border border-border/50">
-                <Text className="text-sm text-muted text-center italic">
+              <View style={{
+                backgroundColor: colors.background,
+                borderRadius: 10,
+                padding: 16,
+                borderWidth: 1,
+                borderColor: colors.border,
+              }}>
+                <Text style={{ fontSize: 13, color: colors.muted, textAlign: "center", fontStyle: "italic" }}>
                   Sem vídeos. Toque em editar para adicionar.
                 </Text>
               </View>
             )}
-          </View>
+          </SectionCard>
 
           {/* Card: Link */}
           {atleta.link && (
-            <View className="bg-surface rounded-2xl p-4 mb-4 border border-border shadow-sm">
-              <View className="flex-row items-center mb-4">
-                <View className="w-10 h-10 rounded-full bg-primary/20 justify-center items-center mr-3">
-                  <IconSymbol name="link" size={20} color={colors.primary} />
-                </View>
-                <Text className="text-lg font-bold text-foreground">
-                  Link
-                </Text>
-              </View>
-
+            <SectionCard title="Link" iconName="link" iconColor={colors.primary} colors={colors}>
               <TouchableOpacity
                 onPress={handleAbrirLink}
-                className="bg-primary/10 rounded-xl p-3 flex-row items-center border border-primary/30"
+                style={{
+                  backgroundColor: colors.primary + "18",
+                  borderRadius: 10,
+                  padding: 12,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  borderWidth: 1,
+                  borderColor: colors.primary + "50",
+                }}
               >
                 <IconSymbol name="link" size={18} color={colors.primary} />
-                <Text className="flex-1 text-primary ml-2 font-medium" numberOfLines={1}>
+                <Text style={{ flex: 1, color: colors.primary, marginLeft: 8, fontWeight: "500" }} numberOfLines={1}>
                   Abrir Link
                 </Text>
                 <IconSymbol name="chevron.right" size={16} color={colors.primary} />
               </TouchableOpacity>
-            </View>
+            </SectionCard>
           )}
 
           {/* Card: Campos Customizados */}
           {atleta.camposCustomizados && (
-            <View className="bg-surface rounded-2xl p-4 border border-border shadow-sm">
-              <View className="flex-row items-center mb-4">
-                <View className="w-10 h-10 rounded-full bg-primary/20 justify-center items-center mr-3">
-                  <IconSymbol name="slider.horizontal.3" size={20} color={colors.primary} />
-                </View>
-                <Text className="text-lg font-bold text-foreground">
-                  Campos Customizados
-                </Text>
-              </View>
-
+            <SectionCard title="Campos Customizados" iconName="slider.horizontal.3" iconColor={colors.primary} colors={colors}>
               {typeof atleta.camposCustomizados === "string" &&
                 (() => {
                   try {
                     const campos = JSON.parse(atleta.camposCustomizados);
-                    return Object.entries(campos).map(([key, value]: any) => (
-                      <InfoCard
+                    const entries = Object.entries(campos);
+                    return entries.map(([key, value]: any, i) => (
+                      <InfoRow
                         key={key}
                         icon="slider.horizontal.3"
                         label={key}
                         value={String(value)}
+                        colors={colors}
+                        isLast={i === entries.length - 1}
                       />
                     ));
                   } catch {
                     return null;
                   }
                 })()}
-            </View>
+            </SectionCard>
           )}
+
         </View>
       </ScrollView>
     </ScreenContainer>
   );
 }
 
-function InfoCard({
+// Componente de seção com card
+function SectionCard({
+  title,
+  iconName,
+  iconColor,
+  colors,
+  children,
+  headerRight,
+}: {
+  title: string;
+  iconName: string;
+  iconColor: string;
+  colors: any;
+  children: React.ReactNode;
+  headerRight?: React.ReactNode;
+}) {
+  return (
+    <View style={{
+      backgroundColor: colors.surface,
+      borderRadius: 16,
+      padding: 16,
+      marginBottom: 16,
+      borderWidth: 1,
+      borderColor: colors.border,
+    }}>
+      <View style={{
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: 16,
+      }}>
+        <View style={{
+          width: 36,
+          height: 36,
+          borderRadius: 18,
+          backgroundColor: iconColor + "25",
+          justifyContent: "center",
+          alignItems: "center",
+          marginRight: 10,
+        }}>
+          <IconSymbol name={iconName as any} size={18} color={iconColor} />
+        </View>
+        <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, flex: 1 }}>
+          {title}
+        </Text>
+        {headerRight}
+      </View>
+      {children}
+    </View>
+  );
+}
+
+// Componente de linha de informação
+function InfoRow({
   icon,
   label,
   value,
+  colors,
+  isLast = false,
 }: {
   icon: string;
   label: string;
   value: string;
+  colors: any;
+  isLast?: boolean;
 }) {
-  const colors = useColors();
-
   return (
-    <View style={{ paddingVertical: 12, borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
-      <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
-        <View style={{ width: 20, marginRight: 12, marginTop: 2 }}>
-          <IconSymbol name={icon as any} size={16} color={colors.muted} />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>{label}</Text>
-          <Text style={{ fontSize: 14, color: colors.foreground, fontWeight: '600' }}>
-            {value}
-          </Text>
-        </View>
+    <View style={{
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: 10,
+      borderBottomWidth: isLast ? 0 : 0.5,
+      borderBottomColor: colors.border,
+    }}>
+      <View style={{
+        width: 32,
+        height: 32,
+        borderRadius: 8,
+        backgroundColor: colors.background,
+        justifyContent: "center",
+        alignItems: "center",
+        marginRight: 12,
+      }}>
+        <IconSymbol name={icon as any} size={15} color={colors.muted} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontSize: 11, color: colors.muted, marginBottom: 2 }}>{label}</Text>
+        <Text style={{ fontSize: 14, color: colors.foreground, fontWeight: "600" }}>{value}</Text>
       </View>
     </View>
   );
