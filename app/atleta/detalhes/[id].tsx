@@ -15,10 +15,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
-
-const API_BASE = typeof window !== 'undefined'
-  ? `${window.location.protocol}//${window.location.hostname}:3000`
-  : 'http://127.0.0.1:3000';
+import { getApiBaseUrl } from "@/constants/oauth";
 
 export default function AtletaDetalhesScreen() {
   const router = useRouter();
@@ -59,7 +56,7 @@ export default function AtletaDetalhesScreen() {
             setIsDeleting(true);
             try {
               // Tenta REST API primeiro (funciona na web e no app)
-              const response = await fetch(`${API_BASE}/api/atletas/${id}`, {
+              const response = await fetch(`${getApiBaseUrl()}/api/atletas/${id}`, {
                 method: 'DELETE',
               });
               if (response.ok) {
