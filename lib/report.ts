@@ -2,7 +2,7 @@
  * Módulo de geração de relatório PDF e Excel.
  * Envia os IDs dos atletas filtrados para o servidor e recebe o arquivo.
  */
-import { Platform } from "react-native";
+import { Platform, Alert } from "react-native";
 import { getApiBaseUrl } from "@/constants/oauth";
 
 interface ReportFilters {
@@ -44,27 +44,44 @@ async function downloadWeb(response: Response) {
 }
 
 async function downloadNative(response: Response) {
-  const FileSystem = await import("expo-file-system/legacy");
-  const Sharing = await import("expo-sharing");
+  try {
+    const FileSystem = await import("expo-file-system/legacy");
+    const Sharing = await import("expo-sharing");
 
-  const arrayBuffer = await response.arrayBuffer();
-  const bytes = new Uint8Array(arrayBuffer);
-  let binary = "";
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  const base64 = btoa(binary);
+    const arrayBuffer = await response.arrayBuffer();
+    const bytes = new Uint8Array(arrayBuffer);
+    let binary = "";
+    for (let i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    const base64 = btoa(binary);
 
-  const fileUri = FileSystem.documentDirectory + "Relatorio_BDMD.pdf";
-  await FileSystem.writeAsStringAsync(fileUri, base64, {
-    encoding: FileSystem.EncodingType.Base64,
-  });
+    // Usar cacheDirectory como fallback se documentDirectory não estiver disponível
+    const fileDir = FileSystem.cacheDirectory || FileSystem.documentDirectory;
+    if (!fileDir) {
+      throw new Error("Diretório de arquivos não disponível no dispositivo");
+    }
 
-  if (await Sharing.isAvailableAsync()) {
-    await Sharing.shareAsync(fileUri, {
-      mimeType: "application/pdf",
-      dialogTitle: "Relatório BDMD",
+    const fileUri = fileDir + "Relatorio_BDMD.pdf";
+    await FileSystem.writeAsStringAsync(fileUri, base64, {
+      encoding: FileSystem.EncodingType.Base64,
     });
+
+    if (await Sharing.isAvailableAsync()) {
+      await Sharing.shareAsync(fileUri, {
+        mimeType: "application/pdf",
+        dialogTitle: "Relatório BDMD",
+      });
+    } else {
+      Alert.alert(
+        "Aviso",
+        "Compartilhamento não disponível. O arquivo foi salvo no dispositivo.",
+        [{ text: "OK" }]
+      );
+    }
+  } catch (error: any) {
+    console.error("[PDF Download Error]", error);
+    throw new Error(`Erro ao salvar relatório: ${error.message}`);
   }
 }
 
@@ -99,27 +116,44 @@ async function downloadWebExcel(response: Response) {
 }
 
 async function downloadNativeExcel(response: Response) {
-  const FileSystem = await import("expo-file-system/legacy");
-  const Sharing = await import("expo-sharing");
+  try {
+    const FileSystem = await import("expo-file-system/legacy");
+    const Sharing = await import("expo-sharing");
 
-  const arrayBuffer = await response.arrayBuffer();
-  const bytes = new Uint8Array(arrayBuffer);
-  let binary = "";
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  const base64 = btoa(binary);
+    const arrayBuffer = await response.arrayBuffer();
+    const bytes = new Uint8Array(arrayBuffer);
+    let binary = "";
+    for (let i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    const base64 = btoa(binary);
 
-  const fileUri = FileSystem.documentDirectory + "Atletas_BDMD.xlsx";
-  await FileSystem.writeAsStringAsync(fileUri, base64, {
-    encoding: FileSystem.EncodingType.Base64,
-  });
+    // Usar cacheDirectory como fallback se documentDirectory não estiver disponível
+    const fileDir = FileSystem.cacheDirectory || FileSystem.documentDirectory;
+    if (!fileDir) {
+      throw new Error("Diretório de arquivos não disponível no dispositivo");
+    }
 
-  if (await Sharing.isAvailableAsync()) {
-    await Sharing.shareAsync(fileUri, {
-      mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      dialogTitle: "Atletas BDMD",
+    const fileUri = fileDir + "Atletas_BDMD.xlsx";
+    await FileSystem.writeAsStringAsync(fileUri, base64, {
+      encoding: FileSystem.EncodingType.Base64,
     });
+
+    if (await Sharing.isAvailableAsync()) {
+      await Sharing.shareAsync(fileUri, {
+        mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        dialogTitle: "Atletas BDMD",
+      });
+    } else {
+      Alert.alert(
+        "Aviso",
+        "Compartilhamento não disponível. O arquivo foi salvo no dispositivo.",
+        [{ text: "OK" }]
+      );
+    }
+  } catch (error: any) {
+    console.error("[Excel Download Error]", error);
+    throw new Error(`Erro ao salvar planilha: ${error.message}`);
   }
 }
 
@@ -127,12 +161,17 @@ export async function generateReport(
   atletaIds: number[],
   filters: ReportFilters
 ): Promise<void> {
-  const response = await fetchPdf(atletaIds, filters);
+  try {
+    const response = await fetchPdf(atletaIds, filters);
 
-  if (Platform.OS === "web") {
-    await downloadWeb(response);
-  } else {
-    await downloadNative(response);
+    if (Platform.OS === "web") {
+      await downloadWeb(response);
+    } else {
+      await downloadNative(response);
+    }
+  } catch (error: any) {
+    console.error("[Report Generation Error]", error);
+    throw error;
   }
 }
 
@@ -140,11 +179,16 @@ export async function generateExcel(
   atletaIds: number[],
   filters: ReportFilters
 ): Promise<void> {
-  const response = await fetchExcel(atletaIds, filters);
+  try {
+    const response = await fetchExcel(atletaIds, filters);
 
-  if (Platform.OS === "web") {
-    await downloadWebExcel(response);
-  } else {
-    await downloadNativeExcel(response);
+    if (Platform.OS === "web") {
+      await downloadWebExcel(response);
+    } else {
+      await downloadNativeExcel(response);
+    }
+  } catch (error: any) {
+    console.error("[Excel Generation Error]", error);
+    throw error;
   }
 }
