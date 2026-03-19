@@ -120,63 +120,65 @@ export default function AtletaDetalhesScreen() {
 
   return (
     <ScreenContainer style={{ padding: 0 }}>
-      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
 
-        {/* Header com botões Voltar / Editar / Excluir */}
-        <View style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          paddingHorizontal: 16,
-          paddingTop: 14,
-          paddingBottom: 12,
-          backgroundColor: colors.background,
-          borderBottomWidth: 1,
-          borderBottomColor: colors.border,
-        }}>
+      {/* Header com botões Voltar / Editar / Excluir — FORA do ScrollView para funcionar na web */}
+      <View style={{
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        paddingHorizontal: 16,
+        paddingTop: 14,
+        paddingBottom: 12,
+        backgroundColor: colors.background,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+        zIndex: 10,
+      }}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={{
+            padding: 8,
+            borderRadius: 20,
+            backgroundColor: colors.surface,
+            borderWidth: 1,
+            borderColor: colors.border,
+          }}
+        >
+          <IconSymbol
+            name="chevron.right"
+            size={20}
+            color={colors.foreground}
+            style={{ transform: [{ rotate: "180deg" }] }}
+          />
+        </TouchableOpacity>
+
+        <View style={{ flexDirection: "row", gap: 10 }}>
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={handleEditar}
             style={{
               padding: 8,
               borderRadius: 20,
-              backgroundColor: colors.surface,
-              borderWidth: 1,
-              borderColor: colors.border,
+              backgroundColor: colors.primary,
             }}
           >
-            <IconSymbol
-              name="chevron.right"
-              size={20}
-              color={colors.foreground}
-              style={{ transform: [{ rotate: "180deg" }] }}
-            />
+            <IconSymbol name="pencil" size={18} color="white" />
           </TouchableOpacity>
-
-          <View style={{ flexDirection: "row", gap: 10 }}>
-            <TouchableOpacity
-              onPress={handleEditar}
-              style={{
-                padding: 8,
-                borderRadius: 20,
-                backgroundColor: colors.primary,
-              }}
-            >
-              <IconSymbol name="pencil" size={18} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={handleExcluir}
-              disabled={isDeleting}
-              style={{
-                padding: 8,
-                borderRadius: 20,
-                backgroundColor: colors.error,
-                opacity: isDeleting ? 0.5 : 1,
-              }}
-            >
-              <IconSymbol name="trash" size={18} color="white" />
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            onPress={handleExcluir}
+            disabled={isDeleting}
+            style={{
+              padding: 8,
+              borderRadius: 20,
+              backgroundColor: colors.error,
+              opacity: isDeleting ? 0.5 : 1,
+            }}
+          >
+            <IconSymbol name="trash" size={18} color="white" />
+          </TouchableOpacity>
         </View>
+      </View>
+
+      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
 
         {/* Foto e Nome centralizados */}
         <View style={{
@@ -431,6 +433,7 @@ export default function AtletaDetalhesScreen() {
 
         </View>
       </ScrollView>
+
     </ScreenContainer>
   );
 }
