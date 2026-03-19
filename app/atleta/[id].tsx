@@ -953,7 +953,7 @@ export default function AtletaFormScreen() {
   
   if (loadingAtleta) {
     return (
-      <ScreenContainer className="justify-center items-center">
+      <ScreenContainer style={{ justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" color={colors.primary} />
       </ScreenContainer>
     );
@@ -963,8 +963,8 @@ export default function AtletaFormScreen() {
   const showOgolButton = link.includes("ogol.com");
   
   return (
-    <ScreenContainer>
-      <View className="flex-1">
+    <ScreenContainer style={{ backgroundColor: colors.background, padding: 0 }}>
+      <View style={{ flex: 1 }}>
         {/* WebView oculta para scraping do Ogol */}
         <OgolWebScraper
           url={ogolScrapeUrl}
@@ -974,49 +974,88 @@ export default function AtletaFormScreen() {
         />
 
         {/* Header */}
-        <View className="px-4 pt-4 pb-3 bg-background border-b border-border flex-row justify-between items-center">
-          <View className="flex-row items-center flex-1">
-            <TouchableOpacity onPress={() => router.back()} className="mr-3">
-              <IconSymbol name="chevron.right" size={24} color={colors.foreground} style={{ transform: [{ rotate: "180deg" }] }} />
+        <View style={{
+          paddingHorizontal: 16,
+          paddingTop: 14,
+          paddingBottom: 12,
+          backgroundColor: colors.background,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}>
+          <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={{
+                marginRight: 12,
+                padding: 6,
+                borderRadius: 8,
+                backgroundColor: colors.surface,
+              }}
+            >
+              <IconSymbol name="chevron.right" size={22} color={colors.foreground} style={{ transform: [{ rotate: "180deg" }] }} />
             </TouchableOpacity>
-            <Text className="text-xl font-bold text-foreground">
+            <Text style={{ fontSize: 20, fontWeight: "700", color: colors.foreground }}>
               {isEdit ? "Editar Atleta" : "Novo Atleta"}
             </Text>
           </View>
           
           {isEdit && (
-            <TouchableOpacity onPress={handleExcluir} disabled={isLoading}>
+            <TouchableOpacity
+              onPress={handleExcluir}
+              disabled={isLoading}
+              style={{
+                padding: 8,
+                borderRadius: 8,
+                backgroundColor: colors.error + "18",
+              }}
+            >
               <IconSymbol name="trash" size={22} color={colors.error} />
             </TouchableOpacity>
           )}
         </View>
         
         {/* Formulário */}
-        <ScrollView className="flex-1" contentContainerStyle={{ padding: 16 }}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
 
-          {/* Link do Ogol - Movido para o topo para facilitar o fluxo */}
-          <View className="mb-4">
-            <Text className="text-sm font-medium text-foreground mb-2">
+          {/* Link do Ogol */}
+          <View style={{ marginBottom: 16 }}>
+            <Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground, marginBottom: 6 }}>
               Link do Ogol
             </Text>
             <TextInput
-              className="bg-surface rounded-lg px-4 py-3 text-foreground border border-border"
+              style={{
+                backgroundColor: colors.surface,
+                borderRadius: 8,
+                paddingHorizontal: 14,
+                paddingVertical: 12,
+                color: colors.foreground,
+                borderWidth: 1,
+                borderColor: colors.border,
+                fontSize: 14,
+              }}
               placeholder="Cole o link do ogol.com.br do atleta"
               placeholderTextColor={colors.muted}
               value={link}
               onChangeText={setLink}
               keyboardType="url"
               autoCapitalize="none"
-              style={{ color: colors.foreground }}
+              returnKeyType="done"
             />
             
-            {/* Botão Preencher do Ogol - aparece quando link contém ogol.com */}
             {showOgolButton && (
               <TouchableOpacity
                 onPress={handlePreencherOgol}
                 disabled={ogolLoading}
-                className="mt-2 rounded-lg py-3 flex-row items-center justify-center"
                 style={{
+                  marginTop: 8,
+                  borderRadius: 8,
+                  paddingVertical: 12,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
                   backgroundColor: "#FF6B00",
                   opacity: ogolLoading ? 0.6 : 1,
                 }}
@@ -1024,59 +1063,63 @@ export default function AtletaFormScreen() {
                 {ogolLoading ? (
                   <>
                     <ActivityIndicator color="#FFFFFF" size="small" />
-                    <Text className="text-white font-semibold ml-2">
-                      Buscando dados...
-                    </Text>
+                    <Text style={{ color: "white", fontWeight: "600", marginLeft: 8 }}>Buscando dados...</Text>
                   </>
                 ) : (
                   <>
                     <IconSymbol name="bolt.fill" size={18} color="#FFFFFF" />
-                    <Text className="text-white font-semibold ml-2">
-                      Preencher do Ogol
-                    </Text>
+                    <Text style={{ color: "white", fontWeight: "600", marginLeft: 8 }}>Preencher do Ogol</Text>
                   </>
                 )}
               </TouchableOpacity>
             )}
 
             {showOgolButton && Platform.OS !== "web" && (
-              <Text className="text-xs text-muted mt-1 text-center">
+              <Text style={{ fontSize: 11, color: colors.muted, marginTop: 4, textAlign: "center" }}>
                 Abre a página do Ogol em segundo plano e extrai os dados automaticamente
               </Text>
             )}
           </View>
 
-          {/* Separador visual */}
           {showOgolButton && (
-            <View className="mb-4 flex-row items-center">
-              <View className="flex-1 h-px bg-border" />
-              <Text className="mx-3 text-xs text-muted">Dados do Atleta</Text>
-              <View className="flex-1 h-px bg-border" />
+            <View style={{ marginBottom: 16, flexDirection: "row", alignItems: "center" }}>
+              <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
+              <Text style={{ marginHorizontal: 12, fontSize: 11, color: colors.muted }}>Dados do Atleta</Text>
+              <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
             </View>
           )}
 
           {/* Nome */}
-          <View className="mb-4">
-            <Text className="text-sm font-medium text-foreground mb-2">
+          <View style={{ marginBottom: 16 }}>
+            <Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground, marginBottom: 6 }}>
               Nome do Atleta *
             </Text>
             <TextInput
-              className="bg-surface rounded-lg px-4 py-3 text-foreground border border-border"
+              style={{
+                backgroundColor: colors.surface,
+                borderRadius: 8,
+                paddingHorizontal: 14,
+                paddingVertical: 12,
+                color: colors.foreground,
+                borderWidth: 1,
+                borderColor: colors.border,
+                fontSize: 14,
+              }}
               placeholder="Ex: Neymar Jr"
               placeholderTextColor={colors.muted}
               value={nome}
               onChangeText={setNome}
-              style={{ color: colors.foreground }}
+              returnKeyType="done"
             />
           </View>
           
           {/* Posição */}
-          <View className="mb-4">
-            <Text className="text-sm font-medium text-foreground mb-2">
+          <View style={{ marginBottom: 16 }}>
+            <Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground, marginBottom: 6 }}>
               Posição Principal
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View className="flex-row gap-2">
+              <View style={{ flexDirection: "row", gap: 6 }}>
                 {POSICOES.map((pos) => (
                   <TouchableOpacity
                     key={pos}
@@ -1106,12 +1149,12 @@ export default function AtletaFormScreen() {
           </View>
 
           {/* Segunda Posição */}
-          <View className="mb-4">
-            <Text className="text-sm font-medium text-foreground mb-2">
+          <View style={{ marginBottom: 16 }}>
+            <Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground, marginBottom: 6 }}>
               Segunda Posição (opcional)
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View className="flex-row gap-2">
+              <View style={{ flexDirection: "row", gap: 6 }}>
                 {POSICOES.map((pos) => (
                   <TouchableOpacity
                     key={pos}
@@ -1141,85 +1184,132 @@ export default function AtletaFormScreen() {
           </View>
           
           {/* Clube */}
-          <View className="mb-4">
-            <Text className="text-sm font-medium text-foreground mb-2">
+          <View style={{ marginBottom: 16 }}>
+            <Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground, marginBottom: 6 }}>
               Clube Atual
             </Text>
-            <View className="flex-row gap-3">
+            <View style={{ flexDirection: "row", gap: 10 }}>
               <TextInput
-                className="flex-1 bg-surface rounded-lg px-4 py-3 text-foreground border border-border"
+                style={{
+                  flex: 1,
+                  backgroundColor: colors.surface,
+                  borderRadius: 8,
+                  paddingHorizontal: 14,
+                  paddingVertical: 12,
+                  color: colors.foreground,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  fontSize: 14,
+                }}
                 placeholder="Nome do clube"
                 placeholderTextColor={colors.muted}
                 value={clubeNome}
                 onChangeText={setClubeNome}
-                style={{ color: colors.foreground }}
+                returnKeyType="done"
               />
               <TextInput
-                className="w-20 bg-surface rounded-lg px-4 py-3 text-foreground border border-border"
-                placeholder="UF/País"
+                style={{
+                  width: 80,
+                  backgroundColor: colors.surface,
+                  borderRadius: 8,
+                  paddingHorizontal: 12,
+                  paddingVertical: 12,
+                  color: colors.foreground,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  fontSize: 14,
+                }}
+                placeholder="UF"
                 placeholderTextColor={colors.muted}
                 value={clubeEstado}
                 onChangeText={(text) => setClubeEstado(text.toUpperCase())}
                 maxLength={3}
-                style={{ color: colors.foreground }}
+                returnKeyType="done"
               />
             </View>
-            {clube && <Text className="text-xs text-muted mt-2">Formato: {clube}</Text>}
+            {clube ? <Text style={{ fontSize: 11, color: colors.muted, marginTop: 4 }}>Formato: {clube}</Text> : null}
           </View>
           
           {/* Data de Nascimento e Idade */}
-          <View className="flex-row gap-3 mb-4">
-            <View className="flex-1">
-              <Text className="text-sm font-medium text-foreground mb-2">
+          <View style={{ flexDirection: "row", gap: 10, marginBottom: 16 }}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground, marginBottom: 6 }}>
                 Data Nasc. (dd/mm/aa)
               </Text>
               <TextInput
-                className="bg-surface rounded-lg px-4 py-3 text-foreground border border-border"
+                style={{
+                  backgroundColor: colors.surface,
+                  borderRadius: 8,
+                  paddingHorizontal: 14,
+                  paddingVertical: 12,
+                  color: colors.foreground,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  fontSize: 14,
+                }}
                 placeholder="01/03/97"
                 placeholderTextColor={colors.muted}
                 value={dataNascimento}
                 onChangeText={handleDataChange}
                 keyboardType="numeric"
                 maxLength={8}
-                style={{ color: colors.foreground }}
+                returnKeyType="done"
               />
             </View>
-            <View className="w-24">
-              <Text className="text-sm font-medium text-foreground mb-2">
+            <View style={{ width: 90 }}>
+              <Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground, marginBottom: 6 }}>
                 Idade
               </Text>
               <TextInput
-                className="bg-surface rounded-lg px-4 py-3 text-foreground border border-border"
+                style={{
+                  backgroundColor: colors.surface,
+                  borderRadius: 8,
+                  paddingHorizontal: 14,
+                  paddingVertical: 12,
+                  color: colors.foreground,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  fontSize: 14,
+                }}
                 placeholder="Auto"
                 placeholderTextColor={colors.muted}
                 value={idade}
                 onChangeText={setIdade}
                 keyboardType="numeric"
-                style={{ color: colors.foreground, backgroundColor: idade ? colors.surface : colors.surface }}
+                returnKeyType="done"
               />
             </View>
           </View>
           
           {/* Altura e Pé */}
-          <View className="flex-row gap-3 mb-4">
-            <View className="flex-1">
-              <Text className="text-sm font-medium text-foreground mb-2">
+          <View style={{ flexDirection: "row", gap: 10, marginBottom: 16 }}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground, marginBottom: 6 }}>
                 Altura
               </Text>
               <TextInput
-                className="bg-surface rounded-lg px-4 py-3 text-foreground border border-border"
+                style={{
+                  backgroundColor: colors.surface,
+                  borderRadius: 8,
+                  paddingHorizontal: 14,
+                  paddingVertical: 12,
+                  color: colors.foreground,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  fontSize: 14,
+                }}
                 placeholder="Ex: 1.76"
                 placeholderTextColor={colors.muted}
                 value={altura}
                 onChangeText={setAltura}
-                style={{ color: colors.foreground }}
+                returnKeyType="done"
               />
             </View>
-            <View className="flex-1">
-              <Text className="text-sm font-medium text-foreground mb-2">
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground, marginBottom: 6 }}>
                 Pé Preferencial
               </Text>
-              <View className="flex-row gap-2">
+              <View style={{ flexDirection: "row", gap: 6 }}>
                 {PES.map((p) => (
                   <TouchableOpacity
                     key={p}
@@ -1252,42 +1342,70 @@ export default function AtletaFormScreen() {
           </View>
           
           {/* Escala */}
-          <View className="mb-4">
-            <Text className="text-sm font-medium text-foreground mb-2">
+          <View style={{ marginBottom: 16 }}>
+            <Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground, marginBottom: 6 }}>
               Escala
             </Text>
             <TextInput
-              className="bg-surface rounded-lg px-4 py-3 text-foreground border border-border"
+              style={{
+                backgroundColor: colors.surface,
+                borderRadius: 8,
+                paddingHorizontal: 14,
+                paddingVertical: 12,
+                color: colors.foreground,
+                borderWidth: 1,
+                borderColor: colors.border,
+                fontSize: 14,
+              }}
               placeholder="Ex: A, B, C..."
               placeholderTextColor={colors.muted}
               value={escala}
               onChangeText={setEscala}
-              style={{ color: colors.foreground }}
+              returnKeyType="done"
             />
           </View>
 
           {/* Naturalidade */}
-          <View className="mb-4">
-            <Text className="text-sm font-medium text-foreground mb-2">
+          <View style={{ marginBottom: 16 }}>
+            <Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground, marginBottom: 6 }}>
               Naturalidade
             </Text>
             <TextInput
-              className="bg-surface rounded-lg px-4 py-3 text-foreground border border-border"
+              style={{
+                backgroundColor: colors.surface,
+                borderRadius: 8,
+                paddingHorizontal: 14,
+                paddingVertical: 12,
+                color: colors.foreground,
+                borderWidth: 1,
+                borderColor: colors.border,
+                fontSize: 14,
+              }}
               placeholder="Ex: São Paulo, SP ou Rio de Janeiro, RJ"
               placeholderTextColor={colors.muted}
               value={naturalidade}
               onChangeText={setNaturalidade}
-              style={{ color: colors.foreground }}
+              returnKeyType="done"
             />
           </View>
 
           {/* Valências */}
-          <View className="mb-4">
-            <Text className="text-sm font-medium text-foreground mb-2">
+          <View style={{ marginBottom: 16 }}>
+            <Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground, marginBottom: 6 }}>
               Valências
             </Text>
             <TextInput
-              className="bg-surface rounded-lg px-4 py-3 text-foreground border border-border"
+              style={{
+                backgroundColor: colors.surface,
+                borderRadius: 8,
+                paddingHorizontal: 14,
+                paddingVertical: 12,
+                color: colors.foreground,
+                borderWidth: 1,
+                borderColor: colors.border,
+                fontSize: 14,
+                minHeight: 100,
+              }}
               placeholder="Descreva as características e valências do atleta (até 500 caracteres)..."
               placeholderTextColor={colors.muted}
               value={valencia}
@@ -1295,43 +1413,51 @@ export default function AtletaFormScreen() {
               multiline
               numberOfLines={4}
               textAlignVertical="top"
-              style={{ color: colors.foreground, minHeight: 100 }}
             />
-            <Text className="text-xs text-muted text-right mt-1">
+            <Text style={{ fontSize: 11, color: colors.muted, textAlign: "right", marginTop: 4 }}>
               {valencia.length}/500
             </Text>
           </View>
           
           {/* Campo de Foto */}
-          <View className="mb-4">
-            <Text className="text-sm font-medium text-foreground mb-2">
+          <View style={{ marginBottom: 16 }}>
+            <Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground, marginBottom: 6 }}>
               Foto do Atleta (opcional)
             </Text>
             <TouchableOpacity
               onPress={handleAdicionarFoto}
               disabled={fotoLoading}
-              className="rounded-lg border-2 border-dashed border-border p-6 items-center justify-center"
               style={{
+                borderRadius: 10,
+                borderWidth: 2,
+                borderStyle: "dashed",
+                borderColor: colors.border,
+                padding: 24,
+                alignItems: "center",
+                justifyContent: "center",
                 backgroundColor: colors.surface,
                 opacity: fotoLoading ? 0.6 : 1,
               }}
             >
               {fotoUri ? (
-                <View className="items-center">
+                <View style={{ alignItems: "center" }}>
                   <Image source={{ uri: fotoUri }} style={{ width: 100, height: 100, borderRadius: 8, marginBottom: 8 }} />
-                  <Text className="text-sm text-primary font-semibold">Foto adicionada</Text>
-                  <Text className="text-xs text-muted mt-1">Toque para trocar</Text>
-                  <TouchableOpacity onPress={handleDeletarFoto} className="mt-2 p-2">
+                  <Text style={{ fontSize: 13, color: colors.primary, fontWeight: "600" }}>Foto adicionada</Text>
+                  <Text style={{ fontSize: 11, color: colors.muted, marginTop: 4 }}>Toque para trocar</Text>
+                  <TouchableOpacity
+                    onPress={handleDeletarFoto}
+                    style={{ marginTop: 8, padding: 8 }}
+                  >
                     <IconSymbol name="trash" size={20} color={colors.error} />
                   </TouchableOpacity>
                 </View>
               ) : fotoLoading ? (
                 <ActivityIndicator color={colors.primary} />
               ) : (
-                <View className="items-center">
+                <View style={{ alignItems: "center" }}>
                   <IconSymbol name="photo.fill" size={32} color={colors.primary} />
-                  <Text className="text-sm text-foreground font-semibold mt-2">Adicionar Foto</Text>
-                  <Text className="text-xs text-muted mt-1">Toque para selecionar</Text>
+                  <Text style={{ fontSize: 13, color: colors.foreground, fontWeight: "600", marginTop: 8 }}>Adicionar Foto</Text>
+                  <Text style={{ fontSize: 11, color: colors.muted, marginTop: 4 }}>Toque para selecionar</Text>
                 </View>
               )}
             </TouchableOpacity>
@@ -1346,58 +1472,77 @@ export default function AtletaFormScreen() {
             )}
             
             {todasAsFotos.length > 1 && (
-              <View className="mt-4">
-                <Text className="text-xs text-muted mb-2">Todas as fotos ({todasAsFotos.length})</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row gap-2">
-                  {todasAsFotos.map((foto, index) => (
-                    <TouchableOpacity
-                      key={index}
-                      onPress={() => {
-                        setFotoSelecionada(index);
-                        setFotoUri(foto.url);
-                      }}
-                      className={`rounded-lg border-2 ${fotoSelecionada === index ? 'border-primary' : 'border-border'}`}
-                    >
-                      <Image
-                        source={{ uri: foto.url }}
-                        style={{ width: 60, height: 60, borderRadius: 6 }}
-                      />
-                    </TouchableOpacity>
-                  ))}
+              <View style={{ marginTop: 12 }}>
+                <Text style={{ fontSize: 11, color: colors.muted, marginBottom: 6 }}>Todas as fotos ({todasAsFotos.length})</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <View style={{ flexDirection: "row", gap: 8 }}>
+                    {todasAsFotos.map((foto, index) => (
+                      <TouchableOpacity
+                        key={index}
+                        onPress={() => {
+                          setFotoSelecionada(index);
+                          setFotoUri(foto.url);
+                        }}
+                        style={{
+                          borderRadius: 8,
+                          borderWidth: 2,
+                          borderColor: fotoSelecionada === index ? colors.primary : colors.border,
+                        }}
+                      >
+                        <Image
+                          source={{ uri: foto.url }}
+                          style={{ width: 60, height: 60, borderRadius: 6 }}
+                        />
+                      </TouchableOpacity>
+                    ))}
+                  </View>
                 </ScrollView>
               </View>
             )}
           </View>
           
           {/* Seção de Vídeos */}
-          <View className="mb-6">
-            <Text className="text-lg font-bold text-foreground mb-3">Vídeos do YouTube</Text>
+          <View style={{ marginBottom: 24 }}>
+            <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 12 }}>Vídeos do YouTube</Text>
             
-            {/* Botão para adicionar vídeo */}
             <TouchableOpacity
               onPress={handleAdicionarVideo}
-              className="border-2 border-dashed border-primary rounded-lg p-4 items-center mb-4"
+              style={{
+                borderWidth: 2,
+                borderStyle: "dashed",
+                borderColor: colors.primary,
+                borderRadius: 10,
+                padding: 16,
+                alignItems: "center",
+                marginBottom: 12,
+              }}
             >
-              <Text className="text-primary font-semibold">+ Adicionar Vídeo</Text>
-              <Text className="text-xs text-muted mt-1">Cole o link do YouTube</Text>
+              <Text style={{ color: colors.primary, fontWeight: "600" }}>+ Adicionar Vídeo</Text>
+              <Text style={{ fontSize: 11, color: colors.muted, marginTop: 4 }}>Cole o link do YouTube</Text>
             </TouchableOpacity>
             
-            {/* Lista de vídeos adicionados */}
             {videoLinks.length > 0 && (
-              <View className="space-y-2">
+              <View>
                 {videoLinks.map((url, index) => (
-                  <View key={index} className="flex-row items-center bg-surface rounded-lg p-3 mb-2">
-                    <View className="flex-1">
-                      <Text className="text-sm text-foreground font-semibold truncate">
+                  <View key={index} style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    backgroundColor: colors.surface,
+                    borderRadius: 8,
+                    padding: 12,
+                    marginBottom: 8,
+                  }}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 13, color: colors.foreground, fontWeight: "600" }}>
                         Vídeo {index + 1}
                       </Text>
-                      <Text className="text-xs text-muted truncate">{url}</Text>
+                      <Text style={{ fontSize: 11, color: colors.muted }} numberOfLines={1}>{url}</Text>
                     </View>
                     <TouchableOpacity
                       onPress={() => handleRemoverVideo(index)}
-                      className="ml-2 p-2"
+                      style={{ marginLeft: 8, padding: 8 }}
                     >
-                      <Text className="text-error font-bold">X</Text>
+                      <Text style={{ color: colors.error, fontWeight: "700" }}>X</Text>
                     </TouchableOpacity>
                   </View>
                 ))}
@@ -1409,30 +1554,46 @@ export default function AtletaFormScreen() {
           <TouchableOpacity
             onPress={handleSalvar}
             disabled={isLoading}
-            className="rounded-xl py-4 items-center mb-4"
             style={{
+              borderRadius: 12,
+              paddingVertical: 16,
+              alignItems: "center",
+              marginBottom: 16,
               backgroundColor: isLoading ? colors.muted : colors.primary,
             }}
           >
             {isLoading ? (
               <ActivityIndicator color="white" />
             ) : (
-              <Text className="text-white font-bold text-base">
+              <Text style={{ color: "white", fontWeight: "700", fontSize: 16 }}>
                 {isEdit ? "Salvar Alterações" : "Cadastrar Atleta"}
               </Text>
             )}
           </TouchableOpacity>
 
-          {/* Espaço extra no final */}
-          <View className="h-8" />
+          <View style={{ height: 32 }} />
         </ScrollView>
       </View>
       
       {/* Modal de adição de vídeo */}
       {showVideoModal && (
-        <View className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
-          <View className="bg-background rounded-2xl p-6 w-4/5 max-w-sm">
-            <Text className="text-xl font-bold text-foreground mb-4">
+        <View style={{
+          position: "absolute",
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: "rgba(0,0,0,0.5)",
+          justifyContent: "center",
+          alignItems: "center",
+          zIndex: 50,
+          padding: 24,
+        }}>
+          <View style={{
+            backgroundColor: colors.background,
+            borderRadius: 16,
+            padding: 24,
+            width: "100%",
+            maxWidth: 360,
+          }}>
+            <Text style={{ fontSize: 18, fontWeight: "700", color: colors.foreground, marginBottom: 16 }}>
               Adicionar Vídeo do YouTube
             </Text>
             
@@ -1441,25 +1602,45 @@ export default function AtletaFormScreen() {
               placeholderTextColor={colors.muted}
               value={videoInputValue}
               onChangeText={setVideoInputValue}
-              className="border border-border rounded-lg p-3 mb-4 text-foreground"
-              style={{ color: colors.foreground }}
+              style={{
+                borderWidth: 1,
+                borderColor: colors.border,
+                borderRadius: 8,
+                padding: 12,
+                marginBottom: 16,
+                color: colors.foreground,
+                backgroundColor: colors.surface,
+                fontSize: 14,
+              }}
               multiline
             />
             
-            <View className="flex-row gap-3">
+            <View style={{ flexDirection: "row", gap: 12 }}>
               <TouchableOpacity
                 onPress={handleCancelarVideo}
-                className="flex-1 py-3 rounded-lg border border-border items-center"
+                style={{
+                  flex: 1,
+                  paddingVertical: 12,
+                  borderRadius: 8,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  alignItems: "center",
+                }}
               >
-                <Text className="font-semibold text-foreground">Cancelar</Text>
+                <Text style={{ fontWeight: "600", color: colors.foreground }}>Cancelar</Text>
               </TouchableOpacity>
               
               <TouchableOpacity
                 onPress={handleConfirmarVideo}
-                className="flex-1 py-3 rounded-lg items-center"
-                style={{ backgroundColor: colors.primary }}
+                style={{
+                  flex: 1,
+                  paddingVertical: 12,
+                  borderRadius: 8,
+                  alignItems: "center",
+                  backgroundColor: colors.primary,
+                }}
               >
-                <Text className="font-semibold text-white">Adicionar</Text>
+                <Text style={{ fontWeight: "600", color: "white" }}>Adicionar</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1468,34 +1649,59 @@ export default function AtletaFormScreen() {
       
       {/* Modal de confirmação de exclusão */}
       {showDeleteModal && (
-        <View className="absolute inset-0 bg-black/50 flex items-center justify-center">
-          <View className="bg-background rounded-2xl p-6 w-4/5 max-w-sm">
-            <Text className="text-xl font-bold text-foreground mb-2">
+        <View style={{
+          position: "absolute",
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: "rgba(0,0,0,0.5)",
+          justifyContent: "center",
+          alignItems: "center",
+          padding: 24,
+        }}>
+          <View style={{
+            backgroundColor: colors.background,
+            borderRadius: 16,
+            padding: 24,
+            width: "100%",
+            maxWidth: 360,
+          }}>
+            <Text style={{ fontSize: 18, fontWeight: "700", color: colors.foreground, marginBottom: 8 }}>
               ⚠️ Tem certeza que deseja excluir?
             </Text>
-            <Text className="text-base text-muted mb-6">
+            <Text style={{ fontSize: 14, color: colors.muted, marginBottom: 24 }}>
               Você está prestes a excluir {nome}. Esta ação não pode ser desfeita.
             </Text>
             
-            <View className="flex-row gap-3">
+            <View style={{ flexDirection: "row", gap: 12 }}>
               <TouchableOpacity
                 onPress={cancelarExclusao}
                 disabled={isLoading}
-                className="flex-1 py-3 rounded-lg border border-border items-center"
+                style={{
+                  flex: 1,
+                  paddingVertical: 12,
+                  borderRadius: 8,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  alignItems: "center",
+                }}
               >
-                <Text className="font-semibold text-foreground">Não</Text>
+                <Text style={{ fontWeight: "600", color: colors.foreground }}>Não</Text>
               </TouchableOpacity>
               
               <TouchableOpacity
                 onPress={confirmarExclusao}
                 disabled={isLoading}
-                className="flex-1 py-3 rounded-lg items-center"
-                style={{ backgroundColor: isLoading ? colors.muted : colors.error }}
+                style={{
+                  flex: 1,
+                  paddingVertical: 12,
+                  borderRadius: 8,
+                  alignItems: "center",
+                  backgroundColor: isLoading ? colors.muted : colors.error,
+                }}
               >
                 {isLoading ? (
                   <ActivityIndicator color="#fff" size="small" />
                 ) : (
-                  <Text className="font-semibold text-white">Sim</Text>
+                  <Text style={{ fontWeight: "600", color: "white" }}>Sim, excluir</Text>
                 )}
               </TouchableOpacity>
             </View>
