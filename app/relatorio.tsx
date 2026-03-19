@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,16 +9,15 @@ import {
   Alert,
   FlatList,
   RefreshControl,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { FilterDropdown } from "@/components/filter-dropdown";
 import { useColors } from "@/hooks/use-colors";
-import { trpc } from "@/lib/trpc";
 import { generateReport, generateExcel } from "@/lib/report";
-import { generateReportWithPreview, downloadPdf } from "@/lib/report-preview";
-import { PDFPreviewModal } from "@/components/pdf-preview-modal";
+import { getApiBaseUrl } from "@/constants/oauth";
 
 // Faixas de idade padrão
 const FAIXAS_IDADE = [
@@ -36,8 +35,34 @@ export default function RelatorioScreen() {
   const router = useRouter();
   const colors = useColors();
 
-  // Query de atletas
-  const { data: atletas = [], isLoading, refetch } = trpc.atletas.list.useQuery();
+  // Carregar atletas via REST API (igual à tela principal)
+  const [atletas, setAtletas] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadAtletas = useCallback(async () => {
+    try {
+      const baseUrl = getApiBaseUrl();
+      const response = await fetch(`${baseUrl}/api/atletas`);
+      if (!response.ok) throw new Error(`Erro: ${response.status}`);
+      const data = await response.json();
+      setAtletas(data.data || data);
+    } catch (error) {
+      console.error("[Relatório] Erro ao carregar atletas:", error);
+    } finally {
+      setIsLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadAtletas();
+  }, [loadAtletas]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    loadAtletas();
+  }, [loadAtletas]);
 
   // Estados de filtro
   const [searchQuery, setSearchQuery] = useState("");
@@ -47,75 +72,47 @@ export default function RelatorioScreen() {
   const [selectedEscalas, setSelectedEscalas] = useState<string[]>([]);
   const [selectedPesPreferencial, setSelectedPesPreferencial] = useState<string[]>([]);
   const [selectedAtletasIds, setSelectedAtletasIds] = useState<number[]>([]);
-  const [refreshing, setRefreshing] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const [generatingExcel, setGeneratingExcel] = useState(false);
-  const [showPdfPreview, setShowPdfPreview] = useState(false);
-  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
-  const [currentFilters, setCurrentFilters] = useState<any>(null);
 
   // Obter posições e clubes únicos
   const posicoes = useMemo(() => {
     const set = new Set<string>();
-    atletas.forEach((a: any) => {
-      if (a.posicao) set.add(a.posicao);
-    });
+    atletas.forEach((a: any) => { if (a.posicao) set.add(a.posicao); });
     return Array.from(set).sort();
   }, [atletas]);
 
   const clubes = useMemo(() => {
     const set = new Set<string>();
-    atletas.forEach((a: any) => {
-      if (a.clube) set.add(a.clube);
-    });
+    atletas.forEach((a: any) => { if (a.clube) set.add(a.clube); });
     return Array.from(set).sort();
   }, [atletas]);
 
   const pesPreferencial = useMemo(() => {
     const set = new Set<string>();
-    atletas.forEach((a: any) => {
-      if (a.pe) set.add(a.pe);
-    });
+    atletas.forEach((a: any) => { if (a.pe) set.add(a.pe); });
     return Array.from(set).sort();
   }, [atletas]);
 
   // Filtrar atletas
   const filteredAtletas = useMemo(() => {
     return atletas.filter((atleta: any) => {
-      if (searchQuery && !atleta.nome.toLowerCase().includes(searchQuery.toLowerCase())) {
-        return false;
-      }
-      if (selectedPosicoes.length > 0 && !selectedPosicoes.includes(atleta.posicao || "")) {
-        return false;
-      }
-      if (selectedClubes.length > 0 && !selectedClubes.includes(atleta.clube || "")) {
-        return false;
-      }
-      if (selectedEscalas.length > 0 && !selectedEscalas.includes(atleta.escala || "")) {
-        return false;
-      }
-      if (selectedPesPreferencial.length > 0 && !selectedPesPreferencial.includes(atleta.pe || "")) {
-        return false;
-      }
+      if (searchQuery && !atleta.nome?.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+      if (selectedPosicoes.length > 0 && !selectedPosicoes.includes(atleta.posicao || "")) return false;
+      if (selectedClubes.length > 0 && !selectedClubes.includes(atleta.clube || "")) return false;
+      if (selectedEscalas.length > 0 && !selectedEscalas.includes(atleta.escala || "")) return false;
+      if (selectedPesPreferencial.length > 0 && !selectedPesPreferencial.includes(atleta.pe || "")) return false;
       if (selectedIdadeFaixas.length > 0) {
         const idade = atleta.idade ?? 0;
         const matchesFaixa = selectedIdadeFaixas.some((faixaIdx) => {
           const faixa = FAIXAS_IDADE[faixaIdx];
           return idade >= faixa.min && idade <= faixa.max;
         });
-        if (!matchesFaixa) {
-          return false;
-        }
+        if (!matchesFaixa) return false;
       }
       return true;
     });
   }, [atletas, searchQuery, selectedPosicoes, selectedClubes, selectedIdadeFaixas, selectedEscalas, selectedPesPreferencial]);
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await refetch();
-    setRefreshing(false);
-  }, [refetch]);
 
   const toggleAtletaSelection = useCallback((atletaId: number) => {
     setSelectedAtletasIds((prev) =>
@@ -136,7 +133,6 @@ export default function RelatorioScreen() {
       Alert.alert("Atenção", "Selecione pelo menos um atleta");
       return;
     }
-
     setGeneratingPdf(true);
     try {
       const filters = {
@@ -146,10 +142,7 @@ export default function RelatorioScreen() {
         pe: selectedPesPreferencial.length > 0 ? selectedPesPreferencial.join(", ") : "Todos",
         busca: searchQuery || undefined,
       };
-      const blob = await generateReportWithPreview(selectedAtletasIds, filters);
-      setPdfBlob(blob);
-      setCurrentFilters(filters);
-      setShowPdfPreview(true);
+      await generateReport(selectedAtletasIds, filters);
     } catch (error: any) {
       Alert.alert("Erro", error.message || "Não foi possível gerar o relatório.");
     } finally {
@@ -157,17 +150,11 @@ export default function RelatorioScreen() {
     }
   };
 
-  const handleDownloadPdf = async () => {
-    if (!pdfBlob) return;
-    await downloadPdf(pdfBlob, "Relatorio_BDMD.pdf");
-  };
-
   const handleGenerateExcel = async () => {
     if (selectedAtletasIds.length === 0) {
       Alert.alert("Atenção", "Selecione pelo menos um atleta");
       return;
     }
-
     setGeneratingExcel(true);
     try {
       const filters = {
@@ -178,7 +165,6 @@ export default function RelatorioScreen() {
         busca: searchQuery || undefined,
       };
       await generateExcel(selectedAtletasIds, filters);
-      Alert.alert("Sucesso", "Planilha exportada com sucesso!");
     } catch (error: any) {
       Alert.alert("Erro", error.message || "Não foi possível exportar a planilha.");
     } finally {
@@ -186,10 +172,8 @@ export default function RelatorioScreen() {
     }
   };
 
-  // Renderizar apenas os filtros (sem TextInput)
   const renderFilters = () => (
     <View style={{ padding: 16, gap: 12 }}>
-      {/* Filtro de Posição */}
       <FilterDropdown
         title="Posições"
         options={posicoes}
@@ -200,8 +184,6 @@ export default function RelatorioScreen() {
           )
         }
       />
-
-      {/* Filtro de Clube */}
       <FilterDropdown
         title="Clubes"
         options={clubes}
@@ -212,8 +194,6 @@ export default function RelatorioScreen() {
           )
         }
       />
-
-      {/* Filtro de Idade */}
       <FilterDropdown
         title="Faixa de Idade"
         options={FAIXAS_IDADE.map((f) => f.label)}
@@ -227,8 +207,6 @@ export default function RelatorioScreen() {
           }
         }}
       />
-
-      {/* Filtro de Escala */}
       <FilterDropdown
         title="Escala"
         options={ESCALAS}
@@ -239,8 +217,6 @@ export default function RelatorioScreen() {
           )
         }
       />
-
-      {/* Filtro de Pé Preferencial */}
       <FilterDropdown
         title="Pé Preferencial"
         options={pesPreferencial}
@@ -252,7 +228,7 @@ export default function RelatorioScreen() {
         }
       />
 
-      {/* Botoes de Selecao */}
+      {/* Botões de Seleção */}
       <View style={{ flexDirection: "row", gap: 8 }}>
         <TouchableOpacity
           onPress={selectAllFiltered}
@@ -292,21 +268,58 @@ export default function RelatorioScreen() {
     </View>
   );
 
+  if (isLoading) {
+    return (
+      <ScreenContainer>
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={{ marginTop: 12, color: colors.muted }}>Carregando atletas...</Text>
+        </View>
+      </ScreenContainer>
+    );
+  }
+
   return (
-    <ScreenContainer className="bg-background p-0">
-      {/* Header fixo com voltar */}
-      <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border, gap: 12 }}>
-        <TouchableOpacity onPress={() => router.back()} style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 6, paddingHorizontal: 8, borderRadius: 6, backgroundColor: colors.surface }}>
+    <ScreenContainer style={{ backgroundColor: colors.background, padding: 0 }}>
+      {/* Header */}
+      <View style={{
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+        gap: 12,
+        backgroundColor: colors.background,
+      }}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 6,
+            paddingVertical: 6,
+            paddingHorizontal: 8,
+            borderRadius: 6,
+            backgroundColor: colors.surface,
+          }}
+        >
           <IconSymbol name="chevron.left" size={20} color={colors.foreground} />
           <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>Voltar</Text>
         </TouchableOpacity>
-        <Text style={{ flex: 1, fontSize: 18, fontWeight: "600", color: colors.foreground }}>
+        <Text style={{ flex: 1, fontSize: 18, fontWeight: "700", color: colors.foreground }}>
           Gerar Relatório
         </Text>
       </View>
 
-      {/* TextInput fixo fora da FlatList */}
-      <View style={{ paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+      {/* Busca */}
+      <View style={{
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+        backgroundColor: colors.background,
+      }}>
         <TextInput
           placeholder="Buscar atleta..."
           value={searchQuery}
@@ -318,17 +331,23 @@ export default function RelatorioScreen() {
             paddingHorizontal: 12,
             paddingVertical: 8,
             color: colors.foreground,
+            backgroundColor: colors.surface,
           }}
           placeholderTextColor={colors.muted}
+          returnKeyType="done"
+          autoCorrect={false}
+          autoCapitalize="none"
         />
       </View>
 
-      {/* Lista de Atletas com Filtros no Header */}
+      {/* Lista */}
       <FlatList
         ListHeaderComponent={renderFilters}
         data={filteredAtletas}
         keyExtractor={(item) => item.id.toString()}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+        }
         renderItem={({ item }) => {
           const isSelected = selectedAtletasIds.includes(item.id);
           return (
@@ -341,13 +360,13 @@ export default function RelatorioScreen() {
                 paddingVertical: 12,
                 borderBottomWidth: 1,
                 borderBottomColor: colors.border,
-                backgroundColor: isSelected ? colors.surface : colors.background,
+                backgroundColor: isSelected ? colors.primary + "15" : colors.background,
               }}
             >
               <View
                 style={{
-                  width: 20,
-                  height: 20,
+                  width: 22,
+                  height: 22,
                   borderRadius: 4,
                   borderWidth: 2,
                   borderColor: isSelected ? colors.primary : colors.border,
@@ -357,31 +376,41 @@ export default function RelatorioScreen() {
                   justifyContent: "center",
                 }}
               >
-                {isSelected && <Text style={{ color: "white", fontWeight: "bold" }}>✓</Text>}
+                {isSelected && (
+                  <Text style={{ color: "white", fontWeight: "bold", fontSize: 13 }}>✓</Text>
+                )}
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontWeight: "600", color: colors.foreground }}>{item.nome}</Text>
                 <Text style={{ fontSize: 12, color: colors.muted }}>
-                  {item.posicao} • {item.clube} • {item.idade} anos
+                  {[item.posicao, item.clube, item.idade ? `${item.idade} anos` : null].filter(Boolean).join(" • ")}
                 </Text>
               </View>
             </TouchableOpacity>
           );
         }}
         ListFooterComponent={
-          <View style={{ padding: 16, gap: 8, marginBottom: 100 }}>
+          <View style={{ padding: 16, gap: 10, marginBottom: 40 }}>
             <TouchableOpacity
               onPress={handleGenerateReport}
               disabled={generatingPdf || selectedAtletasIds.length === 0}
               style={{
                 backgroundColor: selectedAtletasIds.length > 0 ? colors.primary : colors.border,
-                borderRadius: 8,
-                paddingVertical: 12,
+                borderRadius: 10,
+                paddingVertical: 14,
                 alignItems: "center",
+                flexDirection: "row",
+                justifyContent: "center",
+                gap: 8,
               }}
             >
-              <Text style={{ color: "white", fontWeight: "600", fontSize: 16 }}>
-                {generatingPdf ? "Gerando..." : "Gerar Relatório PDF"}
+              {generatingPdf ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <IconSymbol name="doc.fill" size={18} color="white" />
+              )}
+              <Text style={{ color: "white", fontWeight: "700", fontSize: 16 }}>
+                {generatingPdf ? "Gerando PDF..." : `Gerar PDF (${selectedAtletasIds.length} atletas)`}
               </Text>
             </TouchableOpacity>
 
@@ -390,28 +419,26 @@ export default function RelatorioScreen() {
               disabled={generatingExcel || selectedAtletasIds.length === 0}
               style={{
                 backgroundColor: selectedAtletasIds.length > 0 ? colors.primary : colors.border,
-                borderRadius: 8,
-                paddingVertical: 12,
+                borderRadius: 10,
+                paddingVertical: 14,
                 alignItems: "center",
+                flexDirection: "row",
+                justifyContent: "center",
+                gap: 8,
               }}
             >
-              <Text style={{ color: "white", fontWeight: "600", fontSize: 16 }}>
-                {generatingExcel ? "Exportando..." : "Exportar Excel"}
+              {generatingExcel ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <IconSymbol name="square.and.arrow.down" size={18} color="white" />
+              )}
+              <Text style={{ color: "white", fontWeight: "700", fontSize: 16 }}>
+                {generatingExcel ? "Exportando..." : `Exportar Excel (${selectedAtletasIds.length} atletas)`}
               </Text>
             </TouchableOpacity>
           </View>
         }
-        contentContainerStyle={{ paddingTop: 0, paddingBottom: 0 }}
-        scrollEnabled={true}
-      />
-
-      {/* Modal de Prévia de PDF */}
-      <PDFPreviewModal
-        visible={showPdfPreview}
-        pdfBlob={pdfBlob}
-        onClose={() => setShowPdfPreview(false)}
-        onDownload={handleDownloadPdf}
-        fileName="Relatorio_BDMD.pdf"
+        contentContainerStyle={{ paddingBottom: 0 }}
       />
     </ScreenContainer>
   );

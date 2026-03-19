@@ -58,7 +58,10 @@ async function downloadNative(blob: Blob, fileName: string) {
   }
   const base64 = btoa(binary);
 
-  const fileUri = FileSystem.documentDirectory + fileName;
+  const fileDir = FileSystem.cacheDirectory || FileSystem.documentDirectory;
+  if (!fileDir) throw new Error("Diretório de arquivos não disponível");
+
+  const fileUri = fileDir + fileName;
   await FileSystem.writeAsStringAsync(fileUri, base64, {
     encoding: FileSystem.EncodingType.Base64,
   });
@@ -68,6 +71,9 @@ async function downloadNative(blob: Blob, fileName: string) {
       mimeType: "application/pdf",
       dialogTitle: "Relatório BDMD",
     });
+  } else {
+    const { Alert } = await import("react-native");
+    Alert.alert("Aviso", "Arquivo salvo. Compartilhamento não disponível neste dispositivo.");
   }
 }
 
