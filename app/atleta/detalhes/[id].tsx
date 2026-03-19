@@ -16,6 +16,10 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
 
+const API_BASE = typeof window !== 'undefined'
+  ? `${window.location.protocol}//${window.location.hostname}:3000`
+  : 'http://127.0.0.1:3000';
+
 export default function AtletaDetalhesScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
@@ -53,7 +57,26 @@ export default function AtletaDetalhesScreen() {
           style: "destructive",
           onPress: async () => {
             setIsDeleting(true);
-            await deleteAtleta.mutateAsync({ id: Number(id) });
+            try {
+              // Tenta REST API primeiro (funciona na web e no app)
+              const response = await fetch(`${API_BASE}/api/atletas/${id}`, {
+                method: 'DELETE',
+              });
+              if (response.ok) {
+                Alert.alert("Sucesso", "Atleta deletado com sucesso!");
+                router.back();
+              } else {
+                throw new Error('Falha na REST API');
+              }
+            } catch {
+              // Fallback para tRPC
+              try {
+                await deleteAtleta.mutateAsync({ id: Number(id) });
+              } catch {
+                Alert.alert("Erro", "Falha ao deletar atleta");
+                setIsDeleting(false);
+              }
+            }
           },
         },
       ]

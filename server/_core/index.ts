@@ -151,6 +151,20 @@ async function startServer() {
     }
   });
 
+  // Endpoint para deletar atleta
+  app.delete("/api/atletas/:id", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const userId = 1;
+      console.log("[API] Deletando atleta:", id);
+      await db.deleteAtleta(id, userId);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("[API] Erro ao deletar atleta:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Endpoint para upload de foto
   app.post("/api/atletas/:id/foto", async (req, res) => {
     try {
