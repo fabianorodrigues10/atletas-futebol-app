@@ -509,7 +509,7 @@ export default function HomeScreen() {
         {/* Contador de Resultados */}
         <View className="flex-row justify-between items-center mt-3">
           <Text className="text-sm text-muted">
-            {totalAtletas} atleta{totalAtletas !== 1 ? "s" : ""} encontrado{totalAtletas !== 1 ? "s" : ""}
+            {filteredAtletas.length} atleta{filteredAtletas.length !== 1 ? "s" : ""} encontrado{filteredAtletas.length !== 1 ? "s" : ""}
           </Text>
           {activeFilterCount > 0 && (
             <TouchableOpacity onPress={clearFilters}>
