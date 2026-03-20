@@ -319,6 +319,25 @@ async function startServer() {
     }
   });
 
+  // Endpoint para deletar vídeo
+  app.delete("/api/atletas/:id/video/:videoId", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const videoId = Number(req.params.videoId);
+      const userId = 1;
+      
+      console.log("[API] Deletando vídeo:", videoId, "do atleta:", id);
+      
+      await db.deleteMidia(videoId, userId);
+      console.log("[API] Vídeo deletado do banco de dados:", videoId);
+      
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("[API] Erro ao deletar vídeo:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Middleware removido - tRPC trabalha nativamente com batch
 
   // Middleware removido - tRPC trabalha nativamente com batch

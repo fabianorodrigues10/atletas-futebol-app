@@ -59,6 +59,8 @@ export default function AtletaFormScreen() {
   const [naturalidade, setNaturalidade] = useState("");
   const [videoLinks, setVideoLinks] = useState<string[]>([]);
   const [originalVideoLinks, setOriginalVideoLinks] = useState<string[]>([]);
+  // Guarda os objetos completos dos vídeos originais (com id) para poder deletar
+  const [originalVideosData, setOriginalVideosData] = useState<{id: number; url: string}[]>([]);
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [videoInputValue, setVideoInputValue] = useState("");
   const [ogolLoading, setOgolLoading] = useState(false);
@@ -159,14 +161,16 @@ export default function AtletaFormScreen() {
       // Carregar vídeos do atleta
       const videos = (atleta as any).videos;
       if (videos && videos.length > 0) {
-        // Extrair apenas as URLs dos vídeos
+        // Extrair URLs e dados completos dos vídeos
         const videoUrls = videos.map((v: any) => v.url || v);
+        const videosData = videos.map((v: any) => ({ id: v.id, url: v.url || v }));
         setVideoLinks(videoUrls);
-        // Armazenar os vídeos originais para comparação
         setOriginalVideoLinks(videoUrls);
+        setOriginalVideosData(videosData);
       } else {
         setVideoLinks([]);
         setOriginalVideoLinks([]);
+        setOriginalVideosData([]);
       }
     }
   }, [atleta]);
@@ -646,57 +650,62 @@ export default function AtletaFormScreen() {
           }
         }
         
-        // Salvar apenas vídeos NOVOS (que não estavam salvos antes)
-        if (videoLinks && videoLinks.length > 0) {
-          console.log("[DEBUG] videoLinks atuais:", videoLinks);
-          console.log("[DEBUG] videoLinks originais:", originalVideoLinks);
-          
-          // Encontrar apenas os vídeos novos (que não estão em originalVideoLinks)
-          const novosVideos = videoLinks.filter(
-            (url) => !originalVideoLinks.includes(url.trim())
-          );
-          
-          console.log("[DEBUG] Vídeos novos para salvar:", novosVideos);
-          
-          if (novosVideos.length > 0) {
+        // Deletar vídeos que foram removidos da lista
+        const videosRemovidos = originalVideosData.filter(
+          (v) => !videoLinks.includes(v.url)
+        );
+        if (videosRemovidos.length > 0) {
+          console.log("[DEBUG] Vídeos para deletar:", videosRemovidos);
+          for (const video of videosRemovidos) {
             try {
-              for (const videoUrl of novosVideos) {
-                if (videoUrl.trim()) {
-                  console.log("[DEBUG] Salvando vídeo novo:", videoUrl);
-                  
-                  const videoResponse = await fetch(`${getApiBaseUrl()}/api/atletas/${id}/video`, {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                      url: videoUrl.trim(),
-                      nome: `Vídeo - ${new Date().toLocaleString()}`,
-                      descricao: 'Vídeo do YouTube',
-                    }),
-                    credentials: 'include',
-                  });
-                  
-                  if (!videoResponse.ok) {
-                    const errorData = await videoResponse.json();
-                    console.error("[DEBUG] Erro ao salvar vídeo:", errorData);
-                    throw new Error(errorData.error || 'Erro ao salvar vídeo');
-                  }
-                  
-                  const videoResult = await videoResponse.json();
-                  console.log("[DEBUG] Vídeo salvo com sucesso:", videoResult);
-                }
+              const delResp = await fetch(`${getApiBaseUrl()}/api/atletas/${id}/video/${video.id}`, {
+                method: 'DELETE',
+                credentials: 'include',
+              });
+              if (delResp.ok) {
+                console.log("[DEBUG] Vídeo deletado:", video.id);
+              } else {
+                console.error("[DEBUG] Erro ao deletar vídeo:", video.id);
               }
-              console.log("[DEBUG] Todos os vídeos novos salvos com sucesso");
-              // Invalidar cache para refetch dos atletas
-              await queryClient.invalidateQueries();
-            } catch (error) {
-              console.error("[DEBUG] Erro ao salvar vídeos:", error);
-              Alert.alert("Erro ao salvar vídeos", `Não foi possível salvar os vídeos. Tente novamente. Erro: ${error}`);
+            } catch (err) {
+              console.error("[DEBUG] Erro ao deletar vídeo:", err);
             }
-          } else {
-            console.log("[DEBUG] Nenhum vídeo novo para salvar");
           }
+        }
+
+        // Salvar apenas vídeos NOVOS (que não estavam salvos antes)
+        const novosVideos = videoLinks.filter(
+          (url) => !originalVideoLinks.includes(url.trim())
+        );
+        console.log("[DEBUG] Vídeos novos para salvar:", novosVideos);
+        if (novosVideos.length > 0) {
+          try {
+            for (const videoUrl of novosVideos) {
+              if (videoUrl.trim()) {
+                const videoResponse = await fetch(`${getApiBaseUrl()}/api/atletas/${id}/video`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    url: videoUrl.trim(),
+                    nome: `Vídeo - ${new Date().toLocaleString()}`,
+                    descricao: 'Vídeo do YouTube',
+                  }),
+                  credentials: 'include',
+                });
+                if (!videoResponse.ok) {
+                  const errorData = await videoResponse.json();
+                  throw new Error(errorData.error || 'Erro ao salvar vídeo');
+                }
+                console.log("[DEBUG] Vídeo salvo:", videoUrl);
+              }
+            }
+            await queryClient.invalidateQueries();
+          } catch (error) {
+            console.error("[DEBUG] Erro ao salvar vídeos:", error);
+            Alert.alert("Erro ao salvar vídeos", `Não foi possível salvar os vídeos. Erro: ${error}`);
+          }
+        } else {
+          console.log("[DEBUG] Nenhum vídeo novo para salvar");
         }
         
         Alert.alert("Sucesso", "Atleta atualizado com sucesso");
