@@ -24,6 +24,24 @@ import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useFocusEffect } from "expo-router";
 import { getApiBaseUrl } from "@/constants/oauth";
 
+// Calcula a idade atual a partir da data de nascimento (ISO string)
+function calcularIdadeAtual(dataNascimento: string | null | undefined): number | null {
+  if (!dataNascimento) return null;
+  try {
+    const nascimento = new Date(dataNascimento);
+    if (isNaN(nascimento.getTime())) return null;
+    const hoje = new Date();
+    let idade = hoje.getFullYear() - nascimento.getFullYear();
+    const mes = hoje.getMonth() - nascimento.getMonth();
+    if (mes < 0 || (mes === 0 && hoje.getDate() < nascimento.getDate())) {
+      idade--;
+    }
+    return idade >= 0 && idade <= 80 ? idade : null;
+  } catch {
+    return null;
+  }
+}
+
 const FAIXAS_IDADE = [
   { label: "Todas", min: 0, max: 99 },
   { label: "Sub-21", min: 1, max: 21 },
@@ -147,7 +165,7 @@ export default function HomeScreen() {
       }
       // Filtro por faixa de idade (múltiplas)
       if (selectedIdadeFaixas.length > 0) {
-        const idade = atleta.idade ?? 0;
+        const idade = calcularIdadeAtual(atleta.dataNascimento) ?? atleta.idade ?? 0;
         const matchesFaixa = selectedIdadeFaixas.some((faixaIdx) => {
           const faixa = FAIXAS_IDADE[faixaIdx];
           return idade >= faixa.min && idade <= faixa.max;
@@ -609,13 +627,16 @@ export default function HomeScreen() {
                       </Text>
                     </View>
                   )}
-                  {item.idade != null && item.idade > 0 && (
-                    <View style={{ backgroundColor: colors.success + "20", borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 }}>
-                      <Text style={{ fontSize: 12, color: colors.success, fontWeight: "500" }}>
-                        {item.idade} anos
-                      </Text>
-                    </View>
-                  )}
+                  {(() => {
+                    const idadeExibida = calcularIdadeAtual(item.dataNascimento) ?? (item.idade != null && item.idade > 0 ? item.idade : null);
+                    return idadeExibida != null ? (
+                      <View style={{ backgroundColor: colors.success + "20", borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 }}>
+                        <Text style={{ fontSize: 12, color: colors.success, fontWeight: "500" }}>
+                          {idadeExibida} anos
+                        </Text>
+                      </View>
+                    ) : null;
+                  })()}
                 </View>
               </TouchableOpacity>
 

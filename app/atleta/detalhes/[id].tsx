@@ -255,9 +255,25 @@ export default function AtletaDetalhesScreen() {
                   colors={colors}
                 />
               )}
-              {atleta.idade != null && atleta.idade > 0 && (
-                <InfoRow icon="number" label="Idade" value={`${atleta.idade} anos`} colors={colors} />
-              )}
+              {(() => {
+                const idadeExibida = (() => {
+                  if (atleta.dataNascimento) {
+                    const nascimento = new Date(atleta.dataNascimento);
+                    if (!isNaN(nascimento.getTime())) {
+                      const hoje = new Date();
+                      let i = hoje.getFullYear() - nascimento.getFullYear();
+                      const mes = hoje.getMonth() - nascimento.getMonth();
+                      if (mes < 0 || (mes === 0 && hoje.getDate() < nascimento.getDate())) i--;
+                      if (i >= 0 && i <= 80) return i;
+                    }
+                  }
+                  return atleta.idade != null && atleta.idade > 0 ? atleta.idade : null;
+                })();
+                return idadeExibida != null ? (
+                  <InfoRow icon="number" label="Idade" value={`${idadeExibida} anos`} colors={colors} />
+                ) : null;
+              })()}
+
               {atleta.altura != null && (
                 <InfoRow icon="ruler" label="Altura" value={`${Number(atleta.altura).toFixed(2)} m`} colors={colors} />
               )}
