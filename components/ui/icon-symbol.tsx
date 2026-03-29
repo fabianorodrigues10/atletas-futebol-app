@@ -47,6 +47,9 @@ const MAPPING = {
   "photo.fill": "photo",
   "person.crop.circle.badge.exclamationmark": "person-off",
   "camera.fill": "photo-camera",
+  "shield.fill": "shield",
+  "waveform.path.ecg": "analytics",
+  "sportscourt.fill": "sports-soccer",
 } as IconMapping;
 
 /**

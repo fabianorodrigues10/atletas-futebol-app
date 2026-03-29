@@ -43,6 +43,13 @@
       "when": 1771884027680,
       "tag": "0005_supreme_magik",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1774803597133,
+      "tag": "0006_ambiguous_wraith",
+      "breakpoints": true
     }
   ]
 }

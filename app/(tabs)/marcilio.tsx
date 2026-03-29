@@ -1,0 +1,962 @@
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+  FlatList,
+  Modal,
+  TextInput,
+  Alert,
+  StyleSheet,
+  Dimensions,
+  Platform,
+} from "react-native";
+import { ScreenContainer } from "@/components/screen-container";
+import { useRouter } from "expo-router";
+import { getApiBaseUrl } from "@/constants/oauth";
+import Svg, { Polygon, Circle, Line, Text as SvgText } from "react-native-svg";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const CORES = {
+  azulEscuro: "#1a237e",
+  azulMedio: "#283593",
+  azulClaro: "#3949ab",
+  vermelho: "#c62828",
+  vermelhoClaro: "#ef5350",
+  branco: "#ffffff",
+  cinzaClaro: "#f5f5f5",
+  cinzaMedio: "#e0e0e0",
+  cinzaTexto: "#757575",
+  preto: "#212121",
+  verde: "#2e7d32",
+  amarelo: "#f57f17",
+};
+
+type Atleta = {
+  id: number;
+  nome: string;
+  posicao: string | null;
+  segundaPosicao: string | null;
+  clube: string | null;
+  dataNascimento: string | null;
+  idade: number | null;
+  altura: string | null;
+  pe: string | null;
+  escala: string | null;
+  valencia: string | null;
+  naturalidade: string | null;
+  fotoUrl: string | null;
+  estatisticas: EstatisticasTemporada | null;
+};
+
+type EstatisticasTemporada = {
+  id?: number;
+  atletaId?: number;
+  temporada?: string;
+  minutosJogados: number;
+  jogos: number;
+  jogosTitular: number;
+  gols: number;
+  assistencias: number;
+  finalizacoes: number;
+  desarmes: number;
+  interceptacoes: number;
+  duelos: number;
+  duelosGanhos: number;
+  passes: number;
+  passesCompletos: number;
+  cartoesAmarelos: number;
+  cartoesVermelhos: number;
+  notaTecnica: string | null;
+  notaFisica: string | null;
+  notaTatica: string | null;
+  notaAtitudinal: string | null;
+  notaPotencial: string | null;
+  observacoes: string | null;
+};
+
+const STATS_VAZIA: EstatisticasTemporada = {
+  minutosJogados: 0, jogos: 0, jogosTitular: 0,
+  gols: 0, assistencias: 0, finalizacoes: 0,
+  desarmes: 0, interceptacoes: 0, duelos: 0, duelosGanhos: 0,
+  passes: 0, passesCompletos: 0,
+  cartoesAmarelos: 0, cartoesVermelhos: 0,
+  notaTecnica: null, notaFisica: null, notaTatica: null, notaAtitudinal: null, notaPotencial: null,
+  observacoes: null,
+};
+
+function calcularIdade(dataNascimento: string | null, idadeDb: number | null): number | null {
+  if (!dataNascimento) return idadeDb;
+  try {
+    const hoje = new Date();
+    const nasc = new Date(dataNascimento);
+    let idade = hoje.getFullYear() - nasc.getFullYear();
+    const m = hoje.getMonth() - nasc.getMonth();
+    if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) idade--;
+    return idade;
+  } catch {
+    return idadeDb;
+  }
+}
+
+// ==================== GRÁFICO RADAR ====================
+function GraficoRadar({ atleta, benchmark }: { atleta: Atleta; benchmark: any }) {
+  const tamanho = Math.min(SCREEN_WIDTH - 64, 280);
+  const centro = tamanho / 2;
+  const raio = centro - 30;
+  const categorias = [
+    { label: "Técnica", valor: parseFloat(atleta.estatisticas?.notaTecnica || "0") },
+    { label: "Física", valor: parseFloat(atleta.estatisticas?.notaFisica || "0") },
+    { label: "Tática", valor: parseFloat(atleta.estatisticas?.notaTatica || "0") },
+    { label: "Atitudinal", valor: parseFloat(atleta.estatisticas?.notaAtitudinal || "0") },
+    { label: "Potencial", valor: parseFloat(atleta.estatisticas?.notaPotencial || "0") },
+  ];
+  const n = categorias.length;
+  const angulo = (2 * Math.PI) / n;
+  const temDados = categorias.some(c => c.valor > 0);
+
+  const pontoParaXY = (indice: number, valor: number, max = 10) => {
+    const ang = indice * angulo - Math.PI / 2;
+    const r = (valor / max) * raio;
+    return { x: centro + r * Math.cos(ang), y: centro + r * Math.sin(ang) };
+  };
+
+  const pontosAtleta = categorias.map((c, i) => pontoParaXY(i, c.valor));
+  const pontosAtletaStr = pontosAtleta.map(p => `${p.x},${p.y}`).join(" ");
+
+  // Grades de fundo (20%, 40%, 60%, 80%, 100%)
+  const grades = [2, 4, 6, 8, 10];
+
+  return (
+    <View style={{ alignItems: "center" }}>
+      {!temDados ? (
+        <View style={{ width: tamanho, height: tamanho, alignItems: "center", justifyContent: "center", backgroundColor: CORES.cinzaClaro, borderRadius: 12 }}>
+          <Text style={{ color: CORES.cinzaTexto, fontSize: 13, textAlign: "center" }}>
+            Preencha as notas técnicas{"\n"}para ver o gráfico radar
+          </Text>
+        </View>
+      ) : (
+        <Svg width={tamanho} height={tamanho}>
+          {/* Grades de fundo */}
+          {grades.map((g) => {
+            const pts = categorias.map((_, i) => pontoParaXY(i, g));
+            return (
+              <Polygon
+                key={g}
+                points={pts.map(p => `${p.x},${p.y}`).join(" ")}
+                fill="none"
+                stroke={CORES.cinzaMedio}
+                strokeWidth="1"
+              />
+            );
+          })}
+          {/* Linhas dos eixos */}
+          {categorias.map((_, i) => {
+            const fim = pontoParaXY(i, 10);
+            return <Line key={i} x1={centro} y1={centro} x2={fim.x} y2={fim.y} stroke={CORES.cinzaMedio} strokeWidth="1" />;
+          })}
+          {/* Área do atleta */}
+          <Polygon
+            points={pontosAtletaStr}
+            fill={`${CORES.azulClaro}40`}
+            stroke={CORES.azulClaro}
+            strokeWidth="2"
+          />
+          {/* Pontos */}
+          {pontosAtleta.map((p, i) => (
+            <Circle key={i} cx={p.x} cy={p.y} r={4} fill={CORES.azulClaro} />
+          ))}
+          {/* Labels */}
+          {categorias.map((c, i) => {
+            const pos = pontoParaXY(i, 11.5);
+            return (
+              <SvgText
+                key={i}
+                x={pos.x}
+                y={pos.y}
+                textAnchor="middle"
+                fontSize="10"
+                fill={CORES.preto}
+                fontWeight="600"
+              >
+                {c.label}
+              </SvgText>
+            );
+          })}
+          {/* Valores */}
+          {categorias.map((c, i) => {
+            if (c.valor === 0) return null;
+            const pos = pontoParaXY(i, c.valor);
+            return (
+              <SvgText
+                key={`v${i}`}
+                x={pos.x + 6}
+                y={pos.y - 4}
+                fontSize="9"
+                fill={CORES.azulEscuro}
+                fontWeight="bold"
+              >
+                {c.valor.toFixed(1)}
+              </SvgText>
+            );
+          })}
+        </Svg>
+      )}
+    </View>
+  );
+}
+
+// ==================== MODAL DE ESTATÍSTICAS ====================
+function ModalEstatisticas({
+  atleta,
+  visivel,
+  onFechar,
+  onSalvar,
+}: {
+  atleta: Atleta | null;
+  visivel: boolean;
+  onFechar: () => void;
+  onSalvar: (stats: EstatisticasTemporada) => void;
+}) {
+  const [stats, setStats] = useState<EstatisticasTemporada>(STATS_VAZIA);
+  const [salvando, setSalvando] = useState(false);
+
+  useEffect(() => {
+    if (atleta) {
+      setStats(atleta.estatisticas || STATS_VAZIA);
+    }
+  }, [atleta]);
+
+  const campo = (label: string, chave: keyof EstatisticasTemporada, tipo: "numero" | "decimal" = "numero") => (
+    <View style={styles.campoPar}>
+      <Text style={styles.labelCampo}>{label}</Text>
+      <TextInput
+        style={styles.inputCampo}
+        value={stats[chave]?.toString() || ""}
+        onChangeText={(v) => setStats(prev => ({ ...prev, [chave]: tipo === "decimal" ? v : (parseInt(v) || 0) }))}
+        keyboardType="numeric"
+        placeholder="0"
+      />
+    </View>
+  );
+
+  const handleSalvar = async () => {
+    if (!atleta) return;
+    setSalvando(true);
+    try {
+      const base = getApiBaseUrl();
+      await fetch(`${base}/api/atletas/${atleta.id}/estatisticas`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...stats, temporada: "2025" }),
+      });
+      onSalvar(stats);
+      onFechar();
+    } catch (e) {
+      Alert.alert("Erro", "Não foi possível salvar as estatísticas.");
+    } finally {
+      setSalvando(false);
+    }
+  };
+
+  if (!atleta) return null;
+
+  return (
+    <Modal visible={visivel} animationType="slide" presentationStyle="pageSheet">
+      <View style={{ flex: 1, backgroundColor: CORES.branco }}>
+        <View style={styles.modalHeader}>
+          <TouchableOpacity onPress={onFechar} style={styles.btnFechar}>
+            <Text style={{ color: CORES.vermelho, fontWeight: "700", fontSize: 15 }}>Cancelar</Text>
+          </TouchableOpacity>
+          <Text style={styles.modalTitulo}>{atleta.nome}</Text>
+          <TouchableOpacity onPress={handleSalvar} style={styles.btnSalvar} disabled={salvando}>
+            {salvando ? <ActivityIndicator size="small" color={CORES.branco} /> : <Text style={{ color: CORES.branco, fontWeight: "700", fontSize: 15 }}>Salvar</Text>}
+          </TouchableOpacity>
+        </View>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
+          <Text style={styles.secaoTitulo}>⏱ Minutagem</Text>
+          <View style={styles.gridCampos}>
+            {campo("Minutos", "minutosJogados")}
+            {campo("Jogos", "jogos")}
+            {campo("Titular", "jogosTitular")}
+          </View>
+
+          <Text style={styles.secaoTitulo}>⚽ Ofensivo</Text>
+          <View style={styles.gridCampos}>
+            {campo("Gols", "gols")}
+            {campo("Assistências", "assistencias")}
+            {campo("Finalizações", "finalizacoes")}
+          </View>
+
+          <Text style={styles.secaoTitulo}>🛡 Defensivo</Text>
+          <View style={styles.gridCampos}>
+            {campo("Desarmes", "desarmes")}
+            {campo("Interceptações", "interceptacoes")}
+            {campo("Duelos", "duelos")}
+            {campo("Duelos Ganhos", "duelosGanhos")}
+          </View>
+
+          <Text style={styles.secaoTitulo}>🎯 Passe</Text>
+          <View style={styles.gridCampos}>
+            {campo("Passes", "passes")}
+            {campo("Passes Certos", "passesCompletos")}
+          </View>
+
+          <Text style={styles.secaoTitulo}>🟨 Disciplina</Text>
+          <View style={styles.gridCampos}>
+            {campo("Amarelos", "cartoesAmarelos")}
+            {campo("Vermelhos", "cartoesVermelhos")}
+          </View>
+
+          <Text style={styles.secaoTitulo}>⭐ Notas Técnicas (0–10)</Text>
+          <View style={styles.gridCampos}>
+            {campo("Técnica", "notaTecnica", "decimal")}
+            {campo("Física", "notaFisica", "decimal")}
+            {campo("Tática", "notaTatica", "decimal")}
+            {campo("Atitudinal", "notaAtitudinal", "decimal")}
+            {campo("Potencial", "notaPotencial", "decimal")}
+          </View>
+
+          <Text style={styles.secaoTitulo}>📝 Observações</Text>
+          <TextInput
+            style={[styles.inputCampo, { height: 80, textAlignVertical: "top", marginBottom: 32 }]}
+            value={stats.observacoes || ""}
+            onChangeText={(v) => setStats(prev => ({ ...prev, observacoes: v }))}
+            multiline
+            placeholder="Observações técnicas sobre o atleta..."
+          />
+        </ScrollView>
+      </View>
+    </Modal>
+  );
+}
+
+// ==================== CARD DO ATLETA ====================
+function CardAtleta({
+  atleta,
+  selecionado,
+  onToggle,
+  onEditar,
+  onVerDetalhes,
+}: {
+  atleta: Atleta;
+  selecionado: boolean;
+  onToggle: () => void;
+  onEditar: () => void;
+  onVerDetalhes: () => void;
+}) {
+  const idade = calcularIdade(atleta.dataNascimento, atleta.idade);
+  const stats = atleta.estatisticas;
+  const temStats = stats && (stats.jogos > 0 || stats.minutosJogados > 0);
+
+  return (
+    <View style={[styles.cardAtleta, selecionado && styles.cardSelecionado]}>
+      <TouchableOpacity style={styles.cardHeader} onPress={onVerDetalhes} activeOpacity={0.8}>
+        <View style={styles.cardAvatar}>
+          <Text style={styles.cardAvatarLetra}>{atleta.nome.charAt(0).toUpperCase()}</Text>
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.cardNome}>{atleta.nome}</Text>
+          <Text style={styles.cardPosicao}>{atleta.posicao || "—"}{atleta.segundaPosicao ? ` / ${atleta.segundaPosicao}` : ""}</Text>
+          <View style={{ flexDirection: "row", gap: 8, marginTop: 2 }}>
+            {idade && <Text style={styles.cardInfo}>{idade} anos</Text>}
+            {atleta.altura && <Text style={styles.cardInfo}>{parseFloat(atleta.altura).toFixed(2)}m</Text>}
+            {atleta.escala && <View style={styles.badgeEscala}><Text style={styles.badgeEscalaTexto}>{atleta.escala}</Text></View>}
+          </View>
+        </View>
+        <TouchableOpacity
+          style={[styles.checkBox, selecionado && styles.checkBoxSelecionado]}
+          onPress={onToggle}
+        >
+          {selecionado && <Text style={{ color: CORES.branco, fontSize: 12, fontWeight: "bold" }}>✓</Text>}
+        </TouchableOpacity>
+      </TouchableOpacity>
+
+      {temStats && (
+        <View style={styles.statsRow}>
+          <View style={styles.statItem}>
+            <Text style={styles.statValor}>{stats!.jogos}</Text>
+            <Text style={styles.statLabel}>Jogos</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statValor}>{stats!.minutosJogados}</Text>
+            <Text style={styles.statLabel}>Min</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statValor}>{stats!.gols}</Text>
+            <Text style={styles.statLabel}>Gols</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statValor}>{stats!.assistencias}</Text>
+            <Text style={styles.statLabel}>Assist</Text>
+          </View>
+          {stats!.passes > 0 && (
+            <View style={styles.statItem}>
+              <Text style={styles.statValor}>
+                {Math.round((stats!.passesCompletos / stats!.passes) * 100)}%
+              </Text>
+              <Text style={styles.statLabel}>Passes</Text>
+            </View>
+          )}
+        </View>
+      )}
+
+      <View style={styles.cardAcoes}>
+        <TouchableOpacity style={styles.btnEditar} onPress={onEditar}>
+          <Text style={styles.btnEditarTexto}>✏️ Editar Dados</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.btnVerPerfil} onPress={onVerDetalhes}>
+          <Text style={styles.btnVerPerfilTexto}>Ver Perfil →</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+// ==================== TELA PRINCIPAL ====================
+export default function MarcilioScreen() {
+  const router = useRouter();
+  const [elenco, setElenco] = useState<Atleta[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [filtroPosicao, setFiltroPosicao] = useState("");
+  const [filtroIdadeMin, setFiltroIdadeMin] = useState("");
+  const [filtroIdadeMax, setFiltroIdadeMax] = useState("");
+  const [filtroMinutos, setFiltroMinutos] = useState("");
+  const [mostrarFiltros, setMostrarFiltros] = useState(false);
+  const [selecionados, setSelecionados] = useState<number[]>([]);
+  const [atletaEditando, setAtletaEditando] = useState<Atleta | null>(null);
+  const [modalStatsVisivel, setModalStatsVisivel] = useState(false);
+  const [abaAtiva, setAbaAtiva] = useState<"elenco" | "comparar" | "radar">("elenco");
+
+  const carregarElenco = useCallback(async () => {
+    try {
+      setCarregando(true);
+      const base = getApiBaseUrl();
+      const resp = await fetch(`${base}/api/marcilio/elenco?temporada=2025`);
+      if (resp.ok) {
+        const data = await resp.json();
+        setElenco(data);
+      }
+    } catch (e) {
+      console.error("Erro ao carregar elenco:", e);
+    } finally {
+      setCarregando(false);
+    }
+  }, []);
+
+  useEffect(() => { carregarElenco(); }, [carregarElenco]);
+
+  const posicoes = useMemo(() => {
+    const set = new Set<string>();
+    elenco.forEach(a => { if (a.posicao) set.add(a.posicao); });
+    return Array.from(set).sort();
+  }, [elenco]);
+
+  const elencoFiltrado = useMemo(() => {
+    return elenco.filter(a => {
+      const idade = calcularIdade(a.dataNascimento, a.idade);
+      if (filtroPosicao && a.posicao !== filtroPosicao && a.segundaPosicao !== filtroPosicao) return false;
+      if (filtroIdadeMin && idade !== null && idade < parseInt(filtroIdadeMin)) return false;
+      if (filtroIdadeMax && idade !== null && idade > parseInt(filtroIdadeMax)) return false;
+      if (filtroMinutos && (!a.estatisticas || (a.estatisticas.minutosJogados || 0) < parseInt(filtroMinutos))) return false;
+      return true;
+    });
+  }, [elenco, filtroPosicao, filtroIdadeMin, filtroIdadeMax, filtroMinutos]);
+
+  // Estatísticas do dashboard
+  const dashboard = useMemo(() => {
+    if (!elenco.length) return null;
+    const idades = elenco.map(a => calcularIdade(a.dataNascimento, a.idade)).filter(Boolean) as number[];
+    const alturas = elenco.map(a => parseFloat(a.altura || "0")).filter(Boolean);
+    const mediaIdade = idades.length ? (idades.reduce((a, b) => a + b, 0) / idades.length).toFixed(1) : "—";
+    const mediaAltura = alturas.length ? (alturas.reduce((a, b) => a + b, 0) / alturas.length).toFixed(2) : "—";
+    const totalGols = elenco.reduce((acc, a) => acc + (a.estatisticas?.gols || 0), 0);
+    const totalMinutos = elenco.reduce((acc, a) => acc + (a.estatisticas?.minutosJogados || 0), 0);
+    const porPosicao: Record<string, number> = {};
+    elenco.forEach(a => { if (a.posicao) porPosicao[a.posicao] = (porPosicao[a.posicao] || 0) + 1; });
+    return { mediaIdade, mediaAltura, totalGols, totalMinutos, porPosicao, total: elenco.length };
+  }, [elenco]);
+
+  const atletasSelecionados = useMemo(() => elenco.filter(a => selecionados.includes(a.id)), [elenco, selecionados]);
+
+  const toggleSelecionado = (id: number) => {
+    setSelecionados(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
+  const handleSalvarStats = (stats: EstatisticasTemporada) => {
+    if (!atletaEditando) return;
+    setElenco(prev => prev.map(a => a.id === atletaEditando.id ? { ...a, estatisticas: stats } : a));
+  };
+
+  const irParaRelatorio = () => {
+    if (selecionados.length === 0) {
+      Alert.alert("Atenção", "Selecione pelo menos um atleta para gerar o relatório.");
+      return;
+    }
+    router.push("/relatorio");
+  };
+
+  const renderDashboard = () => (
+    <View>
+      {/* Cards do dashboard */}
+      <View style={styles.dashboardGrid}>
+        <View style={styles.dashCard}>
+          <Text style={styles.dashValor}>{dashboard?.total || 0}</Text>
+          <Text style={styles.dashLabel}>Atletas</Text>
+        </View>
+        <View style={styles.dashCard}>
+          <Text style={styles.dashValor}>{dashboard?.mediaIdade || "—"}</Text>
+          <Text style={styles.dashLabel}>Média Idade</Text>
+        </View>
+        <View style={styles.dashCard}>
+          <Text style={styles.dashValor}>{dashboard?.mediaAltura ? `${dashboard.mediaAltura}m` : "—"}</Text>
+          <Text style={styles.dashLabel}>Média Altura</Text>
+        </View>
+        <View style={styles.dashCard}>
+          <Text style={styles.dashValor}>{dashboard?.totalGols || 0}</Text>
+          <Text style={styles.dashLabel}>Gols</Text>
+        </View>
+      </View>
+
+      {/* Distribuição por posição */}
+      {dashboard && Object.keys(dashboard.porPosicao).length > 0 && (
+        <View style={styles.secaoCard}>
+          <Text style={styles.secaoTituloCard}>Distribuição por Posição</Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+            {Object.entries(dashboard.porPosicao).sort((a, b) => b[1] - a[1]).map(([pos, qtd]) => (
+              <View key={pos} style={styles.badgePosicao}>
+                <Text style={styles.badgePosicaoTexto}>{pos}</Text>
+                <View style={styles.badgePosicaoNum}>
+                  <Text style={{ color: CORES.branco, fontSize: 11, fontWeight: "bold" }}>{qtd}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
+
+      {/* Filtros */}
+      <TouchableOpacity style={styles.btnFiltros} onPress={() => setMostrarFiltros(!mostrarFiltros)}>
+        <Text style={styles.btnFiltrosTexto}>{mostrarFiltros ? "▲ Ocultar Filtros" : "▼ Filtros Avançados"}</Text>
+      </TouchableOpacity>
+
+      {mostrarFiltros && (
+        <View style={styles.filtrosContainer}>
+          <Text style={styles.filtroLabel}>Posição</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
+            <TouchableOpacity
+              style={[styles.chipPosicao, !filtroPosicao && styles.chipPosicaoAtivo]}
+              onPress={() => setFiltroPosicao("")}
+            >
+              <Text style={[styles.chipPosicaoTexto, !filtroPosicao && styles.chipPosicaoTextoAtivo]}>Todas</Text>
+            </TouchableOpacity>
+            {posicoes.map(p => (
+              <TouchableOpacity
+                key={p}
+                style={[styles.chipPosicao, filtroPosicao === p && styles.chipPosicaoAtivo]}
+                onPress={() => setFiltroPosicao(filtroPosicao === p ? "" : p)}
+              >
+                <Text style={[styles.chipPosicaoTexto, filtroPosicao === p && styles.chipPosicaoTextoAtivo]}>{p}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
+          <View style={{ flexDirection: "row", gap: 12 }}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.filtroLabel}>Idade Mín.</Text>
+              <TextInput style={styles.filtroInput} value={filtroIdadeMin} onChangeText={setFiltroIdadeMin} keyboardType="numeric" placeholder="Ex: 18" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.filtroLabel}>Idade Máx.</Text>
+              <TextInput style={styles.filtroInput} value={filtroIdadeMax} onChangeText={setFiltroIdadeMax} keyboardType="numeric" placeholder="Ex: 30" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.filtroLabel}>Min. Mínimos</Text>
+              <TextInput style={styles.filtroInput} value={filtroMinutos} onChangeText={setFiltroMinutos} keyboardType="numeric" placeholder="Ex: 90" />
+            </View>
+          </View>
+
+          {(filtroPosicao || filtroIdadeMin || filtroIdadeMax || filtroMinutos) && (
+            <TouchableOpacity onPress={() => { setFiltroPosicao(""); setFiltroIdadeMin(""); setFiltroIdadeMax(""); setFiltroMinutos(""); }} style={styles.btnLimparFiltros}>
+              <Text style={{ color: CORES.vermelho, fontSize: 13, fontWeight: "600" }}>✕ Limpar Filtros</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
+
+      {/* Lista de atletas */}
+      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+        <Text style={styles.totalAtletas}>{elencoFiltrado.length} atleta{elencoFiltrado.length !== 1 ? "s" : ""}</Text>
+        {selecionados.length > 0 && (
+          <TouchableOpacity style={styles.btnRelatorio} onPress={irParaRelatorio}>
+            <Text style={styles.btnRelatorioTexto}>📄 Relatório ({selecionados.length})</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {elencoFiltrado.map(atleta => (
+        <CardAtleta
+          key={atleta.id}
+          atleta={atleta}
+          selecionado={selecionados.includes(atleta.id)}
+          onToggle={() => toggleSelecionado(atleta.id)}
+          onEditar={() => { setAtletaEditando(atleta); setModalStatsVisivel(true); }}
+          onVerDetalhes={() => router.push(`/atleta/detalhes/${atleta.id}`)}
+        />
+      ))}
+    </View>
+  );
+
+  const renderComparar = () => {
+    if (selecionados.length < 2) {
+      return (
+        <View style={styles.estadoVazio}>
+          <Text style={styles.estadoVazioIcone}>⚖️</Text>
+          <Text style={styles.estadoVazioTitulo}>Comparar Atletas</Text>
+          <Text style={styles.estadoVazioTexto}>Selecione 2 ou mais atletas na aba Elenco para comparar suas estatísticas.</Text>
+        </View>
+      );
+    }
+
+    const campos: { label: string; chave: keyof EstatisticasTemporada }[] = [
+      { label: "Jogos", chave: "jogos" },
+      { label: "Minutos", chave: "minutosJogados" },
+      { label: "Gols", chave: "gols" },
+      { label: "Assistências", chave: "assistencias" },
+      { label: "Finalizações", chave: "finalizacoes" },
+      { label: "Desarmes", chave: "desarmes" },
+      { label: "Interceptações", chave: "interceptacoes" },
+      { label: "Amarelos", chave: "cartoesAmarelos" },
+    ];
+
+    return (
+      <View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View>
+            {/* Header */}
+            <View style={[styles.tabelaRow, styles.tabelaHeader]}>
+              <Text style={[styles.tabelaCelula, styles.tabelaLabelCol]}>Estatística</Text>
+              {atletasSelecionados.map(a => (
+                <Text key={a.id} style={[styles.tabelaCelula, styles.tabelaAtletaCol]} numberOfLines={2}>{a.nome}</Text>
+              ))}
+            </View>
+            {/* Linhas */}
+            {campos.map((campo, idx) => {
+              const valores = atletasSelecionados.map(a => Number(a.estatisticas?.[campo.chave] || 0));
+              const maximo = Math.max(...valores);
+              return (
+                <View key={campo.chave} style={[styles.tabelaRow, idx % 2 === 0 && { backgroundColor: CORES.cinzaClaro }]}>
+                  <Text style={[styles.tabelaCelula, styles.tabelaLabelCol, { color: CORES.cinzaTexto }]}>{campo.label}</Text>
+                  {atletasSelecionados.map(a => {
+                    const val = Number(a.estatisticas?.[campo.chave] || 0);
+                    const destaque = val === maximo && maximo > 0;
+                    return (
+                      <Text key={a.id} style={[styles.tabelaCelula, styles.tabelaAtletaCol, destaque && { color: CORES.verde, fontWeight: "bold" }]}>
+                        {val}
+                      </Text>
+                    );
+                  })}
+                </View>
+              );
+            })}
+            {/* Notas */}
+            {[
+              { label: "Nota Técnica", chave: "notaTecnica" as keyof EstatisticasTemporada },
+              { label: "Nota Física", chave: "notaFisica" as keyof EstatisticasTemporada },
+              { label: "Nota Tática", chave: "notaTatica" as keyof EstatisticasTemporada },
+              { label: "Potencial", chave: "notaPotencial" as keyof EstatisticasTemporada },
+            ].map((campo, idx) => {
+              const valores = atletasSelecionados.map(a => parseFloat((a.estatisticas?.[campo.chave] as string) || "0"));
+              const maximo = Math.max(...valores);
+              return (
+                <View key={campo.chave} style={[styles.tabelaRow, (campos.length + idx) % 2 === 0 && { backgroundColor: CORES.cinzaClaro }]}>
+                  <Text style={[styles.tabelaCelula, styles.tabelaLabelCol, { color: CORES.cinzaTexto }]}>{campo.label}</Text>
+                  {atletasSelecionados.map(a => {
+                    const val = parseFloat((a.estatisticas?.[campo.chave] as string) || "0");
+                    const destaque = val === maximo && maximo > 0;
+                    return (
+                      <Text key={a.id} style={[styles.tabelaCelula, styles.tabelaAtletaCol, destaque && { color: CORES.verde, fontWeight: "bold" }]}>
+                        {val > 0 ? val.toFixed(1) : "—"}
+                      </Text>
+                    );
+                  })}
+                </View>
+              );
+            })}
+          </View>
+        </ScrollView>
+        <Text style={{ color: CORES.cinzaTexto, fontSize: 11, marginTop: 8, textAlign: "center" }}>
+          ✅ Destaque em verde = melhor valor entre os selecionados
+        </Text>
+      </View>
+    );
+  };
+
+  const renderRadar = () => {
+    if (selecionados.length === 0) {
+      return (
+        <View style={styles.estadoVazio}>
+          <Text style={styles.estadoVazioIcone}>🕸️</Text>
+          <Text style={styles.estadoVazioTitulo}>Gráfico Radar</Text>
+          <Text style={styles.estadoVazioTexto}>Selecione atletas na aba Elenco e preencha as notas técnicas para visualizar o radar.</Text>
+        </View>
+      );
+    }
+
+    return (
+      <View>
+        {atletasSelecionados.map(atleta => (
+          <View key={atleta.id} style={styles.secaoCard}>
+            <Text style={styles.secaoTituloCard}>{atleta.nome} — {atleta.posicao || "Posição não informada"}</Text>
+            <GraficoRadar atleta={atleta} benchmark={null} />
+            {atleta.estatisticas?.observacoes && (
+              <View style={{ marginTop: 12, padding: 10, backgroundColor: CORES.cinzaClaro, borderRadius: 8 }}>
+                <Text style={{ fontSize: 12, color: CORES.cinzaTexto, fontStyle: "italic" }}>
+                  📝 {atleta.estatisticas.observacoes}
+                </Text>
+              </View>
+            )}
+          </View>
+        ))}
+      </View>
+    );
+  };
+
+  return (
+    <ScreenContainer>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerEsquerda}>
+          <View style={styles.escudoContainer}>
+            <Text style={styles.escudoTexto}>⚽</Text>
+          </View>
+          <View>
+            <Text style={styles.headerTitulo}>Análise de Elenco</Text>
+            <Text style={styles.headerSubtitulo}>Marcílio Dias</Text>
+          </View>
+        </View>
+        <TouchableOpacity style={styles.btnAtualizar} onPress={carregarElenco}>
+          <Text style={{ color: CORES.azulClaro, fontSize: 12, fontWeight: "600" }}>↻ Atualizar</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Abas */}
+      <View style={styles.abas}>
+        {(["elenco", "comparar", "radar"] as const).map(aba => (
+          <TouchableOpacity
+            key={aba}
+            style={[styles.aba, abaAtiva === aba && styles.abaAtiva]}
+            onPress={() => setAbaAtiva(aba)}
+          >
+            <Text style={[styles.abaTexto, abaAtiva === aba && styles.abaTextoAtivo]}>
+              {aba === "elenco" ? "🏟 Elenco" : aba === "comparar" ? "⚖️ Comparar" : "🕸️ Radar"}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {carregando ? (
+        <View style={styles.estadoVazio}>
+          <ActivityIndicator size="large" color={CORES.azulClaro} />
+          <Text style={{ color: CORES.cinzaTexto, marginTop: 12 }}>Carregando elenco...</Text>
+        </View>
+      ) : elenco.length === 0 ? (
+        <View style={styles.estadoVazio}>
+          <Text style={styles.estadoVazioIcone}>🏟️</Text>
+          <Text style={styles.estadoVazioTitulo}>Nenhum atleta encontrado</Text>
+          <Text style={styles.estadoVazioTexto}>
+            Cadastre atletas com o clube "Marcílio Dias/SC" para que apareçam aqui automaticamente.
+          </Text>
+        </View>
+      ) : (
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+          {abaAtiva === "elenco" && renderDashboard()}
+          {abaAtiva === "comparar" && renderComparar()}
+          {abaAtiva === "radar" && renderRadar()}
+        </ScrollView>
+      )}
+
+      <ModalEstatisticas
+        atleta={atletaEditando}
+        visivel={modalStatsVisivel}
+        onFechar={() => { setModalStatsVisivel(false); setAtletaEditando(null); }}
+        onSalvar={handleSalvarStats}
+      />
+    </ScreenContainer>
+  );
+}
+
+const styles = StyleSheet.create({
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: CORES.azulEscuro,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  headerEsquerda: { flexDirection: "row", alignItems: "center", gap: 10 },
+  escudoContainer: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: CORES.vermelho,
+    alignItems: "center", justifyContent: "center",
+  },
+  escudoTexto: { fontSize: 20 },
+  headerTitulo: { color: CORES.branco, fontSize: 16, fontWeight: "800" },
+  headerSubtitulo: { color: `${CORES.branco}99`, fontSize: 12 },
+  btnAtualizar: { padding: 8, backgroundColor: `${CORES.branco}20`, borderRadius: 8 },
+  abas: {
+    flexDirection: "row",
+    backgroundColor: CORES.azulMedio,
+    paddingHorizontal: 8,
+    paddingBottom: 0,
+  },
+  aba: {
+    flex: 1, paddingVertical: 10, alignItems: "center",
+    borderBottomWidth: 3, borderBottomColor: "transparent",
+  },
+  abaAtiva: { borderBottomColor: CORES.branco },
+  abaTexto: { color: `${CORES.branco}80`, fontSize: 12, fontWeight: "600" },
+  abaTextoAtivo: { color: CORES.branco },
+  dashboardGrid: {
+    flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 16,
+  },
+  dashCard: {
+    flex: 1, minWidth: "22%",
+    backgroundColor: CORES.azulEscuro,
+    borderRadius: 10, padding: 12,
+    alignItems: "center",
+  },
+  dashValor: { color: CORES.branco, fontSize: 22, fontWeight: "800" },
+  dashLabel: { color: `${CORES.branco}80`, fontSize: 10, marginTop: 2 },
+  secaoCard: {
+    backgroundColor: CORES.branco,
+    borderRadius: 12, padding: 14,
+    marginBottom: 12,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08, shadowRadius: 4, elevation: 2,
+  },
+  secaoTituloCard: { fontSize: 14, fontWeight: "700", color: CORES.azulEscuro, marginBottom: 4 },
+  btnFiltros: {
+    backgroundColor: CORES.cinzaClaro, borderRadius: 8,
+    padding: 10, alignItems: "center", marginBottom: 8,
+  },
+  btnFiltrosTexto: { color: CORES.azulClaro, fontWeight: "600", fontSize: 13 },
+  filtrosContainer: {
+    backgroundColor: CORES.branco, borderRadius: 12, padding: 14,
+    marginBottom: 12, borderWidth: 1, borderColor: CORES.cinzaMedio,
+  },
+  filtroLabel: { fontSize: 12, color: CORES.cinzaTexto, fontWeight: "600", marginBottom: 4 },
+  filtroInput: {
+    borderWidth: 1, borderColor: CORES.cinzaMedio, borderRadius: 8,
+    padding: 8, fontSize: 13, color: CORES.preto, backgroundColor: CORES.cinzaClaro,
+  },
+  chipPosicao: {
+    paddingHorizontal: 12, paddingVertical: 6,
+    borderRadius: 20, borderWidth: 1, borderColor: CORES.cinzaMedio,
+    marginRight: 6, backgroundColor: CORES.branco,
+  },
+  chipPosicaoAtivo: { backgroundColor: CORES.azulClaro, borderColor: CORES.azulClaro },
+  chipPosicaoTexto: { color: CORES.cinzaTexto, fontSize: 12 },
+  chipPosicaoTextoAtivo: { color: CORES.branco, fontWeight: "600" },
+  btnLimparFiltros: { marginTop: 8, alignItems: "center" },
+  totalAtletas: { fontSize: 13, color: CORES.cinzaTexto, fontWeight: "600" },
+  btnRelatorio: {
+    backgroundColor: CORES.vermelho, borderRadius: 8,
+    paddingHorizontal: 12, paddingVertical: 6,
+  },
+  btnRelatorioTexto: { color: CORES.branco, fontSize: 12, fontWeight: "700" },
+  cardAtleta: {
+    backgroundColor: CORES.branco, borderRadius: 12, marginBottom: 10,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08, shadowRadius: 4, elevation: 2,
+    borderWidth: 1, borderColor: CORES.cinzaMedio,
+  },
+  cardSelecionado: { borderColor: CORES.azulClaro, borderWidth: 2 },
+  cardHeader: { flexDirection: "row", alignItems: "center", padding: 12, gap: 10 },
+  cardAvatar: {
+    width: 44, height: 44, borderRadius: 22,
+    backgroundColor: CORES.azulEscuro, alignItems: "center", justifyContent: "center",
+  },
+  cardAvatarLetra: { color: CORES.branco, fontSize: 18, fontWeight: "800" },
+  cardNome: { fontSize: 15, fontWeight: "700", color: CORES.preto },
+  cardPosicao: { fontSize: 12, color: CORES.azulClaro, fontWeight: "600" },
+  cardInfo: { fontSize: 11, color: CORES.cinzaTexto },
+  badgeEscala: {
+    backgroundColor: `${CORES.azulClaro}20`, borderRadius: 4,
+    paddingHorizontal: 6, paddingVertical: 1,
+  },
+  badgeEscalaTexto: { fontSize: 10, color: CORES.azulClaro, fontWeight: "700" },
+  checkBox: {
+    width: 24, height: 24, borderRadius: 12,
+    borderWidth: 2, borderColor: CORES.cinzaMedio,
+    alignItems: "center", justifyContent: "center",
+  },
+  checkBoxSelecionado: { backgroundColor: CORES.azulClaro, borderColor: CORES.azulClaro },
+  statsRow: {
+    flexDirection: "row", justifyContent: "space-around",
+    paddingVertical: 8, borderTopWidth: 1, borderTopColor: CORES.cinzaClaro,
+    paddingHorizontal: 12,
+  },
+  statItem: { alignItems: "center" },
+  statValor: { fontSize: 16, fontWeight: "800", color: CORES.azulEscuro },
+  statLabel: { fontSize: 10, color: CORES.cinzaTexto },
+  cardAcoes: {
+    flexDirection: "row", gap: 8, padding: 10,
+    borderTopWidth: 1, borderTopColor: CORES.cinzaClaro,
+  },
+  btnEditar: {
+    flex: 1, backgroundColor: CORES.cinzaClaro, borderRadius: 8,
+    padding: 8, alignItems: "center",
+  },
+  btnEditarTexto: { fontSize: 12, color: CORES.preto, fontWeight: "600" },
+  btnVerPerfil: {
+    flex: 1, backgroundColor: CORES.azulEscuro, borderRadius: 8,
+    padding: 8, alignItems: "center",
+  },
+  btnVerPerfilTexto: { fontSize: 12, color: CORES.branco, fontWeight: "600" },
+  badgePosicao: {
+    flexDirection: "row", alignItems: "center", gap: 4,
+    backgroundColor: CORES.branco, borderRadius: 8,
+    paddingHorizontal: 8, paddingVertical: 4,
+    borderWidth: 1, borderColor: CORES.cinzaMedio,
+  },
+  badgePosicaoTexto: { fontSize: 12, color: CORES.preto, fontWeight: "600" },
+  badgePosicaoNum: {
+    backgroundColor: CORES.azulClaro, borderRadius: 10,
+    width: 20, height: 20, alignItems: "center", justifyContent: "center",
+  },
+  estadoVazio: { flex: 1, alignItems: "center", justifyContent: "center", padding: 40 },
+  estadoVazioIcone: { fontSize: 48, marginBottom: 12 },
+  estadoVazioTitulo: { fontSize: 18, fontWeight: "700", color: CORES.preto, marginBottom: 8 },
+  estadoVazioTexto: { fontSize: 14, color: CORES.cinzaTexto, textAlign: "center", lineHeight: 20 },
+  modalHeader: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    padding: 16, borderBottomWidth: 1, borderBottomColor: CORES.cinzaMedio,
+    backgroundColor: CORES.azulEscuro,
+  },
+  modalTitulo: { fontSize: 15, fontWeight: "700", color: CORES.branco, flex: 1, textAlign: "center" },
+  btnFechar: { padding: 4 },
+  btnSalvar: {
+    backgroundColor: CORES.verde, borderRadius: 8,
+    paddingHorizontal: 14, paddingVertical: 6,
+  },
+  secaoTitulo: {
+    fontSize: 13, fontWeight: "700", color: CORES.azulEscuro,
+    marginTop: 16, marginBottom: 8,
+  },
+  gridCampos: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  campoPar: { minWidth: "30%", flex: 1 },
+  labelCampo: { fontSize: 11, color: CORES.cinzaTexto, marginBottom: 3 },
+  inputCampo: {
+    borderWidth: 1, borderColor: CORES.cinzaMedio, borderRadius: 8,
+    padding: 8, fontSize: 14, color: CORES.preto, backgroundColor: CORES.cinzaClaro,
+  },
+  tabelaRow: { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: CORES.cinzaMedio },
+  tabelaHeader: { backgroundColor: CORES.azulEscuro },
+  tabelaCelula: { padding: 10, textAlign: "center", fontSize: 12, color: CORES.preto },
+  tabelaLabelCol: { width: 110, textAlign: "left", color: CORES.branco, fontWeight: "600" },
+  tabelaAtletaCol: { width: 80, fontWeight: "600" },
+});

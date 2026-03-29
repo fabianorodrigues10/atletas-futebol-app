@@ -338,9 +338,118 @@ async function startServer() {
     }
   });
 
-  // Middleware removido - tRPC trabalha nativamente com batch
+  // ==================== ESTATÍSTICAS DE TEMPORADA ====================
 
-  // Middleware removido - tRPC trabalha nativamente com batch
+  // Buscar estatísticas de um atleta
+  app.get("/api/atletas/:id/estatisticas", async (req, res) => {
+    try {
+      const atletaId = Number(req.params.id);
+      const userId = 1;
+      const temporada = (req.query.temporada as string) || "2025";
+      const { getDb } = await import("../../server/db");
+      const { estatisticasTemporada } = await import("../../drizzle/schema");
+      const { eq, and } = await import("drizzle-orm");
+      const dbConn = await getDb();
+      if (!dbConn) return res.json(null);
+      const result = await dbConn.select().from(estatisticasTemporada)
+        .where(and(eq(estatisticasTemporada.atletaId, atletaId), eq(estatisticasTemporada.userId, userId), eq(estatisticasTemporada.temporada, temporada)))
+        .limit(1);
+      res.json(result[0] || null);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Salvar/atualizar estatísticas de um atleta
+  app.post("/api/atletas/:id/estatisticas", async (req, res) => {
+    try {
+      const atletaId = Number(req.params.id);
+      const userId = 1;
+      const dados = req.body;
+      const temporada = dados.temporada || "2025";
+      const { getDb } = await import("../../server/db");
+      const { estatisticasTemporada } = await import("../../drizzle/schema");
+      const { eq, and } = await import("drizzle-orm");
+      const dbConn = await getDb();
+      if (!dbConn) return res.status(500).json({ error: "DB unavailable" });
+      const existing = await dbConn.select().from(estatisticasTemporada)
+        .where(and(eq(estatisticasTemporada.atletaId, atletaId), eq(estatisticasTemporada.userId, userId), eq(estatisticasTemporada.temporada, temporada)))
+        .limit(1);
+      const payload = { atletaId, userId, temporada, ...dados };
+      if (existing[0]) {
+        await dbConn.update(estatisticasTemporada).set(payload)
+          .where(and(eq(estatisticasTemporada.atletaId, atletaId), eq(estatisticasTemporada.userId, userId), eq(estatisticasTemporada.temporada, temporada)));
+        res.json({ success: true, action: "updated" });
+      } else {
+        await dbConn.insert(estatisticasTemporada).values(payload);
+        res.json({ success: true, action: "created" });
+      }
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Buscar elenco completo do Marcílio Dias com estatísticas
+  app.get("/api/marcilio/elenco", async (req, res) => {
+    try {
+      const userId = 1;
+      const temporada = (req.query.temporada as string) || "2025";
+      const { getDb } = await import("../../server/db");
+      const { atletas: atletasTable, estatisticasTemporada, midias: midiasTable } = await import("../../drizzle/schema");
+      const { eq, and, like, inArray, desc } = await import("drizzle-orm");
+      const dbConn = await getDb();
+      if (!dbConn) return res.json([]);
+      const atletasMarcilio = await dbConn.select().from(atletasTable)
+        .where(and(eq(atletasTable.userId, userId), like(atletasTable.clube, "%arc%lio%")));
+      if (!atletasMarcilio.length) return res.json([]);
+      const ids = atletasMarcilio.map((a: any) => a.id);
+      const fotos = await dbConn.select().from(midiasTable)
+        .where(and(inArray(midiasTable.atletaId, ids), eq(midiasTable.tipo, "foto")))
+        .orderBy(desc(midiasTable.createdAt));
+      const fotoMap = new Map();
+      fotos.forEach((f: any) => { if (!fotoMap.has(f.atletaId)) fotoMap.set(f.atletaId, f.url); });
+      const stats = await dbConn.select().from(estatisticasTemporada)
+        .where(and(inArray(estatisticasTemporada.atletaId, ids), eq(estatisticasTemporada.temporada, temporada)));
+      const statsMap = new Map();
+      stats.forEach((s: any) => statsMap.set(s.atletaId, s));
+      const resultado = atletasMarcilio.map((a: any) => ({
+        ...a,
+        fotoUrl: fotoMap.get(a.id) || null,
+        estatisticas: statsMap.get(a.id) || null,
+      }));
+      res.json(resultado);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Benchmark de mercado por posição
+  app.get("/api/benchmark/:posicao", async (req, res) => {
+    try {
+      const userId = 1;
+      const posicao = decodeURIComponent(req.params.posicao);
+      const { getDb } = await import("../../server/db");
+      const { atletas: atletasTable, estatisticasTemporada } = await import("../../drizzle/schema");
+      const { eq, and, or, inArray } = await import("drizzle-orm");
+      const dbConn = await getDb();
+      if (!dbConn) return res.json(null);
+      const atletasPosicao = await dbConn.select().from(atletasTable)
+        .where(and(eq(atletasTable.userId, userId), or(eq(atletasTable.posicao, posicao), eq(atletasTable.segundaPosicao, posicao))!));
+      if (!atletasPosicao.length) return res.json(null);
+      const ids = atletasPosicao.map((a: any) => a.id);
+      const idades = atletasPosicao.map((a: any) => a.idade).filter(Boolean) as number[];
+      const alturas = atletasPosicao.map((a: any) => parseFloat(a.altura || "0")).filter(Boolean);
+      const stats = await dbConn.select().from(estatisticasTemporada).where(inArray(estatisticasTemporada.atletaId, ids));
+      const mediaIdade = idades.length ? Math.round(idades.reduce((a, b) => a + b, 0) / idades.length) : null;
+      const mediaAltura = alturas.length ? (alturas.reduce((a, b) => a + b, 0) / alturas.length).toFixed(2) : null;
+      const mediaGols = stats.length ? (stats.reduce((a: number, s: any) => a + (s.gols || 0), 0) / stats.length).toFixed(1) : "0";
+      const mediaAssistencias = stats.length ? (stats.reduce((a: number, s: any) => a + (s.assistencias || 0), 0) / stats.length).toFixed(1) : "0";
+      const mediaMinutos = stats.length ? Math.round(stats.reduce((a: number, s: any) => a + (s.minutosJogados || 0), 0) / stats.length) : 0;
+      res.json({ posicao, total: atletasPosicao.length, mediaIdade, mediaAltura, mediaGols, mediaAssistencias, mediaMinutos });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
 
   app.use(
     "/api/trpc",

@@ -177,6 +177,38 @@ export const midias = mysqlTable("midias", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
+// Tabela de estatísticas de temporada por atleta
+export const estatisticasTemporada = mysqlTable("estatisticasTemporada", {
+  id: int("id").autoincrement().primaryKey(),
+  atletaId: int("atletaId").notNull(),
+  userId: int("userId").notNull(),
+  temporada: varchar("temporada", { length: 20 }).notNull().default("2025"),
+  minutosJogados: int("minutosJogados").default(0),
+  jogos: int("jogos").default(0),
+  jogosTitular: int("jogosTitular").default(0),
+  gols: int("gols").default(0),
+  assistencias: int("assistencias").default(0),
+  finalizacoes: int("finalizacoes").default(0),
+  desarmes: int("desarmes").default(0),
+  interceptacoes: int("interceptacoes").default(0),
+  duelos: int("duelos").default(0),
+  duelosGanhos: int("duelosGanhos").default(0),
+  passes: int("passes").default(0),
+  passesCompletos: int("passesCompletos").default(0),
+  cartoesAmarelos: int("cartoesAmarelos").default(0),
+  cartoesVermelhos: int("cartoesVermelhos").default(0),
+  notaTecnica: decimal("notaTecnica", { precision: 3, scale: 1 }),
+  notaFisica: decimal("notaFisica", { precision: 3, scale: 1 }),
+  notaTatica: decimal("notaTatica", { precision: 3, scale: 1 }),
+  notaAtitudinal: decimal("notaAtitudinal", { precision: 3, scale: 1 }),
+  notaPotencial: decimal("notaPotencial", { precision: 3, scale: 1 }),
+  observacoes: text("observacoes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type EstatisticaTemporada = typeof estatisticasTemporada.$inferSelect;
+export type InsertEstatisticaTemporada = typeof estatisticasTemporada.$inferInsert;
+
 // Tipos TypeScript adicionais
 export type Atleta = typeof atletas.$inferSelect;
 export type InsertAtleta = typeof atletas.$inferInsert;
