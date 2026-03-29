@@ -490,12 +490,55 @@ export default function MarcilioScreen() {
     setElenco(prev => prev.map(a => a.id === atletaEditando.id ? { ...a, estatisticas: stats } : a));
   };
 
-  const irParaRelatorio = () => {
+  const [gerandoPdf, setGerandoPdf] = useState(false);
+
+  const gerarRelatorioExecutivo = async () => {
     if (selecionados.length === 0) {
       Alert.alert("Atenção", "Selecione pelo menos um atleta para gerar o relatório.");
       return;
     }
-    router.push("/relatorio");
+    setGerandoPdf(true);
+    try {
+      const baseUrl = getApiBaseUrl();
+      const response = await fetch(`${baseUrl}/api/report/pdf-executivo`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: selecionados, temporada: "2025" }),
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || "Erro ao gerar PDF");
+      }
+      const blob = await response.blob();
+      if (Platform.OS === "web") {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `Relatorio_Tecnico_BDMD_2025.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } else {
+        const FileSystem = await import("expo-file-system/legacy");
+        const Sharing = await import("expo-sharing");
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onloadend = async () => {
+          const base64 = (reader.result as string).split(",")[1];
+          const dir = FileSystem.cacheDirectory || FileSystem.documentDirectory || "";
+          const path = dir + `Relatorio_Tecnico_BDMD_2025.pdf`;
+          await FileSystem.writeAsStringAsync(path, base64, { encoding: FileSystem.EncodingType.Base64 });
+          if (await Sharing.isAvailableAsync()) {
+            await Sharing.shareAsync(path, { mimeType: "application/pdf" });
+          } else {
+            Alert.alert("Sucesso", `PDF salvo em:\n${path}`);
+          }
+        };
+      }
+    } catch (e: any) {
+      Alert.alert("Erro", e.message || "Não foi possível gerar o relatório.");
+    } finally {
+      setGerandoPdf(false);
+    }
   };
 
   const renderDashboard = () => (
@@ -590,8 +633,11 @@ export default function MarcilioScreen() {
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
         <Text style={styles.totalAtletas}>{elencoFiltrado.length} atleta{elencoFiltrado.length !== 1 ? "s" : ""}</Text>
         {selecionados.length > 0 && (
-          <TouchableOpacity style={styles.btnRelatorio} onPress={irParaRelatorio}>
-            <Text style={styles.btnRelatorioTexto}>📄 Relatório ({selecionados.length})</Text>
+          <TouchableOpacity style={[styles.btnRelatorio, gerandoPdf && { opacity: 0.7 }]} onPress={gerarRelatorioExecutivo} disabled={gerandoPdf}>
+            {gerandoPdf
+              ? <ActivityIndicator size="small" color={CORES.branco} />
+              : <Text style={styles.btnRelatorioTexto}>📋 Relatório Técnico ({selecionados.length})</Text>
+            }
           </TouchableOpacity>
         )}
       </View>

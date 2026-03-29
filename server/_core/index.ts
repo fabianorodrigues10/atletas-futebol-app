@@ -5,6 +5,7 @@ import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { registerPdfRoutes } from "../pdf-report";
+import { registerPdfExecutivoRoutes } from "../pdf-report-executivo";
 import { registerExcelRoutes } from "../excel-report";
 import { registerOgolRoutes } from "../ogol-scraper";
 import { appRouter } from "../routers";
@@ -81,6 +82,7 @@ async function startServer() {
 
   registerOAuthRoutes(app);
   registerPdfRoutes(app);
+  registerPdfExecutivoRoutes(app);
   registerExcelRoutes(app);
   registerOgolRoutes(app);
 
