@@ -24,9 +24,11 @@ function normalizeStr(str: string): string {
 }
 
 // Verifica se dois nomes de clube são equivalentes (ignora acentos, capitalização e espaços)
-function clubeMatch(clube: string, alvo: string): boolean {
+function clubeMatch(clube: string | null | undefined, alvo: string): boolean {
+  if (!clube || clube.trim() === "") return false; // clube vazio nunca bate
   const nc = normalizeStr(clube);
   const na = normalizeStr(alvo);
+  if (!nc || !na) return false;
   return nc.includes(na) || na.includes(nc);
 }
 
