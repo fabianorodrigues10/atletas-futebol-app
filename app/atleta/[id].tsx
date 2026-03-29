@@ -362,7 +362,12 @@ export default function AtletaFormScreen() {
         Alert.alert("Formato inválido", "O estado/país deve ter 2 ou 3 letras maiúsculas (ex: CE, SP, USA)");
         return;
       }
-      clubeFormatado = `${clubeNome.trim()}/${clubeEstado.trim()}`;
+      // Capitalizar corretamente o nome do clube (ex: "marcilio dias" -> "Marcilio Dias")
+      const nomeCapitalizado = clubeNome.trim()
+        .split(" ")
+        .map((p: string) => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase())
+        .join(" ");
+      clubeFormatado = `${nomeCapitalizado}/${clubeEstado.trim().toUpperCase()}`;
     }
     
     // Validar duplicata completa (apenas ao criar novo atleta)

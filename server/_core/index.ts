@@ -12,6 +12,24 @@ import { createContext } from "./context";
 import * as db from "../db";
 import { storagePut } from "../storage";
 
+// Normaliza string removendo acentos, espaços extras e convertendo para minúsculas
+function normalizeStr(str: string): string {
+  if (!str) return "";
+  return str
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// Verifica se dois nomes de clube são equivalentes (ignora acentos, capitalização e espaços)
+function clubeMatch(clube: string, alvo: string): boolean {
+  const nc = normalizeStr(clube);
+  const na = normalizeStr(alvo);
+  return nc.includes(na) || na.includes(nc);
+}
+
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise((resolve) => {
     const server = net.createServer();
@@ -399,8 +417,12 @@ async function startServer() {
       const { eq, and, like, inArray, desc } = await import("drizzle-orm");
       const dbConn = await getDb();
       if (!dbConn) return res.json([]);
-      const atletasMarcilio = await dbConn.select().from(atletasTable)
-        .where(and(eq(atletasTable.userId, userId), like(atletasTable.clube, "%arc%lio%")));
+      // Buscar todos os atletas e filtrar por normalização (ignora acentos e capitalização)
+      const todosAtletas = await dbConn.select().from(atletasTable)
+        .where(eq(atletasTable.userId, userId));
+      const atletasMarcilio = todosAtletas.filter((a: any) =>
+        clubeMatch(a.clube || "", "Marcilio Dias")
+      );
       if (!atletasMarcilio.length) return res.json([]);
       const ids = atletasMarcilio.map((a: any) => a.id);
       const fotos = await dbConn.select().from(midiasTable)
