@@ -1,0 +1,55 @@
+{
+  "query": "\nSELECT ag.atletaId, a.nome, ag.posicaoOrdem\nFROM atletasEmGrupos ag\nJOIN atletas a ON a.id = ag.atletaId\nWHERE ag.grupoId = 60001\nORDER BY ag.posicaoOrdem;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute \nSELECT ag.atletaId, a.nome, ag.posicaoOrdem\nFROM atletasEmGrupos ag\nJOIN atletas a ON a.id = ag.atletaId\nWHERE ag.grupoId = 60001\nORDER BY ag.posicaoOrdem;\n",
+  "rows": [
+    {
+      "atletaId": "2130001",
+      "nome": "Iago Hass",
+      "posicaoOrdem": "0"
+    },
+    {
+      "atletaId": "90140",
+      "nome": "Alan Costa",
+      "posicaoOrdem": "1"
+    },
+    {
+      "atletaId": "90821",
+      "nome": "Digão",
+      "posicaoOrdem": "2"
+    },
+    {
+      "atletaId": "90347",
+      "nome": "Matheus Inácio",
+      "posicaoOrdem": "3"
+    },
+    {
+      "atletaId": "1290001",
+      "nome": "Edson",
+      "posicaoOrdem": "4"
+    },
+    {
+      "atletaId": "2040001",
+      "nome": "João Lopes",
+      "posicaoOrdem": "5"
+    },
+    {
+      "atletaId": "750001",
+      "nome": "Luisão",
+      "posicaoOrdem": "6"
+    },
+    {
+      "atletaId": "1980002",
+      "nome": "Lucas Passarelli",
+      "posicaoOrdem": "7"
+    },
+    {
+      "atletaId": "91008",
+      "nome": "Lucas Maticoli",
+      "posicaoOrdem": "8"
+    }
+  ],
+  "messages": [],
+  "stdout": "atletaId\tnome\tposicaoOrdem\n2130001\tIago Hass\t0\n90140\tAlan Costa\t1\n90821\tDigão\t2\n90347\tMatheus Inácio\t3\n1290001\tEdson\t4\n2040001\tJoão Lopes\t5\n750001\tLuisão\t6\n1980002\tLucas Passarelli\t7\n91008\tLucas Maticoli\t8\n",
+  "stderr": "",
+  "execution_time_ms": 124
+}

@@ -1,0 +1,64 @@
+{
+  "query": "\nSELECT ag.atletaId, ag.grupoId, a.nome, g.nome as grupo_nome\nFROM atletasEmGrupos ag\nJOIN atletas a ON a.id = ag.atletaId\nJOIN grupos g ON g.id = ag.grupoId\nWHERE ag.grupoId IN (2, 60001)\nORDER BY ag.grupoId, ag.posicaoOrdem;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute \nSELECT ag.atletaId, ag.grupoId, a.nome, g.nome as grupo_nome\nFROM atletasEmGrupos ag\nJOIN atletas a ON a.id = ag.atletaId\nJOIN grupos g ON g.id = ag.grupoId\nWHERE ag.grupoId IN (2, 60001)\nORDER BY ag.grupoId, ag.posicaoOrdem;\n",
+  "rows": [
+    {
+      "atletaId": "2130001",
+      "grupoId": "2",
+      "nome": "Iago Hass",
+      "grupo_nome": "Goleiro"
+    },
+    {
+      "atletaId": "90140",
+      "grupoId": "2",
+      "nome": "Alan Costa",
+      "grupo_nome": "Goleiro"
+    },
+    {
+      "atletaId": "90821",
+      "grupoId": "2",
+      "nome": "Digão",
+      "grupo_nome": "Goleiro"
+    },
+    {
+      "atletaId": "90347",
+      "grupoId": "2",
+      "nome": "Matheus Inácio",
+      "grupo_nome": "Goleiro"
+    },
+    {
+      "atletaId": "1290001",
+      "grupoId": "2",
+      "nome": "Edson",
+      "grupo_nome": "Goleiro"
+    },
+    {
+      "atletaId": "2040001",
+      "grupoId": "2",
+      "nome": "João Lopes",
+      "grupo_nome": "Goleiro"
+    },
+    {
+      "atletaId": "750001",
+      "grupoId": "2",
+      "nome": "Luisão",
+      "grupo_nome": "Goleiro"
+    },
+    {
+      "atletaId": "1980002",
+      "grupoId": "2",
+      "nome": "Lucas Passarelli",
+      "grupo_nome": "Goleiro"
+    },
+    {
+      "atletaId": "91008",
+      "grupoId": "2",
+      "nome": "Lucas Maticoli",
+      "grupo_nome": "Goleiro"
+    }
+  ],
+  "messages": [],
+  "stdout": "atletaId\tgrupoId\tnome\tgrupo_nome\n2130001\t2\tIago Hass\tGoleiro\n90140\t2\tAlan Costa\tGoleiro\n90821\t2\tDigão\tGoleiro\n90347\t2\tMatheus Inácio\tGoleiro\n1290001\t2\tEdson\tGoleiro\n2040001\t2\tJoão Lopes\tGoleiro\n750001\t2\tLuisão\tGoleiro\n1980002\t2\tLucas Passarelli\tGoleiro\n91008\t2\tLucas Maticoli\tGoleiro\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}

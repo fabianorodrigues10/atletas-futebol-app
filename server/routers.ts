@@ -223,6 +223,12 @@ export const appRouter = router({
       )
       .mutation(async ({ ctx, input }) => {
         const userId = ctx.user?.id || 1;
+        // Verificar se já existe grupo com esse nome para esse usuário
+        const gruposExistentes = await db.getGrupos(userId);
+        const existente = gruposExistentes.find((g: any) => g.nome === input.nome);
+        if (existente) {
+          return { id: existente.id };
+        }
         const id = await db.createGrupo({
           userId,
           nome: input.nome,

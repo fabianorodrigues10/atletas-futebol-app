@@ -306,3 +306,7 @@
 
 ## Feature: Link no Nome do Atleta no Radar
 - [x] Tornar o nome do atleta na lista do Radar clicável, abrindo o perfil completo do atleta
+
+## Bug: Goleiros sumiram do Radar
+- [x] Investigar por que os atletas da posição Goleiro desapareceram da lista do Radar
+- [x] Corrigir e restaurar os goleiros (migrado grupo duplicado id=2 → id=60001; adicionada verificação anti-duplicata na criação de grupos)
