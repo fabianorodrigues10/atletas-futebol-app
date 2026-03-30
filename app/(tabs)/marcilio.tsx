@@ -255,12 +255,16 @@ function ModalEstatisticas({
     setSalvando(true);
     try {
       const base = getApiBaseUrl();
-      await fetch(`${base}/api/atletas/${atleta.id}/estatisticas`, {
+      const resp = await fetch(`${base}/api/atletas/${atleta.id}/estatisticas`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...stats, temporada: "2025" }),
       });
-      onSalvar(stats);
+      if (!resp.ok) throw new Error("Falha ao salvar");
+      // Buscar as stats atualizadas do banco para garantir consistência
+      const statsResp = await fetch(`${base}/api/atletas/${atleta.id}/estatisticas?temporada=2025`);
+      const statsAtualizadas = statsResp.ok ? await statsResp.json() : stats;
+      onSalvar(statsAtualizadas || stats);
       onFechar();
     } catch (e) {
       Alert.alert("Erro", "Não foi possível salvar as estatísticas.");
