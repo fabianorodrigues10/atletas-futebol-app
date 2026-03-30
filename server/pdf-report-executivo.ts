@@ -188,10 +188,7 @@ async function drawAtletaPage(doc: PDFKit.PDFDocument, atleta: any, stats: any |
     doc.fontSize(10).fillColor(GRAY).font("Helvetica").text(`🏟  ${atleta.clube}`, ID_X, y);
     y += 14;
   }
-  if (atleta.escala) {
-    doc.fontSize(9).fillColor(GRAY).font("Helvetica").text(`Escala: ${atleta.escala}`, ID_X, y);
-    y += 14;
-  }
+
 
   // Linha separadora
   y = Math.max(y, FOTO_Y + FOTO_H + 10);
@@ -220,14 +217,7 @@ async function drawAtletaPage(doc: PDFKit.PDFDocument, atleta: any, stats: any |
   });
   y += 40;
 
-  // ── SEÇÃO: VALÊNCIAS ─────────────────────────────────────────────────────
-  if (atleta.valencia) {
-    doc.rect(30, y, 535, 14).fill([240, 240, 248] as RGB);
-    doc.fontSize(8).fillColor(DARK).font("Helvetica-Bold").text("VALÊNCIAS TÉCNICAS", 35, y + 3);
-    y += 18;
-    doc.fontSize(8.5).fillColor(BLACK).font("Helvetica").text(atleta.valencia, 30, y, { width: 535, lineGap: 2 });
-    y += doc.heightOfString(atleta.valencia, { width: 535 }) + 10;
-  }
+
 
   // ── SEÇÃO: ESTATÍSTICAS DA TEMPORADA ─────────────────────────────────────
   doc.rect(30, y, 535, 14).fill(PRIMARY);
@@ -289,7 +279,7 @@ async function drawAtletaPage(doc: PDFKit.PDFDocument, atleta: any, stats: any |
     // Observações
     if (stats.observacoes) {
       doc.rect(30, y, 535, 14).fill([240, 240, 248] as RGB);
-      doc.fontSize(8).fillColor(DARK).font("Helvetica-Bold").text("OBSERVAÇÕES DA COMISSÃO TÉCNICA", 35, y + 3);
+      doc.fontSize(8).fillColor(DARK).font("Helvetica-Bold").text("OBSERVAÇÕES", 35, y + 3);
       y += 18;
       doc.rect(30, y, 535, 0).fill(WHITE);
       doc.fontSize(8.5).fillColor(BLACK).font("Helvetica-Oblique")
@@ -302,28 +292,7 @@ async function drawAtletaPage(doc: PDFKit.PDFDocument, atleta: any, stats: any |
     y += 20;
   }
 
-  // ── LINKS ────────────────────────────────────────────────────────────────
-  const hasLinks = atleta.link || (atleta.videos && atleta.videos.length > 0);
-  if (hasLinks) {
-    doc.rect(30, y, 535, 14).fill([240, 240, 248] as RGB);
-    doc.fontSize(8).fillColor(DARK).font("Helvetica-Bold").text("LINKS E VÍDEOS", 35, y + 3);
-    y += 18;
 
-    if (atleta.link) {
-      doc.fontSize(8).fillColor(GRAY).font("Helvetica").text("Perfil: ", 30, y, { continued: true });
-      const linkDisplay = atleta.link.length > 80 ? atleta.link.substring(0, 80) + "..." : atleta.link;
-      doc.fillColor([10, 126, 164] as RGB).text(linkDisplay, { link: atleta.link });
-      y += 13;
-    }
-    if (atleta.videos && Array.isArray(atleta.videos)) {
-      atleta.videos.forEach((v: string, idx: number) => {
-        const vDisplay = v.length > 80 ? v.substring(0, 80) + "..." : v;
-        doc.fontSize(8).fillColor(GRAY).font("Helvetica").text(`Vídeo ${idx + 1}: `, 30, y, { continued: true });
-        doc.fillColor([10, 126, 164] as RGB).text(vDisplay, { link: v });
-        y += 13;
-      });
-    }
-  }
 }
 
 export function registerPdfExecutivoRoutes(app: any) {
