@@ -165,7 +165,7 @@ export default function GruposScreen() {
         paddingHorizontal: 16, paddingVertical: 12,
         borderBottomColor: colors.border, borderBottomWidth: 1,
       }}>
-        <Text style={{ fontSize: 22, fontWeight: "bold", color: colors.foreground }}>Grupos</Text>
+        <Text style={{ fontSize: 22, fontWeight: "bold", color: colors.foreground }}>Radar</Text>
         <Text style={{ fontSize: 13, color: colors.muted, marginTop: 2 }}>
           Organize atletas em listas personalizadas
         </Text>
