@@ -613,11 +613,12 @@ export async function getAtletasDoGrupo(grupoId: number) {
       atletaId: atletasEmGrupos.atletaId,
       atletaNome: atletas.nome,
       posicao: atletas.posicao,
+      posicaoOrdem: atletasEmGrupos.posicaoOrdem,
     })
     .from(atletasEmGrupos)
     .leftJoin(atletas, eq(atletasEmGrupos.atletaId, atletas.id))
     .where(eq(atletasEmGrupos.grupoId, grupoId))
-    .orderBy(atletas.nome);
+    .orderBy(asc(atletasEmGrupos.posicaoOrdem), asc(atletas.nome));
 }
 
 /**
@@ -640,7 +641,13 @@ export async function addAtletaAoGrupo(data: InsertAtletaEmGrupo) {
     .limit(1);
   
   if (existing.length === 0) {
-    const result = await db.insert(atletasEmGrupos).values(data);
+    // Define posicaoOrdem como o próximo disponível no grupo
+    const countResult = await db
+      .select({ count: atletasEmGrupos.id })
+      .from(atletasEmGrupos)
+      .where(eq(atletasEmGrupos.grupoId, data.grupoId));
+    const nextOrdem = countResult.length;
+    const result = await db.insert(atletasEmGrupos).values({ ...data, posicaoOrdem: nextOrdem });
     return Number(result[0].insertId);
   }
   
@@ -674,6 +681,32 @@ export async function removeAllAtletasDoGrupo(grupoId: number) {
   await db
     .delete(atletasEmGrupos)
     .where(eq(atletasEmGrupos.grupoId, grupoId));
+}
+
+/**
+ * Reordena atletas de um grupo salvando a nova ordem
+ */
+export async function reordenarAtletasDoGrupo(
+  grupoId: number,
+  atletaIds: number[] // array na nova ordem
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Atualiza posicaoOrdem de cada atleta em paralelo
+  await Promise.all(
+    atletaIds.map((atletaId, index) =>
+      db
+        .update(atletasEmGrupos)
+        .set({ posicaoOrdem: index })
+        .where(
+          and(
+            eq(atletasEmGrupos.atletaId, atletaId),
+            eq(atletasEmGrupos.grupoId, grupoId)
+          )
+        )
+    )
+  );
 }
 
 // ==================== MÍDIA ====================

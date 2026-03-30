@@ -142,7 +142,7 @@ export const atletasEmGrupos = mysqlTable("atletasEmGrupos", {
   id: int("id").autoincrement().primaryKey(),
   atletaId: int("atletaId").notNull(),
   grupoId: int("grupoId").notNull(),
-  
+  posicaoOrdem: int("posicaoOrdem").notNull().default(0),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

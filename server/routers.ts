@@ -277,6 +277,13 @@ export const appRouter = router({
         await db.removeAtletaDoGrupo(input.atletaId, input.grupoId);
         return { success: true };
       }),
+
+    reordenar: publicProcedure
+      .input(z.object({ grupoId: z.number(), atletaIds: z.array(z.number()) }))
+      .mutation(async ({ input }) => {
+        await db.reordenarAtletasDoGrupo(input.grupoId, input.atletaIds);
+        return { success: true };
+      }),
   }),
 
   // ==================== CONFIGURAÇÃO DE CAMPOS ====================

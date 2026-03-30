@@ -3,6 +3,7 @@ import {
   View, Text, FlatList, TouchableOpacity, TextInput, Modal,
   ScrollView, Alert, ActivityIndicator, Platform,
 } from "react-native";
+
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
 
@@ -83,6 +84,10 @@ export default function RadarScreen() {
     onSuccess: () => atletasDoGrupoQuery.refetch(),
   });
 
+  const reordenarMutation = trpc.grupos.reordenar.useMutation({
+    onSuccess: () => atletasDoGrupoQuery.refetch(),
+  });
+
   // ── Handlers ───────────────────────────────────────────────────────────────
   const handleSelecionarPosicao = async (pos: typeof POSICOES_RADAR[0]) => {
     if (posicaoSelecionada?.nome === pos.nome) {
@@ -116,6 +121,17 @@ export default function RadarScreen() {
   const handleRemoveAtleta = (atletaId: number) => {
     if (!grupoAtual) return;
     removeAtletaMutation.mutate({ atletaId, grupoId: grupoAtual.id });
+  };
+
+  const handleMoverAtleta = (index: number, direcao: "cima" | "baixo") => {
+    if (!grupoAtual) return;
+    const lista = [...(atletasDoGrupoQuery.data as any[] ?? [])];
+    const novoIndex = direcao === "cima" ? index - 1 : index + 1;
+    if (novoIndex < 0 || novoIndex >= lista.length) return;
+    // Troca os dois itens
+    [lista[index], lista[novoIndex]] = [lista[novoIndex], lista[index]];
+    const atletaIds = lista.map((a: any) => a.atletaId);
+    reordenarMutation.mutate({ grupoId: grupoAtual.id, atletaIds });
   };
 
   const handleGerarRelatorio = async () => {
@@ -332,53 +348,71 @@ export default function RadarScreen() {
                 </Text>
               </View>
             ) : (
-              <FlatList
-                data={atletasDoGrupoQuery.data as any[]}
-                keyExtractor={(item) => item.atletaId.toString()}
-                contentContainerStyle={{ padding: 10, paddingBottom: 80 }}
-                renderItem={({ item, index }) => (
-                  <View style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    backgroundColor: colors.surface,
-                    borderRadius: 8,
-                    marginBottom: 6,
-                    padding: 10,
-                    borderLeftWidth: 3,
-                    borderLeftColor: posicaoSelecionada.cor,
-                  }}>
-                    {/* Número */}
-                    <View style={{
-                      width: 24, height: 24, borderRadius: 12,
-                      backgroundColor: posicaoSelecionada.cor + "30",
-                      justifyContent: "center", alignItems: "center",
-                      marginRight: 8,
+              <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 10, paddingBottom: 80 }}>
+                {(atletasDoGrupoQuery.data as any[]).map((item, index) => {
+                  const lista = atletasDoGrupoQuery.data as any[];
+                  return (
+                    <View key={item.atletaId.toString()} style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      backgroundColor: colors.surface,
+                      borderRadius: 8,
+                      marginBottom: 6,
+                      padding: 10,
+                      borderLeftWidth: 3,
+                      borderLeftColor: posicaoSelecionada.cor,
                     }}>
-                      <Text style={{ fontSize: 11, fontWeight: "700", color: posicaoSelecionada.cor }}>
-                        {index + 1}
-                      </Text>
-                    </View>
+                      {/* Número */}
+                      <View style={{
+                        width: 24, height: 24, borderRadius: 12,
+                        backgroundColor: posicaoSelecionada.cor + "30",
+                        justifyContent: "center", alignItems: "center",
+                        marginRight: 8,
+                      }}>
+                        <Text style={{ fontSize: 11, fontWeight: "700", color: posicaoSelecionada.cor }}>
+                          {index + 1}
+                        </Text>
+                      </View>
 
-                    {/* Nome e posição */}
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground }} numberOfLines={1}>
-                        {item.atletaNome || `Atleta #${item.atletaId}`}
-                      </Text>
-                      {item.posicao ? (
-                        <Text style={{ fontSize: 11, color: colors.muted }}>{item.posicao}</Text>
-                      ) : null}
-                    </View>
+                      {/* Nome e posição */}
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground }} numberOfLines={1}>
+                          {item.atletaNome || `Atleta #${item.atletaId}`}
+                        </Text>
+                        {item.posicao ? (
+                          <Text style={{ fontSize: 11, color: colors.muted }}>{item.posicao}</Text>
+                        ) : null}
+                      </View>
 
-                    {/* Remover */}
-                    <TouchableOpacity
-                      onPress={() => handleRemoveAtleta(item.atletaId)}
-                      style={{ padding: 6 }}
-                    >
-                      <Text style={{ color: colors.error, fontSize: 16 }}>✕</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              />
+                      {/* Botões de reordenação */}
+                      <View style={{ flexDirection: "column", marginRight: 4 }}>
+                        <TouchableOpacity
+                          onPress={() => handleMoverAtleta(index, "cima")}
+                          disabled={index === 0 || reordenarMutation.isPending}
+                          style={{ padding: 3, opacity: index === 0 ? 0.3 : 1 }}
+                        >
+                          <Text style={{ color: posicaoSelecionada.cor, fontSize: 12, lineHeight: 14 }}>▲</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() => handleMoverAtleta(index, "baixo")}
+                          disabled={index === lista.length - 1 || reordenarMutation.isPending}
+                          style={{ padding: 3, opacity: index === lista.length - 1 ? 0.3 : 1 }}
+                        >
+                          <Text style={{ color: posicaoSelecionada.cor, fontSize: 12, lineHeight: 14 }}>▼</Text>
+                        </TouchableOpacity>
+                      </View>
+
+                      {/* Remover */}
+                      <TouchableOpacity
+                        onPress={() => handleRemoveAtleta(item.atletaId)}
+                        style={{ padding: 6 }}
+                      >
+                        <Text style={{ color: colors.error, fontSize: 16 }}>✕</Text>
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })}
+              </ScrollView>
             )}
           </View>
         )}
