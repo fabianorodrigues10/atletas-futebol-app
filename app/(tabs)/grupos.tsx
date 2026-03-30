@@ -66,11 +66,11 @@ export default function RadarScreen() {
   // ── Mutations ──────────────────────────────────────────────────────────────
   const createMutation = trpc.grupos.create.useMutation({
     onSuccess: (data) => {
-      gruposQuery.refetch().then(() => {
-        if (posicaoSelecionada) {
-          setGrupoAtual({ id: data.id, nome: posicaoSelecionada.nome, cor: posicaoSelecionada.cor });
-        }
-      });
+      // Define grupoAtual imediatamente — não espera refetch para não bloquear o botão
+      if (posicaoSelecionada) {
+        setGrupoAtual({ id: data.id, nome: posicaoSelecionada.nome, cor: posicaoSelecionada.cor });
+      }
+      gruposQuery.refetch();
     },
   });
 
@@ -288,15 +288,18 @@ export default function RadarScreen() {
                     setBuscaNome("");
                     setModalBuscaVisible(true);
                   }}
-                  disabled={qtdNoGrupo >= LIMITE_POR_POSICAO || !grupoAtual}
+                  disabled={qtdNoGrupo >= LIMITE_POR_POSICAO || createMutation.isPending}
                   style={{
                     flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center",
                     backgroundColor: qtdNoGrupo >= LIMITE_POR_POSICAO ? colors.border : posicaoSelecionada.cor,
                     paddingVertical: 7, borderRadius: 8, gap: 4,
-                    opacity: !grupoAtual ? 0.6 : 1,
+                    opacity: createMutation.isPending ? 0.6 : 1,
                   }}
                 >
-                  <Text style={{ color: "white", fontSize: 12, fontWeight: "700" }}>+ Atleta</Text>
+                  {createMutation.isPending
+                    ? <ActivityIndicator size="small" color="white" />
+                    : <Text style={{ color: "white", fontSize: 12, fontWeight: "700" }}>+ Atleta</Text>
+                  }
                 </TouchableOpacity>
 
                 <TouchableOpacity
