@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useMemo } from "react";
 import {
   View, Text, FlatList, TouchableOpacity, TextInput, Modal,
   ScrollView, Alert, ActivityIndicator, Platform,
@@ -6,409 +6,421 @@ import {
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
 
+// ── Posições fixas do futebol ──────────────────────────────────────────────
+const POSICOES_RADAR = [
+  { nome: "Goleiro",       abrev: "GOL", cor: "#F59E0B", icon: "🧤" },
+  { nome: "Lateral Direito", abrev: "LD",  cor: "#3B82F6", icon: "⚡" },
+  { nome: "Zagueiro",      abrev: "ZAG", cor: "#1D4ED8", icon: "🛡️" },
+  { nome: "Lateral Esquerdo", abrev: "LE", cor: "#3B82F6", icon: "⚡" },
+  { nome: "Volante",       abrev: "VOL", cor: "#6366F1", icon: "⚙️" },
+  { nome: "Meia",          abrev: "MEI", cor: "#8B5CF6", icon: "🎯" },
+  { nome: "Meia Atacante", abrev: "MAT", cor: "#A855F7", icon: "🔮" },
+  { nome: "Extremo Direito", abrev: "ED", cor: "#EC4899", icon: "🏃" },
+  { nome: "Extremo Esquerdo", abrev: "EE", cor: "#EC4899", icon: "🏃" },
+  { nome: "Segundo Atacante", abrev: "SA", cor: "#EF4444", icon: "🔥" },
+  { nome: "Centroavante",  abrev: "CA",  cor: "#DC2626", icon: "⚽" },
+];
+
+const LIMITE_POR_POSICAO = 10;
+
 interface Grupo {
   id: number;
   nome: string;
   descricao?: string | null;
   cor: string;
-  createdAt: Date;
 }
 
-interface AtletaEmGrupo {
-  atletaId: number;
-  atletaNome?: string;
-}
-
-const CORES = [
-  "#FF6B35", "#FF1744", "#00BCD4", "#4CAF50", "#9C27B0", "#FFC107",
-  "#E91E63", "#3F51B5", "#009688", "#795548", "#607D8B",
-];
-
-export default function GruposScreen() {
+export default function RadarScreen() {
   const colors = useColors();
 
-  // Estados do modal de criar grupo
-  const [modalCriarVisible, setModalCriarVisible] = useState(false);
-  const [novoGrupo, setNovoGrupo] = useState({ nome: "", descricao: "", cor: "#FF6B35" });
-
-  // Estados do painel de atletas
-  const [selectedGrupo, setSelectedGrupo] = useState<Grupo | null>(null);
-  const [modalAdicionarVisible, setModalAdicionarVisible] = useState(false);
+  // Estado: posição selecionada (abre o painel lateral)
+  const [posicaoSelecionada, setPosicaoSelecionada] = useState<typeof POSICOES_RADAR[0] | null>(null);
+  // Estado: grupo (do banco) correspondente à posição selecionada
+  const [grupoAtual, setGrupoAtual] = useState<Grupo | null>(null);
+  // Modal de busca de atleta
+  const [modalBuscaVisible, setModalBuscaVisible] = useState(false);
   const [buscaNome, setBuscaNome] = useState("");
+  // Geração de relatório
+  const [gerandoRelatorio, setGerandoRelatorio] = useState(false);
 
   // ── Queries ────────────────────────────────────────────────────────────────
-  const { data: grupos = [], isLoading: loadingGrupos, refetch: refetchGrupos } =
-    trpc.atletas.list?.useQuery?.() ?? trpc.grupos.list.useQuery();
-
-  // Usar a query correta para grupos
   const gruposQuery = trpc.grupos.list.useQuery();
+
+  // Mapeia nome da posição → grupo do banco
+  const gruposPorPosicao = useMemo(() => {
+    const map = new Map<string, Grupo>();
+    (gruposQuery.data ?? []).forEach((g: any) => map.set(g.nome, g));
+    return map;
+  }, [gruposQuery.data]);
+
   const atletasDoGrupoQuery = trpc.grupos.getAtletas.useQuery(
-    { grupoId: selectedGrupo?.id ?? 0 },
-    { enabled: !!selectedGrupo }
+    { grupoId: grupoAtual?.id ?? 0 },
+    { enabled: !!grupoAtual }
   );
 
-  // Busca de atletas para adicionar ao grupo
   const buscaAtletasQuery = trpc.atletas.search.useQuery(
     { nome: buscaNome },
-    { enabled: modalAdicionarVisible && buscaNome.length >= 2 }
+    { enabled: modalBuscaVisible && buscaNome.length >= 2 }
   );
 
   // ── Mutations ──────────────────────────────────────────────────────────────
   const createMutation = trpc.grupos.create.useMutation({
-    onSuccess: () => {
-      setNovoGrupo({ nome: "", descricao: "", cor: "#FF6B35" });
-      setModalCriarVisible(false);
-      gruposQuery.refetch();
+    onSuccess: (data) => {
+      gruposQuery.refetch().then(() => {
+        if (posicaoSelecionada) {
+          setGrupoAtual({ id: data.id, nome: posicaoSelecionada.nome, cor: posicaoSelecionada.cor });
+        }
+      });
     },
-    onError: (err) => Alert.alert("Erro", err.message || "Não foi possível criar o grupo."),
-  });
-
-  const deleteMutation = trpc.grupos.delete.useMutation({
-    onSuccess: () => {
-      if (selectedGrupo) setSelectedGrupo(null);
-      gruposQuery.refetch();
-    },
-    onError: (err) => Alert.alert("Erro", err.message || "Não foi possível excluir o grupo."),
   });
 
   const addAtletaMutation = trpc.grupos.addAtleta.useMutation({
     onSuccess: () => atletasDoGrupoQuery.refetch(),
-    onError: (err) => Alert.alert("Erro", err.message || "Não foi possível adicionar o atleta."),
+    onError: (err) => Alert.alert("Erro", err.message),
   });
 
   const removeAtletaMutation = trpc.grupos.removeAtleta.useMutation({
     onSuccess: () => atletasDoGrupoQuery.refetch(),
-    onError: (err) => Alert.alert("Erro", err.message || "Não foi possível remover o atleta."),
   });
 
   // ── Handlers ───────────────────────────────────────────────────────────────
-  const handleCreateGrupo = () => {
-    if (!novoGrupo.nome.trim()) {
-      Alert.alert("Atenção", "O nome do grupo é obrigatório.");
+  const handleSelecionarPosicao = async (pos: typeof POSICOES_RADAR[0]) => {
+    if (posicaoSelecionada?.nome === pos.nome) {
+      setPosicaoSelecionada(null);
+      setGrupoAtual(null);
       return;
     }
-    createMutation.mutate({
-      nome: novoGrupo.nome.trim(),
-      descricao: novoGrupo.descricao.trim() || undefined,
-      cor: novoGrupo.cor,
-    });
-  };
-
-  const handleDeleteGrupo = (id: number) => {
-    if (Platform.OS === "web") {
-      if (!confirm("Tem certeza que deseja excluir este grupo?")) return;
-      deleteMutation.mutate({ id });
+    setPosicaoSelecionada(pos);
+    const grupoExistente = gruposPorPosicao.get(pos.nome);
+    if (grupoExistente) {
+      setGrupoAtual(grupoExistente as Grupo);
     } else {
-      Alert.alert("Excluir grupo", "Tem certeza que deseja excluir este grupo?", [
-        { text: "Cancelar", style: "cancel" },
-        { text: "Excluir", style: "destructive", onPress: () => deleteMutation.mutate({ id }) },
-      ]);
+      // Cria o grupo automaticamente
+      createMutation.mutate({ nome: pos.nome, cor: pos.cor });
+      setGrupoAtual(null);
     }
   };
 
   const handleAddAtleta = (atletaId: number) => {
-    if (!selectedGrupo) return;
-    const jaEsta = (atletasDoGrupoQuery.data ?? []).some((a: any) => a.atletaId === atletaId);
-    if (jaEsta) {
-      Alert.alert("Atenção", "Este atleta já está no grupo.");
+    if (!grupoAtual) return;
+    const qtd = (atletasDoGrupoQuery.data ?? []).length;
+    if (qtd >= LIMITE_POR_POSICAO) {
+      Alert.alert("Limite atingido", `Máximo de ${LIMITE_POR_POSICAO} atletas por posição.`);
       return;
     }
-    addAtletaMutation.mutate({ atletaId, grupoId: selectedGrupo.id });
+    const jaEsta = (atletasDoGrupoQuery.data ?? []).some((a: any) => a.atletaId === atletaId);
+    if (jaEsta) return;
+    addAtletaMutation.mutate({ atletaId, grupoId: grupoAtual.id });
   };
 
   const handleRemoveAtleta = (atletaId: number) => {
-    if (!selectedGrupo) return;
-    removeAtletaMutation.mutate({ atletaId, grupoId: selectedGrupo.id });
+    if (!grupoAtual) return;
+    removeAtletaMutation.mutate({ atletaId, grupoId: grupoAtual.id });
   };
 
-  // IDs dos atletas já no grupo para marcar na busca
+  const handleGerarRelatorio = async () => {
+    if (!grupoAtual) return;
+    const atletas = atletasDoGrupoQuery.data ?? [];
+    if (atletas.length === 0) {
+      Alert.alert("Sem atletas", "Adicione atletas a esta posição antes de gerar o relatório.");
+      return;
+    }
+    setGerandoRelatorio(true);
+    try {
+      const ids = (atletas as any[]).map((a) => a.atletaId);
+      const response = await fetch("/api/report/pdf-executivo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids, temporada: "2025" }),
+      });
+      if (!response.ok) throw new Error("Erro ao gerar relatório");
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      if (Platform.OS === "web") {
+        window.open(url, "_blank");
+      }
+    } catch (err: any) {
+      Alert.alert("Erro", err.message || "Não foi possível gerar o relatório.");
+    } finally {
+      setGerandoRelatorio(false);
+    }
+  };
+
+  // IDs já no grupo
   const idsNoGrupo = new Set((atletasDoGrupoQuery.data ?? []).map((a: any) => a.atletaId));
+  const qtdNoGrupo = (atletasDoGrupoQuery.data ?? []).length;
 
-  // ── Render ─────────────────────────────────────────────────────────────────
-  const renderGrupo = ({ item }: { item: Grupo }) => {
-    const isSelected = selectedGrupo?.id === item.id;
-    return (
-      <TouchableOpacity
-        onPress={() => setSelectedGrupo(isSelected ? null : item)}
-        style={{
-          backgroundColor: colors.surface,
-          borderRadius: 12,
-          padding: 14,
-          marginBottom: 10,
-          borderLeftWidth: 4,
-          borderLeftColor: item.cor,
-          borderWidth: isSelected ? 1.5 : 0,
-          borderColor: isSelected ? item.cor : "transparent",
-        }}
-      >
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}>
-              {item.nome}
-            </Text>
-            {item.descricao ? (
-              <Text style={{ fontSize: 12, color: colors.muted, marginTop: 2 }}>{item.descricao}</Text>
-            ) : null}
-          </View>
-          <TouchableOpacity onPress={() => handleDeleteGrupo(item.id)} style={{ padding: 8 }}>
-            <Text style={{ color: colors.error, fontSize: 18 }}>✕</Text>
-          </TouchableOpacity>
-        </View>
-      </TouchableOpacity>
-    );
-  };
+  // ── Contagem por posição (para exibir no card) ─────────────────────────────
+  // Usamos queries individuais por grupo — mas para evitar N queries, calculamos
+  // via gruposQuery + atletasDoGrupoQuery apenas para a posição selecionada.
+  // Para contagem geral, buscamos todos de uma vez:
+  const contagemQuery = trpc.grupos.list.useQuery(undefined, { enabled: false });
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      {/* Header */}
+      {/* ── Header ──────────────────────────────────────────────────────────── */}
       <View style={{
-        paddingHorizontal: 16, paddingVertical: 12,
-        borderBottomColor: colors.border, borderBottomWidth: 1,
+        paddingHorizontal: 16, paddingTop: 16, paddingBottom: 12,
+        borderBottomWidth: 1, borderBottomColor: colors.border,
+        backgroundColor: colors.background,
       }}>
-        <Text style={{ fontSize: 22, fontWeight: "bold", color: colors.foreground }}>Radar</Text>
-        <Text style={{ fontSize: 13, color: colors.muted, marginTop: 2 }}>
-          Organize atletas em listas personalizadas
+        <Text style={{ fontSize: 22, fontWeight: "800", color: colors.foreground, letterSpacing: 0.5 }}>
+          Radar
+        </Text>
+        <Text style={{ fontSize: 12, color: colors.muted, marginTop: 2 }}>
+          Atletas no radar para contratação · Máx. {LIMITE_POR_POSICAO} por posição
         </Text>
       </View>
 
-      {/* Conteúdo */}
-      {gruposQuery.isLoading ? (
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-          <ActivityIndicator color={colors.primary} />
-        </View>
-      ) : (
-        <ScrollView style={{ flex: 1, padding: 16 }} contentContainerStyle={{ paddingBottom: 100 }}>
-          {(gruposQuery.data ?? []).length === 0 ? (
-            <View style={{ alignItems: "center", marginTop: 60 }}>
-              <Text style={{ color: colors.muted, fontSize: 14, textAlign: "center" }}>
-                Nenhum grupo criado ainda.{"\n"}Toque em + para criar o primeiro grupo.
-              </Text>
-            </View>
-          ) : (
-            <FlatList
-              data={gruposQuery.data as Grupo[]}
-              renderItem={renderGrupo}
-              keyExtractor={(item) => item.id.toString()}
-              scrollEnabled={false}
-            />
-          )}
+      {/* ── Conteúdo principal ──────────────────────────────────────────────── */}
+      <View style={{ flex: 1, flexDirection: "row" }}>
 
-          {/* Painel de atletas do grupo selecionado */}
-          {selectedGrupo && (
-            <View style={{
-              marginTop: 4,
-              padding: 14,
-              backgroundColor: colors.surface,
-              borderRadius: 12,
-              borderLeftWidth: 4,
-              borderLeftColor: selectedGrupo.cor,
-            }}>
-              {/* Cabeçalho do painel */}
-              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>
-                  Atletas em "{selectedGrupo.nome}"
+        {/* Lista de posições */}
+        <ScrollView
+          style={{ flex: posicaoSelecionada ? 0.42 : 1, borderRightWidth: posicaoSelecionada ? 1 : 0, borderRightColor: colors.border }}
+          contentContainerStyle={{ padding: 12, paddingBottom: 80 }}
+        >
+          {POSICOES_RADAR.map((pos) => {
+            const grupo = gruposPorPosicao.get(pos.nome);
+            const isSelected = posicaoSelecionada?.nome === pos.nome;
+
+            return (
+              <TouchableOpacity
+                key={pos.nome}
+                onPress={() => handleSelecionarPosicao(pos)}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  backgroundColor: isSelected ? pos.cor + "22" : colors.surface,
+                  borderRadius: 10,
+                  marginBottom: 8,
+                  padding: 10,
+                  borderWidth: isSelected ? 1.5 : 1,
+                  borderColor: isSelected ? pos.cor : colors.border,
+                }}
+              >
+                {/* Badge abreviação */}
+                <View style={{
+                  width: 36, height: 36, borderRadius: 8,
+                  backgroundColor: pos.cor,
+                  justifyContent: "center", alignItems: "center",
+                  marginRight: 10,
+                }}>
+                  <Text style={{ color: "white", fontSize: 10, fontWeight: "800" }}>{pos.abrev}</Text>
+                </View>
+
+                {/* Nome + contagem */}
+                <View style={{ flex: 1 }}>
+                  <Text style={{
+                    fontSize: 13, fontWeight: isSelected ? "700" : "600",
+                    color: isSelected ? pos.cor : colors.foreground,
+                  }}>
+                    {pos.nome}
+                  </Text>
+                  {grupo ? (
+                    <Text style={{ fontSize: 11, color: colors.muted }}>
+                      {isSelected && grupoAtual
+                        ? `${qtdNoGrupo}/${LIMITE_POR_POSICAO} atletas`
+                        : "Toque para ver"}
+                    </Text>
+                  ) : (
+                    <Text style={{ fontSize: 11, color: colors.muted, fontStyle: "italic" }}>Vazio</Text>
+                  )}
+                </View>
+
+                {/* Indicador de seleção */}
+                <Text style={{ color: isSelected ? pos.cor : colors.muted, fontSize: 16 }}>
+                  {isSelected ? "◀" : "▶"}
                 </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+
+        {/* Painel de atletas da posição selecionada */}
+        {posicaoSelecionada && (
+          <View style={{ flex: 0.58, backgroundColor: colors.background }}>
+            {/* Cabeçalho do painel */}
+            <View style={{
+              padding: 12,
+              borderBottomWidth: 1,
+              borderBottomColor: colors.border,
+              backgroundColor: posicaoSelecionada.cor + "15",
+            }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <View style={{
+                  backgroundColor: posicaoSelecionada.cor,
+                  paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6,
+                }}>
+                  <Text style={{ color: "white", fontSize: 11, fontWeight: "800" }}>
+                    {posicaoSelecionada.abrev}
+                  </Text>
+                </View>
+                <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground, flex: 1 }}>
+                  {posicaoSelecionada.nome}
+                </Text>
+              </View>
+
+              {/* Barra de progresso */}
+              <View style={{ marginBottom: 8 }}>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
+                  <Text style={{ fontSize: 11, color: colors.muted }}>
+                    {qtdNoGrupo}/{LIMITE_POR_POSICAO} atletas
+                  </Text>
+                  <Text style={{ fontSize: 11, color: qtdNoGrupo >= LIMITE_POR_POSICAO ? "#EF4444" : colors.muted }}>
+                    {LIMITE_POR_POSICAO - qtdNoGrupo} vagas
+                  </Text>
+                </View>
+                <View style={{ height: 4, backgroundColor: colors.border, borderRadius: 2 }}>
+                  <View style={{
+                    height: 4,
+                    width: `${(qtdNoGrupo / LIMITE_POR_POSICAO) * 100}%`,
+                    backgroundColor: qtdNoGrupo >= LIMITE_POR_POSICAO ? "#EF4444" : posicaoSelecionada.cor,
+                    borderRadius: 2,
+                  }} />
+                </View>
+              </View>
+
+              {/* Botões de ação */}
+              <View style={{ flexDirection: "row", gap: 6 }}>
                 <TouchableOpacity
                   onPress={() => {
                     setBuscaNome("");
-                    setModalAdicionarVisible(true);
+                    setModalBuscaVisible(true);
                   }}
+                  disabled={qtdNoGrupo >= LIMITE_POR_POSICAO || !grupoAtual}
                   style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    backgroundColor: selectedGrupo.cor,
-                    paddingHorizontal: 12,
-                    paddingVertical: 6,
-                    borderRadius: 8,
-                    gap: 4,
+                    flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center",
+                    backgroundColor: qtdNoGrupo >= LIMITE_POR_POSICAO ? colors.border : posicaoSelecionada.cor,
+                    paddingVertical: 7, borderRadius: 8, gap: 4,
+                    opacity: !grupoAtual ? 0.6 : 1,
                   }}
                 >
-                  <Text style={{ color: "white", fontSize: 13, fontWeight: "600" }}>+ Adicionar</Text>
+                  <Text style={{ color: "white", fontSize: 12, fontWeight: "700" }}>+ Atleta</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={handleGerarRelatorio}
+                  disabled={qtdNoGrupo === 0 || gerandoRelatorio}
+                  style={{
+                    flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center",
+                    backgroundColor: qtdNoGrupo === 0 ? colors.border : "#1D4ED8",
+                    paddingVertical: 7, borderRadius: 8, gap: 4,
+                  }}
+                >
+                  {gerandoRelatorio
+                    ? <ActivityIndicator size="small" color="white" />
+                    : <Text style={{ color: "white", fontSize: 12, fontWeight: "700" }}>📋 PDF</Text>
+                  }
                 </TouchableOpacity>
               </View>
+            </View>
 
-              {/* Lista de atletas no grupo */}
-              {atletasDoGrupoQuery.isLoading ? (
-                <ActivityIndicator color={colors.primary} size="small" />
-              ) : (atletasDoGrupoQuery.data ?? []).length === 0 ? (
-                <Text style={{ color: colors.muted, fontSize: 13, fontStyle: "italic" }}>
-                  Nenhum atleta neste grupo ainda.
+            {/* Lista de atletas */}
+            {atletasDoGrupoQuery.isLoading || createMutation.isPending ? (
+              <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+                <ActivityIndicator color={posicaoSelecionada.cor} />
+              </View>
+            ) : (atletasDoGrupoQuery.data ?? []).length === 0 ? (
+              <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 20 }}>
+                <Text style={{ fontSize: 28, marginBottom: 8 }}>🔍</Text>
+                <Text style={{ color: colors.muted, fontSize: 13, textAlign: "center" }}>
+                  Nenhum atleta nesta posição.{"\n"}Toque em "+ Atleta" para adicionar.
                 </Text>
-              ) : (
-                (atletasDoGrupoQuery.data as any[]).map((a) => (
-                  <View key={a.atletaId} style={{
+              </View>
+            ) : (
+              <FlatList
+                data={atletasDoGrupoQuery.data as any[]}
+                keyExtractor={(item) => item.atletaId.toString()}
+                contentContainerStyle={{ padding: 10, paddingBottom: 80 }}
+                renderItem={({ item, index }) => (
+                  <View style={{
                     flexDirection: "row",
-                    justifyContent: "space-between",
                     alignItems: "center",
-                    paddingVertical: 8,
-                    borderBottomWidth: 1,
-                    borderBottomColor: colors.border,
+                    backgroundColor: colors.surface,
+                    borderRadius: 8,
+                    marginBottom: 6,
+                    padding: 10,
+                    borderLeftWidth: 3,
+                    borderLeftColor: posicaoSelecionada.cor,
                   }}>
-                    <Text style={{ color: colors.foreground, fontSize: 14, flex: 1 }}>
-                      {a.atletaNome || `Atleta #${a.atletaId}`}
-                    </Text>
+                    {/* Número */}
+                    <View style={{
+                      width: 24, height: 24, borderRadius: 12,
+                      backgroundColor: posicaoSelecionada.cor + "30",
+                      justifyContent: "center", alignItems: "center",
+                      marginRight: 8,
+                    }}>
+                      <Text style={{ fontSize: 11, fontWeight: "700", color: posicaoSelecionada.cor }}>
+                        {index + 1}
+                      </Text>
+                    </View>
+
+                    {/* Nome e posição */}
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground }} numberOfLines={1}>
+                        {item.atletaNome || `Atleta #${item.atletaId}`}
+                      </Text>
+                      {item.posicao ? (
+                        <Text style={{ fontSize: 11, color: colors.muted }}>{item.posicao}</Text>
+                      ) : null}
+                    </View>
+
+                    {/* Remover */}
                     <TouchableOpacity
-                      onPress={() => handleRemoveAtleta(a.atletaId)}
+                      onPress={() => handleRemoveAtleta(item.atletaId)}
                       style={{ padding: 6 }}
                     >
                       <Text style={{ color: colors.error, fontSize: 16 }}>✕</Text>
                     </TouchableOpacity>
                   </View>
-                ))
-              )}
-            </View>
-          )}
-        </ScrollView>
-      )}
-
-      {/* Botão flutuante para criar grupo */}
-      <TouchableOpacity
-        onPress={() => {
-          setNovoGrupo({ nome: "", descricao: "", cor: "#FF6B35" });
-          setModalCriarVisible(true);
-        }}
-        style={{
-          position: "absolute",
-          bottom: 24,
-          right: 24,
-          width: 56,
-          height: 56,
-          borderRadius: 28,
-          backgroundColor: colors.primary,
-          justifyContent: "center",
-          alignItems: "center",
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.25,
-          shadowRadius: 4,
-          elevation: 5,
-        }}
-      >
-        <Text style={{ fontSize: 28, color: "white", lineHeight: 32 }}>+</Text>
-      </TouchableOpacity>
-
-      {/* ── Modal: Criar Grupo ─────────────────────────────────────────────── */}
-      <Modal
-        visible={modalCriarVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setModalCriarVisible(false)}
-      >
-        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" }}>
-          <View style={{
-            backgroundColor: colors.background,
-            borderTopLeftRadius: 20,
-            borderTopRightRadius: 20,
-            padding: 20,
-            paddingBottom: 40,
-          }}>
-            <Text style={{ fontSize: 18, fontWeight: "bold", color: colors.foreground, marginBottom: 16 }}>
-              Novo Grupo
-            </Text>
-
-            <Text style={{ color: colors.foreground, fontSize: 12, fontWeight: "600", marginBottom: 4 }}>
-              Nome do Grupo *
-            </Text>
-            <TextInput
-              style={{
-                borderWidth: 1, borderColor: colors.border, borderRadius: 8,
-                padding: 12, marginBottom: 16, color: colors.foreground,
-                backgroundColor: colors.surface,
-              }}
-              placeholder="Ex: Titulares, Reservas, Monitorados"
-              placeholderTextColor={colors.muted}
-              value={novoGrupo.nome}
-              onChangeText={(text) => setNovoGrupo({ ...novoGrupo, nome: text })}
-              returnKeyType="next"
-            />
-
-            <Text style={{ color: colors.foreground, fontSize: 12, fontWeight: "600", marginBottom: 4 }}>
-              Descrição (opcional)
-            </Text>
-            <TextInput
-              style={{
-                borderWidth: 1, borderColor: colors.border, borderRadius: 8,
-                padding: 12, marginBottom: 16, color: colors.foreground,
-                backgroundColor: colors.surface, height: 72,
-              }}
-              placeholder="Descrição do grupo"
-              placeholderTextColor={colors.muted}
-              value={novoGrupo.descricao}
-              onChangeText={(text) => setNovoGrupo({ ...novoGrupo, descricao: text })}
-              multiline
-            />
-
-            <Text style={{ color: colors.foreground, fontSize: 12, fontWeight: "600", marginBottom: 8 }}>
-              Cor
-            </Text>
-            <View style={{ flexDirection: "row", gap: 8, marginBottom: 20 }}>
-              {CORES.map((cor) => (
-                <TouchableOpacity
-                  key={cor}
-                  onPress={() => setNovoGrupo({ ...novoGrupo, cor })}
-                  style={{
-                    width: 36, height: 36, borderRadius: 8, backgroundColor: cor,
-                    borderWidth: novoGrupo.cor === cor ? 3 : 1,
-                    borderColor: novoGrupo.cor === cor ? colors.foreground : "transparent",
-                  }}
-                />
-              ))}
-            </View>
-
-            <View style={{ flexDirection: "row", gap: 12 }}>
-              <TouchableOpacity
-                onPress={() => setModalCriarVisible(false)}
-                style={{
-                  flex: 1, paddingVertical: 12, borderRadius: 8,
-                  borderWidth: 1, borderColor: colors.border, alignItems: "center",
-                }}
-              >
-                <Text style={{ color: colors.foreground, fontWeight: "600" }}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handleCreateGrupo}
-                disabled={createMutation.isPending}
-                style={{
-                  flex: 1, paddingVertical: 12, borderRadius: 8,
-                  backgroundColor: colors.primary, alignItems: "center",
-                  opacity: createMutation.isPending ? 0.7 : 1,
-                }}
-              >
-                {createMutation.isPending
-                  ? <ActivityIndicator color="white" size="small" />
-                  : <Text style={{ color: "white", fontWeight: "600" }}>Criar</Text>}
-              </TouchableOpacity>
-            </View>
+                )}
+              />
+            )}
           </View>
-        </View>
-      </Modal>
+        )}
+      </View>
 
-      {/* ── Modal: Adicionar Atleta ao Grupo ──────────────────────────────── */}
+      {/* ── Modal: Buscar e Adicionar Atleta ──────────────────────────────────── */}
       <Modal
-        visible={modalAdicionarVisible}
+        visible={modalBuscaVisible}
         transparent
         animationType="slide"
-        onRequestClose={() => setModalAdicionarVisible(false)}
+        onRequestClose={() => setModalBuscaVisible(false)}
       >
-        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" }}>
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.55)", justifyContent: "flex-end" }}>
           <View style={{
             backgroundColor: colors.background,
             borderTopLeftRadius: 20,
             borderTopRightRadius: 20,
             padding: 20,
-            paddingBottom: 40,
+            paddingBottom: 36,
             height: 520,
           }}>
-            <Text style={{ fontSize: 17, fontWeight: "bold", color: colors.foreground, marginBottom: 12 }}>
-              Adicionar atleta a "{selectedGrupo?.nome}"
-            </Text>
+            {/* Cabeçalho do modal */}
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14, gap: 8 }}>
+              <View style={{
+                backgroundColor: posicaoSelecionada?.cor ?? colors.primary,
+                paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6,
+              }}>
+                <Text style={{ color: "white", fontSize: 11, fontWeight: "800" }}>
+                  {posicaoSelecionada?.abrev}
+                </Text>
+              </View>
+              <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, flex: 1 }}>
+                Adicionar ao Radar
+              </Text>
+              <Text style={{ fontSize: 12, color: colors.muted }}>
+                {qtdNoGrupo}/{LIMITE_POR_POSICAO}
+              </Text>
+            </View>
 
             {/* Campo de busca */}
             <TextInput
               style={{
-                borderWidth: 1, borderColor: colors.border, borderRadius: 8,
+                borderWidth: 1, borderColor: colors.border, borderRadius: 10,
                 padding: 12, marginBottom: 12, color: colors.foreground,
-                backgroundColor: colors.surface,
+                backgroundColor: colors.surface, fontSize: 14,
               }}
               placeholder="Buscar atleta pelo nome..."
               placeholderTextColor={colors.muted}
@@ -419,15 +431,19 @@ export default function GruposScreen() {
 
             {/* Resultados */}
             {buscaNome.length < 2 ? (
-              <Text style={{ color: colors.muted, fontSize: 13, textAlign: "center", marginTop: 8 }}>
-                Digite ao menos 2 letras para buscar
-              </Text>
+              <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+                <Text style={{ color: colors.muted, fontSize: 13 }}>
+                  Digite ao menos 2 letras para buscar
+                </Text>
+              </View>
             ) : buscaAtletasQuery.isLoading ? (
-              <ActivityIndicator color={colors.primary} style={{ marginTop: 16 }} />
+              <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+                <ActivityIndicator color={posicaoSelecionada?.cor ?? colors.primary} />
+              </View>
             ) : (buscaAtletasQuery.data ?? []).length === 0 ? (
-              <Text style={{ color: colors.muted, fontSize: 13, textAlign: "center", marginTop: 8 }}>
-                Nenhum atleta encontrado
-              </Text>
+              <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+                <Text style={{ color: colors.muted, fontSize: 13 }}>Nenhum atleta encontrado</Text>
+              </View>
             ) : (
               <FlatList
                 data={buscaAtletasQuery.data as any[]}
@@ -440,13 +456,12 @@ export default function GruposScreen() {
                       onPress={() => !jaEsta && handleAddAtleta(item.id)}
                       style={{
                         flexDirection: "row",
-                        justifyContent: "space-between",
                         alignItems: "center",
-                        paddingVertical: 12,
+                        paddingVertical: 10,
                         paddingHorizontal: 4,
                         borderBottomWidth: 1,
                         borderBottomColor: colors.border,
-                        opacity: jaEsta ? 0.5 : 1,
+                        opacity: jaEsta ? 0.45 : 1,
                       }}
                     >
                       <View style={{ flex: 1 }}>
@@ -454,19 +469,17 @@ export default function GruposScreen() {
                           {item.nome}
                         </Text>
                         <Text style={{ fontSize: 12, color: colors.muted }}>
-                          {[item.posicao, item.clube].filter(Boolean).join(" • ")}
+                          {[item.posicao, item.clube].filter(Boolean).join(" · ")}
                         </Text>
                       </View>
                       {jaEsta ? (
-                        <Text style={{ fontSize: 12, color: colors.muted, marginLeft: 8 }}>Já adicionado</Text>
-                      ) : addAtletaMutation.isPending ? (
-                        <ActivityIndicator size="small" color={colors.primary} />
+                        <Text style={{ fontSize: 11, color: colors.muted }}>✓ Adicionado</Text>
                       ) : (
                         <View style={{
-                          backgroundColor: selectedGrupo?.cor ?? colors.primary,
-                          borderRadius: 6, paddingHorizontal: 10, paddingVertical: 4, marginLeft: 8,
+                          backgroundColor: posicaoSelecionada?.cor ?? colors.primary,
+                          borderRadius: 6, paddingHorizontal: 10, paddingVertical: 4,
                         }}>
-                          <Text style={{ color: "white", fontSize: 12, fontWeight: "600" }}>+ Adicionar</Text>
+                          <Text style={{ color: "white", fontSize: 12, fontWeight: "700" }}>+ Add</Text>
                         </View>
                       )}
                     </TouchableOpacity>
@@ -476,9 +489,9 @@ export default function GruposScreen() {
             )}
 
             <TouchableOpacity
-              onPress={() => setModalAdicionarVisible(false)}
+              onPress={() => setModalBuscaVisible(false)}
               style={{
-                marginTop: 16, paddingVertical: 12, borderRadius: 8,
+                marginTop: 12, paddingVertical: 12, borderRadius: 10,
                 borderWidth: 1, borderColor: colors.border, alignItems: "center",
               }}
             >
