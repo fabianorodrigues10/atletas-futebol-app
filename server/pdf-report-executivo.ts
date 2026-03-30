@@ -1,6 +1,6 @@
 /**
  * Relatório Executivo PDF - Comissão Técnica BDMD
- * Ficha completa por atleta: perfil + estatísticas de temporada + notas avaliativas
+ * Layout compacto: 3 atletas por página A4
  */
 import PDFDocument from "pdfkit";
 import { Request, Response } from "express";
@@ -15,12 +15,28 @@ type RGB = [number, number, number];
 // Identidade visual Marcílio Dias
 const PRIMARY: RGB = [223, 16, 26];   // Vermelho
 const DARK: RGB = [30, 32, 115];      // Azul escuro
-const GOLD: RGB = [212, 175, 55];     // Dourado
 const GRAY: RGB = [104, 112, 118];
 const LIGHT_GRAY: RGB = [245, 245, 245];
 const BORDER: RGB = [220, 220, 230];
 const WHITE: RGB = [255, 255, 255];
 const BLACK: RGB = [20, 20, 20];
+
+// Dimensões da página A4 (pontos)
+const PAGE_W = 595;
+const PAGE_H = 842;
+const MARGIN = 20;
+const CONTENT_W = PAGE_W - MARGIN * 2;
+
+// Cabeçalho ocupa 50px, rodapé 28px
+const HEADER_H = 50;
+const FOOTER_H = 28;
+const USABLE_H = PAGE_H - HEADER_H - FOOTER_H; // ~764px
+
+// Cada ficha ocupa exatamente 1/3 da área útil
+const CARD_H = Math.floor(USABLE_H / 3); // ~254px
+const CARD_PADDING = 5;
+// Altura do cabeçalho da ficha
+const CARD_HDR_H_CONST = 24;
 
 function formatDate(dateStr: string | Date | null): string {
   if (!dateStr) return "—";
@@ -63,114 +79,88 @@ function fetchImageBuffer(url: string): Promise<Buffer | null> {
 }
 
 function drawPageHeader(doc: PDFKit.PDFDocument) {
-  // Faixa de cabeçalho
-  doc.rect(0, 0, 595, 70).fill(DARK);
+  doc.rect(0, 0, PAGE_W, HEADER_H).fill(DARK);
 
-  // Tentar escudo
   try {
     const shieldPath = require.resolve("../assets/images/marcilio-dias-shield.png");
-    doc.image(shieldPath, 20, 8, { width: 54, height: 54 });
+    doc.image(shieldPath, 14, 5, { width: 40, height: 40 });
   } catch {
-    doc.fontSize(22).fillColor(WHITE).font("Helvetica-Bold").text("BDMD", 20, 22);
+    doc.fontSize(16).fillColor(WHITE).font("Helvetica-Bold").text("BDMD", 14, 16);
   }
 
-  // Título
-  doc.fontSize(16).fillColor(WHITE).font("Helvetica-Bold").text("BANCO DE DADOS MARCÍLIO DIAS", 90, 18);
-  doc.fontSize(9).fillColor([180, 190, 220] as RGB).font("Helvetica").text("Relatório Técnico — Comissão Técnica", 90, 38);
+  doc.fontSize(13).fillColor(WHITE).font("Helvetica-Bold")
+    .text("BANCO DE DADOS MARCÍLIO DIAS", 64, 10);
+  doc.fontSize(8).fillColor([180, 190, 220] as RGB).font("Helvetica")
+    .text("Relatório Técnico — Comissão Técnica", 64, 27);
 
-  // Data
   const now = new Date();
   const dateStr = `${String(now.getDate()).padStart(2, "0")}/${String(now.getMonth() + 1).padStart(2, "0")}/${now.getFullYear()}`;
-  doc.fontSize(8).fillColor([180, 190, 220] as RGB).text(`Emitido em ${dateStr}`, 90, 52);
+  doc.fontSize(7).fillColor([180, 190, 220] as RGB)
+    .text(`Emitido em ${dateStr}`, PAGE_W - 110, 20);
 
-  // Linha dourada decorativa
-  doc.rect(0, 70, 595, 3).fill(PRIMARY);
+  doc.rect(0, HEADER_H, PAGE_W, 2).fill(PRIMARY);
 }
 
 function drawPageFooter(doc: PDFKit.PDFDocument, pageNum: number, totalPages: number) {
-  doc.rect(0, 810, 595, 32).fill(DARK);
-  doc.fontSize(7).fillColor([180, 190, 220] as RGB).font("Helvetica")
+  const fy = PAGE_H - FOOTER_H;
+  doc.rect(0, fy, PAGE_W, FOOTER_H).fill(DARK);
+  doc.fontSize(6.5).fillColor([180, 190, 220] as RGB).font("Helvetica")
     .text("BDMD — Banco de Dados Marcílio Dias  •  Documento Confidencial  •  Uso Exclusivo da Comissão Técnica",
-      0, 818, { width: 595, align: "center" });
-  doc.text(`Página ${pageNum} de ${totalPages}`, 0, 828, { width: 595, align: "center" });
+      0, fy + 8, { width: PAGE_W, align: "center" });
+  doc.text(`Página ${pageNum} de ${totalPages}`, 0, fy + 18, { width: PAGE_W, align: "center" });
 }
 
-function drawNotaBar(doc: PDFKit.PDFDocument, label: string, valor: number | null, x: number, y: number, barWidth: number = 140) {
-  const nota = valor ?? 0;
-  const pct = Math.min(nota / 10, 1);
+/**
+ * Desenha a ficha compacta de um atleta dentro de uma "faixa" vertical da página.
+ * cardY: posição Y de início da faixa
+ */
+async function drawAtletaCard(
+  doc: PDFKit.PDFDocument,
+  atleta: any,
+  stats: any | null,
+  cardY: number,
+  fotoBuffer: Buffer | null
+) {
+  const cx = MARGIN;
+  const cw = CONTENT_W;
+  const p = CARD_PADDING;
 
-  // Label
-  doc.fontSize(7).fillColor(GRAY).font("Helvetica").text(label, x, y);
+  // Fundo da ficha
+  doc.rect(cx, cardY + 2, cw, CARD_H - 4).fill(LIGHT_GRAY).stroke(BORDER);
 
-  // Fundo da barra
-  doc.rect(x, y + 10, barWidth, 6).fill([230, 230, 235] as RGB);
+  //  // ── FAIXA DE CABEÇALHO DA FICHA ────────────────────────────────────
+  const CARD_HDR_H = CARD_HDR_H_CONST;
+  doc.rect(cx, cardY + 2, cw, CARD_HDR_H).fill(DARK);
 
-  // Cor da barra por nota
-  let barColor: RGB = [239, 68, 68]; // vermelho
-  if (nota >= 7) barColor = [34, 197, 94]; // verde
-  else if (nota >= 5) barColor = [245, 158, 11]; // amarelo
-
-  doc.rect(x, y + 10, barWidth * pct, 6).fill(barColor);
-
-  // Valor
-  doc.fontSize(7).fillColor(BLACK).font("Helvetica-Bold")
-    .text(nota > 0 ? nota.toFixed(1) : "—", x + barWidth + 4, y + 8);
-}
-
-function drawStatBox(doc: PDFKit.PDFDocument, label: string, valor: string | number, x: number, y: number, w: number = 70, h: number = 38) {
-  // Caixa
-  doc.rect(x, y, w, h).fill(LIGHT_GRAY).stroke();
-  doc.rect(x, y, w, 14).fill(DARK);
-
-  // Label
-  doc.fontSize(6).fillColor(WHITE).font("Helvetica-Bold")
-    .text(label.toUpperCase(), x + 2, y + 4, { width: w - 4, align: "center" });
-
-  // Valor
-  doc.fontSize(14).fillColor(DARK).font("Helvetica-Bold")
-    .text(String(valor ?? "—"), x + 2, y + 17, { width: w - 4, align: "center" });
-}
-
-async function drawAtletaPage(doc: PDFKit.PDFDocument, atleta: any, stats: any | null, isFirst: boolean) {
-  if (!isFirst) doc.addPage();
-
-  drawPageHeader(doc);
-
-  let y = 85;
-
-  // ── SEÇÃO: FOTO + IDENTIFICAÇÃO ──────────────────────────────────────────
-  // Foto do atleta
-  const fotoUrl = atleta.fotoUrl || (atleta.midias?.find((m: any) => m.tipo === "foto")?.url);
-  let fotoBuffer: Buffer | null = null;
-  if (fotoUrl) {
-    const fullUrl = fotoUrl.startsWith("http") ? fotoUrl : `https://manus-storage.s3.amazonaws.com/${fotoUrl}`;
-    fotoBuffer = await fetchImageBuffer(fullUrl);
-  }
-
-  const FOTO_X = 30;
-  const FOTO_Y = y;
-  const FOTO_W = 90;
-  const FOTO_H = 110;
+  // Foto (à esquerda, ocupa toda a área útil da ficha)
+  const FOTO_W = 60;
+  const FOTO_H = CARD_H - CARD_HDR_H - 6;
+  const FOTO_X = cx + p;
+  const FOTO_Y = cardY + CARD_HDR_H + 3;
 
   if (fotoBuffer) {
     try {
       doc.image(fotoBuffer, FOTO_X, FOTO_Y, { width: FOTO_W, height: FOTO_H, cover: [FOTO_W, FOTO_H] });
       doc.rect(FOTO_X, FOTO_Y, FOTO_W, FOTO_H).stroke(BORDER);
     } catch {
-      doc.rect(FOTO_X, FOTO_Y, FOTO_W, FOTO_H).fill(LIGHT_GRAY);
-      doc.fontSize(9).fillColor(GRAY).text("Sem foto", FOTO_X, FOTO_Y + 45, { width: FOTO_W, align: "center" });
+      doc.rect(FOTO_X, FOTO_Y, FOTO_W, FOTO_H).fill([200, 200, 210] as RGB);
+      doc.fontSize(6).fillColor(GRAY).text("Sem foto", FOTO_X, FOTO_Y + FOTO_H / 2 - 4, { width: FOTO_W, align: "center" });
     }
   } else {
-    doc.rect(FOTO_X, FOTO_Y, FOTO_W, FOTO_H).fill(LIGHT_GRAY);
-    doc.fontSize(9).fillColor(GRAY).text("Sem foto", FOTO_X, FOTO_Y + 45, { width: FOTO_W, align: "center" });
+    doc.rect(FOTO_X, FOTO_Y, FOTO_W, FOTO_H).fill([200, 200, 210] as RGB);
+    doc.fontSize(6).fillColor(GRAY).text("Sem foto", FOTO_X, FOTO_Y + FOTO_H / 2 - 4, { width: FOTO_W, align: "center" });
   }
 
-  // Identificação ao lado da foto
-  const ID_X = 135;
-  doc.fontSize(20).fillColor(DARK).font("Helvetica-Bold").text(atleta.nome || "—", ID_X, y, { width: 430 });
-  y += 26;
+  // Área de conteúdo à direita da foto
+  const INFO_X = FOTO_X + FOTO_W + p;
+  const INFO_W = cw - FOTO_W - p * 3;
+  const CONTENT_START_Y = cardY + CARD_HDR_H + 4;
 
-  // Posição com badge colorido
+  // Nome (na faixa escura)
+  doc.fontSize(12).fillColor(WHITE).font("Helvetica-Bold")
+    .text(atleta.nome || "—", INFO_X, cardY + 6, { width: INFO_W - 60 });
+
+  // Badge de posição (canto direito da faixa escura)
   const posicao = atleta.posicao || "—";
   const posColors: Record<string, RGB> = {
     Goleiro: [245, 158, 11], Zagueiro: [59, 130, 246], Lateral: [34, 197, 94],
@@ -178,121 +168,102 @@ async function drawAtletaPage(doc: PDFKit.PDFDocument, atleta: any, stats: any |
     Centroavante: [249, 115, 22], "2º Atacante": [249, 115, 22],
   };
   const posColor = posColors[posicao] || DARK;
-  const posText = atleta.segundaPosicao ? `${posicao} / ${atleta.segundaPosicao}` : posicao;
-  doc.rect(ID_X, y, 160, 16).fill(posColor);
-  doc.fontSize(9).fillColor(WHITE).font("Helvetica-Bold").text(posText.toUpperCase(), ID_X + 4, y + 4, { width: 152 });
-  y += 22;
+  const posText = atleta.segundaPosicao ? `${posicao}/${atleta.segundaPosicao}` : posicao;
+  const BADGE_W = 80;
+  doc.rect(cx + cw - BADGE_W - p, cardY + 4, BADGE_W, 16).fill(posColor);
+  doc.fontSize(7).fillColor(WHITE).font("Helvetica-Bold")
+    .text(posText.toUpperCase(), cx + cw - BADGE_W - p + 2, cardY + 8, { width: BADGE_W - 4, align: "center" });
 
-  // Clube e escala
-  if (atleta.clube) {
-    doc.fontSize(10).fillColor(GRAY).font("Helvetica").text(`🏟  ${atleta.clube}`, ID_X, y);
-    y += 14;
-  }
+  // ── DADOS PESSOAIS (linha compacta) ────────────────────────────────────
+  let iy = CONTENT_START_Y;
 
+  const dadosLinha = [
+    atleta.dataNascimento ? `Nasc: ${formatDate(atleta.dataNascimento)}` : null,
+    calcularIdade(atleta.dataNascimento) !== "—" ? calcularIdade(atleta.dataNascimento) : null,
+    atleta.naturalidade ? `${atleta.naturalidade}` : null,
+    atleta.altura ? `${atleta.altura}m` : null,
+    atleta.pe ? `Pé: ${atleta.pe}` : null,
+    atleta.clube ? `${atleta.clube}` : null,
+  ].filter(Boolean).join("  •  ");
 
-  // Linha separadora
-  y = Math.max(y, FOTO_Y + FOTO_H + 10);
-  doc.moveTo(30, y).lineTo(565, y).strokeColor(BORDER).lineWidth(0.8).stroke();
-  y += 12;
+  doc.fontSize(7.5).fillColor(GRAY).font("Helvetica")
+    .text(dadosLinha, INFO_X, iy, { width: INFO_W });
+  iy += 14;
 
-  // ── SEÇÃO: DADOS PESSOAIS E FÍSICOS ─────────────────────────────────────
-  doc.rect(30, y, 535, 14).fill(DARK);
-  doc.fontSize(8).fillColor(WHITE).font("Helvetica-Bold").text("DADOS PESSOAIS E FÍSICOS", 35, y + 3);
-  y += 18;
-
-  const dadosPessoais = [
-    ["Data de Nascimento", formatDate(atleta.dataNascimento)],
-    ["Idade", calcularIdade(atleta.dataNascimento)],
-    ["Naturalidade", atleta.naturalidade || "—"],
-    ["Altura", atleta.altura ? `${atleta.altura} m` : "—"],
-    ["Pé Preferencial", atleta.pe || "—"],
-  ];
-
-  const COL_W = 106;
-  dadosPessoais.forEach(([label, valor], i) => {
-    const cx = 30 + i * COL_W;
-    doc.rect(cx, y, COL_W - 2, 32).fill(LIGHT_GRAY);
-    doc.fontSize(6.5).fillColor(GRAY).font("Helvetica").text(label, cx + 4, y + 4, { width: COL_W - 8 });
-    doc.fontSize(9).fillColor(DARK).font("Helvetica-Bold").text(String(valor), cx + 4, y + 14, { width: COL_W - 8 });
-  });
-  y += 40;
-
-
-
-  // ── SEÇÃO: ESTATÍSTICAS DA TEMPORADA ─────────────────────────────────────
-  doc.rect(30, y, 535, 14).fill(PRIMARY);
-  doc.fontSize(8).fillColor(WHITE).font("Helvetica-Bold")
-    .text(`ESTATÍSTICAS DA TEMPORADA ${stats?.temporada || "2025"}`, 35, y + 3);
-  y += 18;
-
+  // ── ESTATÍSTICAS ────────────────────────────────────────────────────────
   if (stats) {
-    // Linha 1: stats de participação
-    const statsRow1 = [
+    // Linha de stats: 14 campos em mini-boxes
+    const allStats = [
       ["Jogos", stats.jogos ?? 0],
       ["Titular", stats.jogosTitular ?? 0],
-      ["Minutos", stats.minutosJogados ?? 0],
+      ["Min", stats.minutosJogados ?? 0],
       ["Gols", stats.gols ?? 0],
-      ["Assist.", stats.assistencias ?? 0],
-      ["Finaliz.", stats.finalizacoes ?? 0],
-      ["Desarmes", stats.desarmes ?? 0],
-    ];
-    const BOX_W = 74;
-    statsRow1.forEach(([label, valor], i) => {
-      drawStatBox(doc, String(label), String(valor), 30 + i * (BOX_W + 2), y, BOX_W, 40);
-    });
-    y += 48;
-
-    // Linha 2: stats defensivos/disciplina
-    const statsRow2 = [
-      ["Intercep.", stats.interceptacoes ?? 0],
-      ["Duelos", stats.duelos ?? 0],
-      ["Duelos G.", stats.duelosGanhos ?? 0],
+      ["Assist", stats.assistencias ?? 0],
+      ["Final", stats.finalizacoes ?? 0],
+      ["Desarme", stats.desarmes ?? 0],
+      ["Intercep", stats.interceptacoes ?? 0],
+      ["Duelos G", stats.duelosGanhos ?? 0],
       ["Passes", stats.passes ?? 0],
-      ["Passes C.", stats.passesCompletos ?? 0],
-      ["Amarelos", stats.cartoesAmarelos ?? 0],
-      ["Vermelhos", stats.cartoesVermelhos ?? 0],
+      ["Pass.C", stats.passesCompletos ?? 0],
+      ["Amar", stats.cartoesAmarelos ?? 0],
+      ["Verm", stats.cartoesVermelhos ?? 0],
     ];
-    statsRow2.forEach(([label, valor], i) => {
-      drawStatBox(doc, String(label), String(valor), 30 + i * (BOX_W + 2), y, BOX_W, 40);
+
+    const BOX_W = Math.floor(INFO_W / allStats.length) - 1;
+    const BOX_H = 40;
+
+    allStats.forEach(([label, valor], i) => {
+      const bx = INFO_X + i * (BOX_W + 1);
+      doc.rect(bx, iy, BOX_W, BOX_H).fill(WHITE).stroke(BORDER);
+      doc.rect(bx, iy, BOX_W, 10).fill(DARK);
+      doc.fontSize(5.5).fillColor(WHITE).font("Helvetica-Bold")
+        .text(String(label).toUpperCase(), bx + 1, iy + 3, { width: BOX_W - 2, align: "center" });
+      doc.fontSize(11).fillColor(DARK).font("Helvetica-Bold")
+        .text(String(valor), bx + 1, iy + 16, { width: BOX_W - 2, align: "center" });
     });
-    y += 48;
+    iy += BOX_H + 8;
 
-    // ── NOTAS AVALIATIVAS ────────────────────────────────────────────────
-    doc.rect(30, y, 535, 14).fill([240, 240, 248] as RGB);
-    doc.fontSize(8).fillColor(DARK).font("Helvetica-Bold").text("NOTAS AVALIATIVAS (0–10)", 35, y + 3);
-    y += 18;
-
+    // ── NOTAS AVALIATIVAS (barras compactas inline) ─────────────────────
     const notas = [
       ["Técnica", stats.notaTecnica],
       ["Física", stats.notaFisica],
       ["Tática", stats.notaTatica],
     ];
 
-    const BAR_W = 90;
-    const NOTA_COL_W = 110;
+    const NOTA_W = Math.floor(INFO_W / notas.length) - 4;
     notas.forEach(([label, valor], i) => {
-      const cx = 30 + i * NOTA_COL_W;
-      drawNotaBar(doc, String(label), valor !== null ? parseFloat(String(valor)) : null, cx, y, BAR_W);
-    });
-    y += 30;
+      const nx = INFO_X + i * (NOTA_W + 4);
+      const nota = valor !== null && valor !== undefined ? parseFloat(String(valor)) : 0;
+      const pct = Math.min(nota / 10, 1);
 
-    // Observações
+      doc.fontSize(7.5).fillColor(GRAY).font("Helvetica")
+        .text(`${label}: ${nota > 0 ? nota.toFixed(1) : "—"}`, nx, iy, { width: NOTA_W });
+
+      // Barra
+      doc.rect(nx, iy + 11, NOTA_W, 7).fill([220, 220, 228] as RGB);
+      let barColor: RGB = [239, 68, 68];
+      if (nota >= 7) barColor = [34, 197, 94];
+      else if (nota >= 5) barColor = [245, 158, 11];
+      if (nota > 0) doc.rect(nx, iy + 11, NOTA_W * pct, 7).fill(barColor);
+    });
+    iy += 24;
+
+    // ── OBSERVAÇÕES ─────────────────────────────────────────────────────
     if (stats.observacoes) {
-      doc.rect(30, y, 535, 14).fill([240, 240, 248] as RGB);
-      doc.fontSize(8).fillColor(DARK).font("Helvetica-Bold").text("OBSERVAÇÕES", 35, y + 3);
-      y += 18;
-      doc.rect(30, y, 535, 0).fill(WHITE);
-      doc.fontSize(8.5).fillColor(BLACK).font("Helvetica-Oblique")
-        .text(`"${stats.observacoes}"`, 35, y, { width: 525, lineGap: 3 });
-      y += doc.heightOfString(`"${stats.observacoes}"`, { width: 525 }) + 10;
+      const obsMaxH = (cardY + CARD_H - 6) - iy;
+      if (obsMaxH > 10) {
+        doc.fontSize(6.5).fillColor(BLACK).font("Helvetica-Oblique")
+          .text(`Obs: ${stats.observacoes}`, INFO_X, iy, { width: INFO_W, height: obsMaxH, ellipsis: true });
+      }
     }
   } else {
-    doc.fontSize(9).fillColor(GRAY).font("Helvetica-Oblique")
-      .text("Estatísticas de temporada ainda não preenchidas para este atleta.", 30, y, { width: 535 });
-    y += 20;
+    doc.fontSize(7).fillColor(GRAY).font("Helvetica-Oblique")
+      .text("Estatísticas da temporada não preenchidas.", INFO_X, iy, { width: INFO_W });
   }
 
-
+  // Linha divisória na base da ficha
+  doc.moveTo(cx, cardY + CARD_H - 2).lineTo(cx + cw, cardY + CARD_H - 2)
+    .strokeColor(BORDER).lineWidth(0.5).stroke();
 }
 
 export function registerPdfExecutivoRoutes(app: any) {
@@ -312,16 +283,6 @@ export function registerPdfExecutivoRoutes(app: any) {
       }
 
       if (!atletasData.length) return res.status(404).json({ error: "Atletas não encontrados" });
-
-      // Buscar vídeos
-      const videosData = await db.select().from(midias).where(
-        and(inArray(midias.atletaId, ids!), eq(midias.tipo, "video"))
-      );
-      const videoMap = new Map<number, string[]>();
-      videosData.forEach((v: any) => {
-        if (!videoMap.has(v.atletaId)) videoMap.set(v.atletaId, []);
-        videoMap.get(v.atletaId)!.push(v.url);
-      });
 
       // Buscar fotos
       const fotosData = await db.select().from(midias).where(
@@ -344,12 +305,19 @@ export function registerPdfExecutivoRoutes(app: any) {
       const statsMap = new Map<number, any>();
       statsData.forEach((s: any) => statsMap.set(s.atletaId, s));
 
-      // Montar dados completos
+      // Pré-carregar fotos em paralelo
       const atletasCompletos = atletasData.map((a: any) => ({
         ...a,
-        fotoUrl: fotoMap.get(a.id) || null,
-        videos: videoMap.get(a.id) || [],
+        fotoUrl: fotoMap.get(a.id) || a.fotoUrl || null,
       }));
+
+      const fotoBuffers = await Promise.all(
+        atletasCompletos.map(async (a: any) => {
+          if (!a.fotoUrl) return null;
+          const fullUrl = a.fotoUrl.startsWith("http") ? a.fotoUrl : `https://manus-storage.s3.amazonaws.com/${a.fotoUrl}`;
+          return fetchImageBuffer(fullUrl);
+        })
+      );
 
       // Gerar PDF
       const doc = new PDFDocument({
@@ -362,12 +330,24 @@ export function registerPdfExecutivoRoutes(app: any) {
       const chunks: Buffer[] = [];
       doc.on("data", (c: Buffer) => chunks.push(c));
 
-      // Gerar uma página por atleta
-      for (let i = 0; i < atletasCompletos.length; i++) {
-        if (i === 0) doc.addPage();
-        const atleta = atletasCompletos[i];
-        const stats = statsMap.get(atleta.id) || null;
-        await drawAtletaPage(doc, atleta, stats, i === 0);
+      // Distribuir atletas: 3 por página
+      const ATLETAS_POR_PAGINA = 3;
+      const totalPaginas = Math.ceil(atletasCompletos.length / ATLETAS_POR_PAGINA);
+
+      for (let p = 0; p < totalPaginas; p++) {
+        doc.addPage();
+        drawPageHeader(doc);
+
+        const startIdx = p * ATLETAS_POR_PAGINA;
+        const pageAtletas = atletasCompletos.slice(startIdx, startIdx + ATLETAS_POR_PAGINA);
+
+        for (let j = 0; j < pageAtletas.length; j++) {
+          const atleta = pageAtletas[j];
+          const stats = statsMap.get(atleta.id) || null;
+          const fotoBuffer = fotoBuffers[startIdx + j];
+          const cardY = HEADER_H + 2 + j * CARD_H;
+          await drawAtletaCard(doc, atleta, stats, cardY, fotoBuffer);
+        }
       }
 
       // Rodapés com numeração
@@ -378,7 +358,6 @@ export function registerPdfExecutivoRoutes(app: any) {
       }
 
       doc.end();
-
       await new Promise<void>((resolve) => doc.on("end", resolve));
 
       const pdfBuffer = Buffer.concat(chunks);
@@ -386,7 +365,7 @@ export function registerPdfExecutivoRoutes(app: any) {
       const filename = `Relatorio_Tecnico_${nomes}_${temporadaAlvo}.pdf`;
 
       res.setHeader("Content-Type", "application/pdf");
-      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+      res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
       res.setHeader("Content-Length", pdfBuffer.length);
       res.send(pdfBuffer);
     } catch (error: any) {
