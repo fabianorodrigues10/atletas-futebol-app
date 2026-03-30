@@ -303,3 +303,6 @@
 ## Bug: Alinhamento de Ícones no Header
 - [ ] Corrigir alinhamento dos ícones (gráfico, documento, engrenagem, busca) no header
 - [ ] Ícones devem estar alinhados horizontalmente em uma linha
+
+## Feature: Link no Nome do Atleta no Radar
+- [x] Tornar o nome do atleta na lista do Radar clicável, abrindo o perfil completo do atleta

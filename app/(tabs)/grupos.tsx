@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useRouter } from "expo-router";
 import {
   View, Text, FlatList, TouchableOpacity, TextInput, Modal,
   ScrollView, Alert, ActivityIndicator, Platform,
@@ -34,6 +35,7 @@ interface Grupo {
 
 export default function RadarScreen() {
   const colors = useColors();
+  const router = useRouter();
 
   // Estado: posição selecionada (abre o painel lateral)
   const [posicaoSelecionada, setPosicaoSelecionada] = useState<typeof POSICOES_RADAR[0] | null>(null);
@@ -488,9 +490,19 @@ export default function RadarScreen() {
 
                       {/* Nome e posição */}
                       <View style={{ flex: 1 }}>
-                        <Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground }} numberOfLines={1}>
-                          {item.atletaNome || `Atleta #${item.atletaId}`}
-                        </Text>
+                        <TouchableOpacity
+                          onPress={() => router.push(`/atleta/detalhes/${item.atletaId}` as any)}
+                          style={{ alignSelf: "flex-start" }}
+                        >
+                          <Text style={{
+                            fontSize: 13,
+                            fontWeight: "700",
+                            color: posicaoSelecionada.cor,
+                            textDecorationLine: "underline",
+                          }} numberOfLines={1}>
+                            {item.atletaNome || `Atleta #${item.atletaId}`}
+                          </Text>
+                        </TouchableOpacity>
                         {item.posicao ? (
                           <Text style={{ fontSize: 11, color: colors.muted }}>{item.posicao}</Text>
                         ) : null}
