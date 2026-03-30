@@ -1,125 +1,84 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, TextInput, Modal, ScrollView } from "react-native";
+import { useState } from "react";
+import { View, Text, FlatList, TouchableOpacity, TextInput, Modal, ScrollView, Alert, ActivityIndicator } from "react-native";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
-import { cn } from "@/lib/utils";
 
 interface Grupo {
   id: number;
   nome: string;
-  descricao?: string;
+  descricao?: string | null;
   cor: string;
   createdAt: Date;
 }
 
-interface AtletaEmGrupo {
-  atletaId: number;
-}
+const CORES = ["#FF6B35", "#FF1744", "#00BCD4", "#4CAF50", "#9C27B0", "#FFC107"];
 
 export default function GruposScreen() {
   const colors = useColors();
-  const [grupos, setGrupos] = useState<Grupo[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
-  const [editingGrupo, setEditingGrupo] = useState<Grupo | null>(null);
   const [novoGrupo, setNovoGrupo] = useState({ nome: "", descricao: "", cor: "#FF6B35" });
-  const [atletasGrupo, setAtletasGrupo] = useState<AtletaEmGrupo[]>([]);
   const [selectedGrupo, setSelectedGrupo] = useState<Grupo | null>(null);
 
-  // Carregar grupos
-  useEffect(() => {
-    carregarGrupos();
-  }, []);
+  // Queries tRPC
+  const { data: grupos = [], isLoading, refetch } = trpc.grupos.list.useQuery();
+  const { data: atletasDoGrupo = [], refetch: refetchAtletas } = trpc.grupos.getAtletas.useQuery(
+    { grupoId: selectedGrupo?.id ?? 0 },
+    { enabled: !!selectedGrupo }
+  );
 
-  const carregarGrupos = async () => {
-    try {
-      const response = await fetch(`${getApiBaseUrl()}/api/grupos/list`, {
-        credentials: "include",
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setGrupos(data.result || []);
-      }
-    } catch (error) {
-      console.error("Erro ao carregar grupos:", error);
-    }
-  };
+  // Mutations tRPC
+  const createMutation = trpc.grupos.create.useMutation({
+    onSuccess: () => {
+      setNovoGrupo({ nome: "", descricao: "", cor: "#FF6B35" });
+      setModalVisible(false);
+      refetch();
+    },
+    onError: (err) => {
+      Alert.alert("Erro", err.message || "Não foi possível criar o grupo.");
+    },
+  });
 
-  const handleCreateGrupo = async () => {
+  const deleteMutation = trpc.grupos.delete.useMutation({
+    onSuccess: () => {
+      if (selectedGrupo) setSelectedGrupo(null);
+      refetch();
+    },
+    onError: (err) => {
+      Alert.alert("Erro", err.message || "Não foi possível excluir o grupo.");
+    },
+  });
+
+  const handleCreateGrupo = () => {
     if (!novoGrupo.nome.trim()) {
-      alert("Nome do grupo é obrigatório");
+      Alert.alert("Atenção", "O nome do grupo é obrigatório.");
       return;
     }
-
-    try {
-      const response = await fetch(`${getApiBaseUrl()}/api/grupos/create`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nome: novoGrupo.nome,
-          descricao: novoGrupo.descricao || undefined,
-          cor: novoGrupo.cor,
-        }),
-        credentials: "include",
-      });
-
-      if (response.ok) {
-        setNovoGrupo({ nome: "", descricao: "", cor: "#FF6B35" });
-        setModalVisible(false);
-        carregarGrupos();
-      }
-    } catch (error) {
-      console.error("Erro ao criar grupo:", error);
-    }
+    createMutation.mutate({
+      nome: novoGrupo.nome.trim(),
+      descricao: novoGrupo.descricao.trim() || undefined,
+      cor: novoGrupo.cor,
+    });
   };
 
-  const handleDeleteGrupo = async (id: number) => {
-    if (!confirm("Tem certeza que deseja deletar este grupo?")) return;
-
-    try {
-      const response = await fetch(`${getApiBaseUrl()}/api/grupos/delete`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
-        credentials: "include",
-      });
-
-      if (response.ok) {
-        carregarGrupos();
-      }
-    } catch (error) {
-      console.error("Erro ao deletar grupo:", error);
-    }
-  };
-
-  const handleSelectGrupo = async (grupo: Grupo) => {
-    setSelectedGrupo(grupo);
-    try {
-      const response = await fetch(`${getApiBaseUrl()}/api/grupos/getAtletas`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ grupoId: grupo.id }),
-        credentials: "include",
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setAtletasGrupo(data.result || []);
-      }
-    } catch (error) {
-      console.error("Erro ao carregar atletas do grupo:", error);
-    }
+  const handleDeleteGrupo = (id: number) => {
+    Alert.alert("Excluir grupo", "Tem certeza que deseja excluir este grupo?", [
+      { text: "Cancelar", style: "cancel" },
+      { text: "Excluir", style: "destructive", onPress: () => deleteMutation.mutate({ id }) },
+    ]);
   };
 
   const renderGrupo = ({ item }: { item: Grupo }) => (
     <TouchableOpacity
-      onPress={() => handleSelectGrupo(item)}
+      onPress={() => setSelectedGrupo(item)}
       style={{
-        backgroundColor: colors.surface,
+        backgroundColor: selectedGrupo?.id === item.id ? colors.surface : colors.surface,
         borderRadius: 12,
         padding: 16,
         marginBottom: 12,
         borderLeftWidth: 4,
         borderLeftColor: item.cor,
+        borderWidth: selectedGrupo?.id === item.id ? 1.5 : 0,
+        borderColor: selectedGrupo?.id === item.id ? item.cor : "transparent",
       }}
     >
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
@@ -127,14 +86,11 @@ export default function GruposScreen() {
           <Text style={{ fontSize: 16, fontWeight: "600", color: colors.foreground }}>
             {item.nome}
           </Text>
-          {item.descricao && (
+          {item.descricao ? (
             <Text style={{ fontSize: 12, color: colors.muted, marginTop: 4 }}>
               {item.descricao}
             </Text>
-          )}
-          <Text style={{ fontSize: 12, color: colors.muted, marginTop: 4 }}>
-            {atletasGrupo.length} atletas
-          </Text>
+          ) : null}
         </View>
         <TouchableOpacity
           onPress={() => handleDeleteGrupo(item.id)}
@@ -151,28 +107,65 @@ export default function GruposScreen() {
       {/* Header */}
       <View style={{ paddingHorizontal: 16, paddingVertical: 12, borderBottomColor: colors.border, borderBottomWidth: 1 }}>
         <Text style={{ fontSize: 24, fontWeight: "bold", color: colors.foreground }}>Grupos</Text>
+        <Text style={{ fontSize: 13, color: colors.muted, marginTop: 2 }}>
+          Organize atletas em listas personalizadas
+        </Text>
       </View>
 
       {/* Conteúdo */}
-      <ScrollView style={{ flex: 1, padding: 16 }}>
-        {grupos.length === 0 ? (
-          <View style={{ alignItems: "center", justifyContent: "center", marginTop: 40 }}>
-            <Text style={{ color: colors.muted, fontSize: 14 }}>Nenhum grupo criado ainda</Text>
-          </View>
-        ) : (
-          <FlatList
-            data={grupos}
-            renderItem={renderGrupo}
-            keyExtractor={(item) => item.id.toString()}
-            scrollEnabled={false}
-          />
-        )}
-      </ScrollView>
+      {isLoading ? (
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <ActivityIndicator color={colors.primary} />
+        </View>
+      ) : (
+        <ScrollView style={{ flex: 1, padding: 16 }}>
+          {grupos.length === 0 ? (
+            <View style={{ alignItems: "center", justifyContent: "center", marginTop: 60 }}>
+              <Text style={{ color: colors.muted, fontSize: 14, textAlign: "center" }}>
+                Nenhum grupo criado ainda.{"\n"}Toque em + para criar o primeiro grupo.
+              </Text>
+            </View>
+          ) : (
+            <FlatList
+              data={grupos as Grupo[]}
+              renderItem={renderGrupo}
+              keyExtractor={(item) => item.id.toString()}
+              scrollEnabled={false}
+            />
+          )}
+
+          {/* Painel de atletas do grupo selecionado */}
+          {selectedGrupo && (
+            <View style={{
+              marginTop: 8,
+              padding: 16,
+              backgroundColor: colors.surface,
+              borderRadius: 12,
+              borderLeftWidth: 4,
+              borderLeftColor: selectedGrupo.cor,
+            }}>
+              <Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground, marginBottom: 8 }}>
+                Atletas em "{selectedGrupo.nome}"
+              </Text>
+              {atletasDoGrupo.length === 0 ? (
+                <Text style={{ color: colors.muted, fontSize: 13 }}>
+                  Nenhum atleta neste grupo ainda.
+                </Text>
+              ) : (
+                atletasDoGrupo.map((a: any) => (
+                  <Text key={a.atletaId} style={{ color: colors.foreground, fontSize: 13, paddingVertical: 4 }}>
+                    • Atleta #{a.atletaId}
+                  </Text>
+                ))
+              )}
+            </View>
+          )}
+        </ScrollView>
+      )}
 
       {/* Botão flutuante para criar grupo */}
       <TouchableOpacity
         onPress={() => {
-          setEditingGrupo(null);
           setNovoGrupo({ nome: "", descricao: "", cor: "#FF6B35" });
           setModalVisible(true);
         }}
@@ -193,10 +186,10 @@ export default function GruposScreen() {
           elevation: 5,
         }}
       >
-        <Text style={{ fontSize: 28, color: "white" }}>+</Text>
+        <Text style={{ fontSize: 28, color: "white", lineHeight: 32 }}>+</Text>
       </TouchableOpacity>
 
-      {/* Modal para criar/editar grupo */}
+      {/* Modal para criar grupo */}
       <Modal
         visible={modalVisible}
         transparent
@@ -214,12 +207,12 @@ export default function GruposScreen() {
             }}
           >
             <Text style={{ fontSize: 18, fontWeight: "bold", color: colors.foreground, marginBottom: 16 }}>
-              {editingGrupo ? "Editar Grupo" : "Novo Grupo"}
+              Novo Grupo
             </Text>
 
             {/* Campo Nome */}
             <Text style={{ color: colors.foreground, fontSize: 12, fontWeight: "600", marginBottom: 4 }}>
-              Nome do Grupo
+              Nome do Grupo *
             </Text>
             <TextInput
               style={{
@@ -229,11 +222,13 @@ export default function GruposScreen() {
                 padding: 12,
                 marginBottom: 16,
                 color: colors.foreground,
+                backgroundColor: colors.surface,
               }}
               placeholder="Ex: Titulares, Reservas, Monitorados"
               placeholderTextColor={colors.muted}
               value={novoGrupo.nome}
               onChangeText={(text) => setNovoGrupo({ ...novoGrupo, nome: text })}
+              returnKeyType="next"
             />
 
             {/* Campo Descrição */}
@@ -248,7 +243,8 @@ export default function GruposScreen() {
                 padding: 12,
                 marginBottom: 16,
                 color: colors.foreground,
-                height: 80,
+                backgroundColor: colors.surface,
+                height: 72,
               }}
               placeholder="Descrição do grupo"
               placeholderTextColor={colors.muted}
@@ -261,18 +257,18 @@ export default function GruposScreen() {
             <Text style={{ color: colors.foreground, fontSize: 12, fontWeight: "600", marginBottom: 8 }}>
               Cor
             </Text>
-            <View style={{ flexDirection: "row", gap: 8, marginBottom: 16 }}>
-              {["#FF6B35", "#FF1744", "#00BCD4", "#4CAF50", "#9C27B0", "#FFC107"].map((cor) => (
+            <View style={{ flexDirection: "row", gap: 8, marginBottom: 20 }}>
+              {CORES.map((cor) => (
                 <TouchableOpacity
                   key={cor}
                   onPress={() => setNovoGrupo({ ...novoGrupo, cor })}
                   style={{
-                    width: 40,
-                    height: 40,
+                    width: 36,
+                    height: 36,
                     borderRadius: 8,
                     backgroundColor: cor,
-                    borderWidth: novoGrupo.cor === cor ? 3 : 0,
-                    borderColor: colors.foreground,
+                    borderWidth: novoGrupo.cor === cor ? 3 : 1,
+                    borderColor: novoGrupo.cor === cor ? colors.foreground : "transparent",
                   }}
                 />
               ))}
@@ -295,17 +291,21 @@ export default function GruposScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleCreateGrupo}
+                disabled={createMutation.isPending}
                 style={{
                   flex: 1,
                   paddingVertical: 12,
                   borderRadius: 8,
                   backgroundColor: colors.primary,
                   alignItems: "center",
+                  opacity: createMutation.isPending ? 0.7 : 1,
                 }}
               >
-                <Text style={{ color: "white", fontWeight: "600" }}>
-                  {editingGrupo ? "Atualizar" : "Criar"}
-                </Text>
+                {createMutation.isPending ? (
+                  <ActivityIndicator color="white" size="small" />
+                ) : (
+                  <Text style={{ color: "white", fontWeight: "600" }}>Criar</Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -313,17 +313,4 @@ export default function GruposScreen() {
       </Modal>
     </View>
   );
-}
-
-function getApiBaseUrl() {
-  if (typeof window !== "undefined") {
-    const hostname = window.location.hostname;
-    const port = window.location.port;
-    const protocol = window.location.protocol;
-    
-    // Substitui porta 8081 pela 3000 (API)
-    const apiPort = port === "8081" ? "3000" : port;
-    return `${protocol}//${hostname}:${apiPort}`;
-  }
-  return "http://127.0.0.1:3000";
 }
