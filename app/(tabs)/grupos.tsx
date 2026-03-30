@@ -19,7 +19,10 @@ interface AtletaEmGrupo {
   atletaNome?: string;
 }
 
-const CORES = ["#FF6B35", "#FF1744", "#00BCD4", "#4CAF50", "#9C27B0", "#FFC107"];
+const CORES = [
+  "#FF6B35", "#FF1744", "#00BCD4", "#4CAF50", "#9C27B0", "#FFC107",
+  "#E91E63", "#3F51B5", "#009688", "#795548", "#607D8B",
+];
 
 export default function GruposScreen() {
   const colors = useColors();
