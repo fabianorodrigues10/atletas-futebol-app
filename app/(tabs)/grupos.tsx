@@ -255,7 +255,7 @@ export default function RadarScreen() {
 
         {/* Painel de atletas da posição selecionada */}
         {posicaoSelecionada && (
-          <View style={{ flex: 0.58, backgroundColor: colors.background }}>
+          <View style={{ flex: 1, maxWidth: "58%", backgroundColor: colors.background, flexDirection: "column", minHeight: 0 }}>
             {/* Cabeçalho do painel */}
             <View style={{
               padding: 12,
@@ -298,7 +298,7 @@ export default function RadarScreen() {
               </View>
 
               {/* Botões de ação */}
-              <View style={{ flexDirection: "row", gap: 6 }}>
+              <View style={{ flexDirection: "row" }}>
                 <TouchableOpacity
                   onPress={() => {
                     setBuscaNome("");
@@ -308,7 +308,7 @@ export default function RadarScreen() {
                   style={{
                     flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center",
                     backgroundColor: qtdNoGrupo >= LIMITE_POR_POSICAO ? colors.border : posicaoSelecionada.cor,
-                    paddingVertical: 7, borderRadius: 8, gap: 4,
+                    paddingVertical: 7, borderRadius: 8, marginRight: 6,
                     opacity: createMutation.isPending ? 0.6 : 1,
                   }}
                 >
@@ -324,7 +324,7 @@ export default function RadarScreen() {
                   style={{
                     flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center",
                     backgroundColor: qtdNoGrupo === 0 ? colors.border : "#1D4ED8",
-                    paddingVertical: 7, borderRadius: 8, gap: 4,
+                    paddingVertical: 7, borderRadius: 8,
                   }}
                 >
                   {gerandoRelatorio
@@ -348,11 +348,15 @@ export default function RadarScreen() {
                 </Text>
               </View>
             ) : (
-              <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 10, paddingBottom: 80 }}>
-                {(atletasDoGrupoQuery.data as any[]).map((item, index) => {
+              <FlatList
+                data={atletasDoGrupoQuery.data as any[]}
+                keyExtractor={(item) => item.atletaId.toString()}
+                style={{ flex: 1, minHeight: 0 }}
+                contentContainerStyle={{ padding: 10, paddingBottom: 80, flexGrow: 1 }}
+                renderItem={({ item, index }) => {
                   const lista = atletasDoGrupoQuery.data as any[];
                   return (
-                    <View key={item.atletaId.toString()} style={{
+                    <View style={{
                       flexDirection: "row",
                       alignItems: "center",
                       backgroundColor: colors.surface,
@@ -411,8 +415,8 @@ export default function RadarScreen() {
                       </TouchableOpacity>
                     </View>
                   );
-                })}
-              </ScrollView>
+                }}
+              />
             )}
           </View>
         )}
