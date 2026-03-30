@@ -132,28 +132,9 @@ async function drawAtletaCard(
   const CARD_HDR_H = CARD_HDR_H_CONST;
   doc.rect(cx, cardY + 2, cw, CARD_HDR_H).fill(DARK);
 
-  // Foto (à esquerda, ocupa toda a área útil da ficha)
-  const FOTO_W = 60;
-  const FOTO_H = CARD_H - CARD_HDR_H - 6;
-  const FOTO_X = cx + p;
-  const FOTO_Y = cardY + CARD_HDR_H + 3;
-
-  if (fotoBuffer) {
-    try {
-      doc.image(fotoBuffer, FOTO_X, FOTO_Y, { width: FOTO_W, height: FOTO_H, cover: [FOTO_W, FOTO_H] });
-      doc.rect(FOTO_X, FOTO_Y, FOTO_W, FOTO_H).stroke(BORDER);
-    } catch {
-      doc.rect(FOTO_X, FOTO_Y, FOTO_W, FOTO_H).fill([200, 200, 210] as RGB);
-      doc.fontSize(6).fillColor(GRAY).text("Sem foto", FOTO_X, FOTO_Y + FOTO_H / 2 - 4, { width: FOTO_W, align: "center" });
-    }
-  } else {
-    doc.rect(FOTO_X, FOTO_Y, FOTO_W, FOTO_H).fill([200, 200, 210] as RGB);
-    doc.fontSize(6).fillColor(GRAY).text("Sem foto", FOTO_X, FOTO_Y + FOTO_H / 2 - 4, { width: FOTO_W, align: "center" });
-  }
-
-  // Área de conteúdo à direita da foto
-  const INFO_X = FOTO_X + FOTO_W + p;
-  const INFO_W = cw - FOTO_W - p * 3;
+  // Sem coluna de foto — conteúdo ocupa toda a largura
+  const INFO_X = cx + p;
+  const INFO_W = cw - p * 2;
   const CONTENT_START_Y = cardY + CARD_HDR_H + 4;
 
   // Nome (na faixa escura)
@@ -168,7 +149,7 @@ async function drawAtletaCard(
     Centroavante: [249, 115, 22], "2º Atacante": [249, 115, 22],
   };
   const posColor = posColors[posicao] || DARK;
-  const posText = atleta.segundaPosicao ? `${posicao}/${atleta.segundaPosicao}` : posicao;
+  const posText = posicao;
   const BADGE_W = 80;
   doc.rect(cx + cw - BADGE_W - p, cardY + 4, BADGE_W, 16).fill(posColor);
   doc.fontSize(7).fillColor(WHITE).font("Helvetica-Bold")
