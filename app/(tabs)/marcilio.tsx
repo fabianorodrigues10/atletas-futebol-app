@@ -509,11 +509,9 @@ export default function MarcilioScreen() {
       const blob = await response.blob();
       if (Platform.OS === "web") {
         const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `Relatorio_Tecnico_BDMD_2025.pdf`;
-        a.click();
-        URL.revokeObjectURL(url);
+        window.open(url, "_blank");
+        // Revogar após delay para garantir que o navegador abriu
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
       } else {
         const FileSystem = await import("expo-file-system/legacy");
         const Sharing = await import("expo-sharing");
