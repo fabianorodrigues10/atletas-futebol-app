@@ -217,16 +217,23 @@ function ModalEstatisticas({
   atleta: Atleta | null;
   visivel: boolean;
   onFechar: () => void;
-  onSalvar: (stats: EstatisticasTemporada) => void;
+  onSalvar: (atletaId: number, stats: EstatisticasTemporada) => void;
 }) {
   const [stats, setStats] = useState<EstatisticasTemporada>(STATS_VAZIA);
   const [salvando, setSalvando] = useState(false);
 
+  // Só inicializa os stats quando o modal ABRE (visivel muda de false para true)
+  // Nunca reinicializa enquanto o modal está aberto
+  const atletaIdRef = React.useRef<number | null>(null);
   useEffect(() => {
-    if (atleta) {
-      setStats(atleta.estatisticas || STATS_VAZIA);
+    if (visivel && atleta && atleta.id !== atletaIdRef.current) {
+      atletaIdRef.current = atleta.id;
+      setStats(atleta.estatisticas ? { ...atleta.estatisticas } : { ...STATS_VAZIA });
     }
-  }, [atleta]);
+    if (!visivel) {
+      atletaIdRef.current = null;
+    }
+  }, [visivel, atleta]);
 
   const campo = (label: string, chave: keyof EstatisticasTemporada, tipo: "numero" | "decimal" = "numero") => (
     <View style={styles.campoPar}>
@@ -255,19 +262,23 @@ function ModalEstatisticas({
     setSalvando(true);
     try {
       const base = getApiBaseUrl();
-      const resp = await fetch(`${base}/api/atletas/${atleta.id}/estatisticas`, {
+      const atletaId = atleta.id;
+      const payload = { ...stats, temporada: "2025" };
+      const resp = await fetch(`${base}/api/atletas/${atletaId}/estatisticas`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...stats, temporada: "2025" }),
+        body: JSON.stringify(payload),
       });
-      if (!resp.ok) throw new Error("Falha ao salvar");
-      // Buscar as stats atualizadas do banco para garantir consistência
-      const statsResp = await fetch(`${base}/api/atletas/${atleta.id}/estatisticas?temporada=2025`);
-      const statsAtualizadas = statsResp.ok ? await statsResp.json() : stats;
-      onSalvar(statsAtualizadas || stats);
+      if (!resp.ok) {
+        const errText = await resp.text();
+        throw new Error(`Falha ao salvar: ${errText}`);
+      }
+      // Notifica o pai com o atletaId e os stats salvos
+      onSalvar(atletaId, payload);
+      // Fecha o modal
       onFechar();
-    } catch (e) {
-      Alert.alert("Erro", "Não foi possível salvar as estatísticas.");
+    } catch (e: any) {
+      Alert.alert("Erro", e?.message || "Não foi possível salvar as estatísticas.");
     } finally {
       setSalvando(false);
     }
@@ -495,9 +506,11 @@ export default function MarcilioScreen() {
     setSelecionados(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
-  const handleSalvarStats = (stats: EstatisticasTemporada) => {
-    if (!atletaEditando) return;
-    setElenco(prev => prev.map(a => a.id === atletaEditando.id ? { ...a, estatisticas: stats } : a));
+  const handleSalvarStats = (atletaId: number, stats: EstatisticasTemporada) => {
+    // Atualiza o elenco local imediatamente com os dados salvos
+    setElenco(prev => prev.map(a => a.id === atletaId ? { ...a, estatisticas: { ...stats } } : a));
+    // Também atualiza o atletaEditando para evitar que o useEffect do modal reinicialize
+    setAtletaEditando(prev => prev && prev.id === atletaId ? { ...prev, estatisticas: { ...stats } } : prev);
   };
 
   const [gerandoPdf, setGerandoPdf] = useState(false);
