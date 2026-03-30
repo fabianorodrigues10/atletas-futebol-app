@@ -436,7 +436,8 @@ export default function RadarScreen() {
             borderTopRightRadius: 20,
             padding: 20,
             paddingBottom: 36,
-            height: 520,
+            height: 560,
+            minHeight: 400,
           }}>
             {/* Cabeçalho do modal */}
             <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14, gap: 8 }}>
@@ -489,12 +490,11 @@ export default function RadarScreen() {
               <FlatList
                 data={buscaAtletasQuery.data as any[]}
                 keyExtractor={(item) => item.id.toString()}
-                style={{ flex: 1 }}
-                getItemLayout={(_, index) => ({ length: 57, offset: 57 * index, index })}
-                windowSize={10}
-                maxToRenderPerBatch={30}
-                initialNumToRender={20}
-                removeClippedSubviews
+                style={{ flex: 1, minHeight: 0 }}
+                windowSize={5}
+                maxToRenderPerBatch={20}
+                initialNumToRender={15}
+                removeClippedSubviews={false}
                 renderItem={({ item }) => {
                   const jaEsta = idsNoGrupo.has(item.id);
                   return (
