@@ -59,7 +59,7 @@ export default function RadarScreen() {
   );
 
   const buscaAtletasQuery = trpc.atletas.search.useQuery(
-    { nome: buscaNome },
+    { nome: buscaNome, limit: 50 },
     { enabled: modalBuscaVisible && buscaNome.length >= 2 }
   );
 

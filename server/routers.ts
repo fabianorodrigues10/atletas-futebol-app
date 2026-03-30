@@ -58,6 +58,7 @@ export const appRouter = router({
           pe: z.string().optional(),
           escala: z.string().optional(),
           valencia: z.string().optional(),
+          limit: z.number().optional(),
         })
       )
       .query(({ ctx, input }) => {

@@ -1,4 +1,4 @@
-import { eq, and, like, gte, lte, or, desc, inArray } from "drizzle-orm";
+import { eq, and, like, gte, lte, or, desc, asc, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   InsertUser,
@@ -251,6 +251,7 @@ export async function searchAtletas(
     pe?: string;
     escala?: string;
     valencia?: string;
+    limit?: number;
   }
 ) {
   const db = await getDb();
@@ -303,11 +304,16 @@ export async function searchAtletas(
     conditions.push(eq(atletas.valencia, filtros.valencia));
   }
   
-  return db
+  const query = db
     .select()
     .from(atletas)
     .where(and(...conditions))
-    .orderBy(desc(atletas.createdAt));
+    .orderBy(asc(atletas.nome));
+
+  if (filtros.limit) {
+    return query.limit(filtros.limit);
+  }
+  return query;
 }
 
 /**
