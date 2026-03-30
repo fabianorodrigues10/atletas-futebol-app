@@ -110,8 +110,7 @@ function GraficoRadar({ atleta, benchmark }: { atleta: Atleta; benchmark: any })
     { label: "Técnica", valor: parseFloat(atleta.estatisticas?.notaTecnica || "0") },
     { label: "Física", valor: parseFloat(atleta.estatisticas?.notaFisica || "0") },
     { label: "Tática", valor: parseFloat(atleta.estatisticas?.notaTatica || "0") },
-    { label: "Atitudinal", valor: parseFloat(atleta.estatisticas?.notaAtitudinal || "0") },
-    { label: "Potencial", valor: parseFloat(atleta.estatisticas?.notaPotencial || "0") },
+
   ];
   const n = categorias.length;
   const angulo = (2 * Math.PI) / n;
@@ -314,8 +313,7 @@ function ModalEstatisticas({
             {campo("Técnica", "notaTecnica", "decimal")}
             {campo("Física", "notaFisica", "decimal")}
             {campo("Tática", "notaTatica", "decimal")}
-            {campo("Atitudinal", "notaAtitudinal", "decimal")}
-            {campo("Potencial", "notaPotencial", "decimal")}
+
           </View>
 
           <Text style={styles.secaoTitulo}>📝 Observações</Text>
@@ -711,7 +709,7 @@ export default function MarcilioScreen() {
               { label: "Nota Técnica", chave: "notaTecnica" as keyof EstatisticasTemporada },
               { label: "Nota Física", chave: "notaFisica" as keyof EstatisticasTemporada },
               { label: "Nota Tática", chave: "notaTatica" as keyof EstatisticasTemporada },
-              { label: "Potencial", chave: "notaPotencial" as keyof EstatisticasTemporada },
+
             ].map((campo, idx) => {
               const valores = atletasSelecionados.map(a => parseFloat((a.estatisticas?.[campo.chave] as string) || "0"));
               const maximo = Math.max(...valores);

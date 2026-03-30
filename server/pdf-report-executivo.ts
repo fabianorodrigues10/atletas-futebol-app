@@ -276,8 +276,6 @@ async function drawAtletaPage(doc: PDFKit.PDFDocument, atleta: any, stats: any |
       ["Técnica", stats.notaTecnica],
       ["Física", stats.notaFisica],
       ["Tática", stats.notaTatica],
-      ["Atitudinal", stats.notaAtitudinal],
-      ["Potencial", stats.notaPotencial],
     ];
 
     const BAR_W = 90;
