@@ -6,6 +6,7 @@ import {
 
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
+import { getApiBaseUrl } from "@/constants/oauth";
 
 // ── Posições fixas do futebol ──────────────────────────────────────────────
 const POSICOES_RADAR = [
@@ -144,16 +145,35 @@ export default function RadarScreen() {
     setGerandoRelatorio(true);
     try {
       const ids = (atletas as any[]).map((a) => a.atletaId);
-      const response = await fetch("/api/report/pdf-executivo", {
+      const baseUrl = getApiBaseUrl();
+      const response = await fetch(`${baseUrl}/api/report/pdf-executivo`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids, temporada: "2025" }),
       });
       if (!response.ok) throw new Error("Erro ao gerar relatório");
       const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
       if (Platform.OS === "web") {
+        const url = URL.createObjectURL(blob);
         window.open(url, "_blank");
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+      } else {
+        const FileSystem = await import("expo-file-system/legacy");
+        const Sharing = await import("expo-sharing");
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onloadend = async () => {
+          const base64 = (reader.result as string).split(",")[1];
+          const dir = FileSystem.cacheDirectory || FileSystem.documentDirectory || "";
+          const posNome = posicaoSelecionada?.nome.replace(/\s+/g, "_") ?? "Radar";
+          const path = dir + `Radar_${posNome}_2025.pdf`;
+          await FileSystem.writeAsStringAsync(path, base64, { encoding: FileSystem.EncodingType.Base64 });
+          if (await Sharing.isAvailableAsync()) {
+            await Sharing.shareAsync(path, { mimeType: "application/pdf" });
+          } else {
+            Alert.alert("Sucesso", `PDF salvo em:\n${path}`);
+          }
+        };
       }
     } catch (err: any) {
       Alert.alert("Erro", err.message || "Não foi possível gerar o relatório.");
