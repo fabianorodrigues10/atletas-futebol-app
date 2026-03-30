@@ -1,14 +1,12 @@
 /**
- * Relatório Executivo PDF - Comissão Técnica BDMD
- * Layout compacto: 3 atletas por página A4
+ * Relatório Radar PDF - Comissão Técnica BDMD
+ * Layout: lista simples de atletas por posição — até 10 por página
  */
 import PDFDocument from "pdfkit";
 import { Request, Response } from "express";
 import { getDb } from "./db";
 import { atletas, midias, estatisticasTemporada } from "../drizzle/schema";
 import { eq, inArray, and } from "drizzle-orm";
-import https from "https";
-import http from "http";
 
 type RGB = [number, number, number];
 
@@ -20,23 +18,21 @@ const LIGHT_GRAY: RGB = [245, 245, 245];
 const BORDER: RGB = [220, 220, 230];
 const WHITE: RGB = [255, 255, 255];
 const BLACK: RGB = [20, 20, 20];
+const STRIPE: RGB = [237, 240, 255];  // Linha alternada
 
-// Dimensões da página A4 (pontos)
+// Dimensões A4
 const PAGE_W = 595;
 const PAGE_H = 842;
-const MARGIN = 20;
+const MARGIN = 28;
 const CONTENT_W = PAGE_W - MARGIN * 2;
 
-// Cabeçalho ocupa 50px, rodapé 28px
+// Cabeçalho e rodapé
 const HEADER_H = 50;
 const FOOTER_H = 28;
-const USABLE_H = PAGE_H - HEADER_H - FOOTER_H; // ~764px
 
-// Cada ficha ocupa exatamente 1/4 da área útil
-const CARD_H = Math.floor(USABLE_H / 4); // ~191px
-const CARD_PADDING = 5;
-// Altura do cabeçalho da ficha
-const CARD_HDR_H_CONST = 20;
+// Linha da tabela
+const ROW_H = 22;
+const TABLE_HDR_H = 18;
 
 function formatDate(dateStr: string | Date | null): string {
   if (!dateStr) return "—";
@@ -59,26 +55,7 @@ function calcularIdade(dataNascimento: string | Date | null): string {
   } catch { return "—"; }
 }
 
-function fetchImageBuffer(url: string): Promise<Buffer | null> {
-  return new Promise((resolve) => {
-    if (!url || (!url.startsWith("http://") && !url.startsWith("https://"))) {
-      resolve(null);
-      return;
-    }
-    const client = url.startsWith("https") ? https : http;
-    const req = client.get(url, { timeout: 5000 }, (res) => {
-      if (res.statusCode !== 200) { resolve(null); return; }
-      const chunks: Buffer[] = [];
-      res.on("data", (c: Buffer) => chunks.push(c));
-      res.on("end", () => resolve(Buffer.concat(chunks)));
-      res.on("error", () => resolve(null));
-    });
-    req.on("error", () => resolve(null));
-    req.on("timeout", () => { req.destroy(); resolve(null); });
-  });
-}
-
-function drawPageHeader(doc: PDFKit.PDFDocument) {
+function drawPageHeader(doc: PDFKit.PDFDocument, posicaoNome?: string) {
   doc.rect(0, 0, PAGE_W, HEADER_H).fill(DARK);
 
   try {
@@ -91,7 +68,7 @@ function drawPageHeader(doc: PDFKit.PDFDocument) {
   doc.fontSize(13).fillColor(WHITE).font("Helvetica-Bold")
     .text("BANCO DE DADOS MARCÍLIO DIAS", 64, 10);
   doc.fontSize(8).fillColor([180, 190, 220] as RGB).font("Helvetica")
-    .text("Relatório Técnico — Comissão Técnica", 64, 27);
+    .text("Radar de Scouting — Comissão Técnica", 64, 27);
 
   const now = new Date();
   const dateStr = `${String(now.getDate()).padStart(2, "0")}/${String(now.getMonth() + 1).padStart(2, "0")}/${now.getFullYear()}`;
@@ -99,6 +76,14 @@ function drawPageHeader(doc: PDFKit.PDFDocument) {
     .text(`Emitido em ${dateStr}`, PAGE_W - 110, 20);
 
   doc.rect(0, HEADER_H, PAGE_W, 2).fill(PRIMARY);
+
+  // Título da posição abaixo do cabeçalho
+  if (posicaoNome) {
+    doc.fontSize(11).fillColor(DARK).font("Helvetica-Bold")
+      .text(posicaoNome.toUpperCase(), MARGIN, HEADER_H + 8);
+    doc.moveTo(MARGIN, HEADER_H + 22).lineTo(PAGE_W - MARGIN, HEADER_H + 22)
+      .strokeColor(BORDER).lineWidth(1).stroke();
+  }
 }
 
 function drawPageFooter(doc: PDFKit.PDFDocument, pageNum: number, totalPages: number) {
@@ -111,194 +96,112 @@ function drawPageFooter(doc: PDFKit.PDFDocument, pageNum: number, totalPages: nu
 }
 
 /**
- * Desenha a ficha compacta de um atleta dentro de uma "faixa" vertical da página.
- * cardY: posição Y de início da faixa
+ * Desenha a tabela de atletas de uma posição.
+ * Retorna a posição Y final após a tabela.
  */
-async function drawAtletaCard(
+function drawAtletasTable(
   doc: PDFKit.PDFDocument,
-  atleta: any,
-  stats: any | null,
-  cardY: number,
-  fotoBuffer: Buffer | null
-) {
+  atletasList: any[],
+  startY: number
+): number {
   const cx = MARGIN;
   const cw = CONTENT_W;
-  const p = CARD_PADDING;
 
-  // Fundo da ficha
-  doc.rect(cx, cardY + 2, cw, CARD_H - 4).fill(LIGHT_GRAY).stroke(BORDER);
+  // Colunas: Nº | Nome | Nasc. | Idade | Naturalidade | Altura | Pé | Clube
+  const cols = [
+    { label: "Nº",           w: 22,  align: "center" as const },
+    { label: "Nome",         w: 150, align: "left"   as const },
+    { label: "Nascimento",   w: 60,  align: "center" as const },
+    { label: "Idade",        w: 40,  align: "center" as const },
+    { label: "Naturalidade", w: 90,  align: "left"   as const },
+    { label: "Alt.",         w: 30,  align: "center" as const },
+    { label: "Pé",           w: 30,  align: "center" as const },
+    { label: "Clube",        w: 117, align: "left"   as const },
+  ];
 
-  //  // ── FAIXA DE CABEÇALHO DA FICHA ────────────────────────────────────
-  const CARD_HDR_H = CARD_HDR_H_CONST;
-  doc.rect(cx, cardY + 2, cw, CARD_HDR_H).fill(DARK);
+  // Ajustar última coluna para preencher a largura total
+  const totalFixed = cols.slice(0, -1).reduce((s, c) => s + c.w, 0);
+  cols[cols.length - 1].w = cw - totalFixed;
 
-  // Sem coluna de foto — conteúdo ocupa toda a largura
-  const INFO_X = cx + p;
-  const INFO_W = cw - p * 2;
-  const CONTENT_START_Y = cardY + CARD_HDR_H + 4;
+  let y = startY;
 
-  // Nome (na faixa escura)
-  doc.fontSize(10).fillColor(WHITE).font("Helvetica-Bold")
-    .text(atleta.nome || "—", INFO_X, cardY + 5, { width: INFO_W - 70 });
+  // Cabeçalho da tabela
+  doc.rect(cx, y, cw, TABLE_HDR_H).fill(DARK);
+  let colX = cx;
+  cols.forEach((col) => {
+    doc.fontSize(6.5).fillColor(WHITE).font("Helvetica-Bold")
+      .text(col.label, colX + 3, y + 5, { width: col.w - 6, align: col.align });
+    colX += col.w;
+  });
+  y += TABLE_HDR_H;
 
-  // Badge de posição (canto direito da faixa escura)
-  const posicao = atleta.posicao || "—";
-  const posColors: Record<string, RGB> = {
-    Goleiro: [245, 158, 11], Zagueiro: [59, 130, 246], Lateral: [34, 197, 94],
-    Volante: [139, 92, 246], Meia: [236, 72, 153], Extremo: [239, 68, 68],
-    Centroavante: [249, 115, 22], "2º Atacante": [249, 115, 22],
-  };
-  const posColor = posColors[posicao] || DARK;
-  const posText = posicao;
-  const BADGE_W = 75;
-  doc.rect(cx + cw - BADGE_W - p, cardY + 3, BADGE_W, 14).fill(posColor);
-  doc.fontSize(6.5).fillColor(WHITE).font("Helvetica-Bold")
-    .text(posText.toUpperCase(), cx + cw - BADGE_W - p + 2, cardY + 7, { width: BADGE_W - 4, align: "center" });
+  // Linhas de atletas
+  atletasList.forEach((atleta, idx) => {
+    const rowColor: RGB = idx % 2 === 0 ? WHITE : STRIPE;
+    doc.rect(cx, y, cw, ROW_H).fill(rowColor).stroke(BORDER);
 
-  // ── DADOS PESSOAIS (linha compacta) ────────────────────────────────────
-  let iy = CONTENT_START_Y;
-
-  const dadosLinha = [
-    atleta.dataNascimento ? `Nasc: ${formatDate(atleta.dataNascimento)}` : null,
-    calcularIdade(atleta.dataNascimento) !== "—" ? calcularIdade(atleta.dataNascimento) : null,
-    atleta.naturalidade ? `${atleta.naturalidade}` : null,
-    atleta.altura ? `${atleta.altura}m` : null,
-    atleta.pe ? `Pé: ${atleta.pe}` : null,
-    atleta.clube ? `${atleta.clube}` : null,
-  ].filter(Boolean).join("  •  ");
-
-  doc.fontSize(7).fillColor(GRAY).font("Helvetica")
-    .text(dadosLinha, INFO_X, iy, { width: INFO_W });
-  iy += 11;
-
-  // ── ESTATÍSTICAS ────────────────────────────────────────────────────────
-  if (stats) {
-    // Linha de stats: 14 campos em mini-boxes
-    const allStats = [
-      ["Jogos", stats.jogos ?? 0],
-      ["Titular", stats.jogosTitular ?? 0],
-      ["Min", stats.minutosJogados ?? 0],
-      ["Gols", stats.gols ?? 0],
-      ["Assist", stats.assistencias ?? 0],
-      ["Final", stats.finalizacoes ?? 0],
-      ["Desarme", stats.desarmes ?? 0],
-      ["Intercep", stats.interceptacoes ?? 0],
-      ["Duelos G", stats.duelosGanhos ?? 0],
-      ["Passes", stats.passes ?? 0],
-      ["Pass.C", stats.passesCompletos ?? 0],
-      ["Amar", stats.cartoesAmarelos ?? 0],
-      ["Verm", stats.cartoesVermelhos ?? 0],
+    const rowData = [
+      String(idx + 1),
+      atleta.nome || "—",
+      formatDate(atleta.dataNascimento),
+      calcularIdade(atleta.dataNascimento),
+      atleta.naturalidade || "—",
+      atleta.altura ? `${atleta.altura}m` : "—",
+      atleta.pe || "—",
+      atleta.clube || "—",
     ];
 
-    const BOX_W = Math.floor(INFO_W / allStats.length) - 1;
-    const BOX_H = 28;
-
-    allStats.forEach(([label, valor], i) => {
-      const bx = INFO_X + i * (BOX_W + 1);
-      doc.rect(bx, iy, BOX_W, BOX_H).fill(WHITE).stroke(BORDER);
-      doc.rect(bx, iy, BOX_W, 9).fill(DARK);
-      doc.fontSize(5).fillColor(WHITE).font("Helvetica-Bold")
-        .text(String(label).toUpperCase(), bx + 1, iy + 2, { width: BOX_W - 2, align: "center" });
-      doc.fontSize(9).fillColor(DARK).font("Helvetica-Bold")
-        .text(String(valor), bx + 1, iy + 12, { width: BOX_W - 2, align: "center" });
+    colX = cx;
+    rowData.forEach((val, ci) => {
+      const col = cols[ci];
+      doc.fontSize(7.5).fillColor(BLACK).font(ci === 1 ? "Helvetica-Bold" : "Helvetica")
+        .text(val, colX + 3, y + 7, { width: col.w - 6, align: col.align, ellipsis: true });
+      colX += col.w;
     });
-    iy += BOX_H + 5;
 
-    // ── NOTAS AVALIATIVAS (barras compactas inline) ─────────────────────
-    const notas = [
-      ["Técnica", stats.notaTecnica],
-      ["Física", stats.notaFisica],
-      ["Tática", stats.notaTatica],
-    ];
-
-    const NOTA_W = Math.floor(INFO_W / notas.length) - 4;
-    notas.forEach(([label, valor], i) => {
-      const nx = INFO_X + i * (NOTA_W + 4);
-      const nota = valor !== null && valor !== undefined ? parseFloat(String(valor)) : 0;
-      const pct = Math.min(nota / 10, 1);
-
-      doc.fontSize(6.5).fillColor(GRAY).font("Helvetica")
-        .text(`${label}: ${nota > 0 ? nota.toFixed(1) : "—"}`, nx, iy, { width: NOTA_W });
-
-      // Barra
-      doc.rect(nx, iy + 9, NOTA_W, 5).fill([220, 220, 228] as RGB);
-      let barColor: RGB = [239, 68, 68];
-      if (nota >= 7) barColor = [34, 197, 94];
-      else if (nota >= 5) barColor = [245, 158, 11];
-      if (nota > 0) doc.rect(nx, iy + 9, NOTA_W * pct, 5).fill(barColor);
-    });
-    iy += 18;
-
-    // ── OBSERVAÇÕES (1 linha máximo) ─────────────────────────────────────────
-    if (stats.observacoes) {
-      const obsMaxH = (cardY + CARD_H - 4) - iy;
-      if (obsMaxH > 8) {
-        doc.fontSize(6).fillColor(BLACK).font("Helvetica-Oblique")
-          .text(`Obs: ${stats.observacoes}`, INFO_X, iy, { width: INFO_W, height: obsMaxH, ellipsis: true });
+    // Linha divisória vertical entre colunas
+    colX = cx;
+    cols.forEach((col, ci) => {
+      if (ci > 0) {
+        doc.moveTo(colX, y).lineTo(colX, y + ROW_H)
+          .strokeColor(BORDER).lineWidth(0.3).stroke();
       }
-    }
-  } else {
-    doc.fontSize(7).fillColor(GRAY).font("Helvetica-Oblique")
-      .text("Estatísticas da temporada não preenchidas.", INFO_X, iy, { width: INFO_W });
-  }
+      colX += col.w;
+    });
 
-  // Linha divisória na base da ficha
-  doc.moveTo(cx, cardY + CARD_H - 2).lineTo(cx + cw, cardY + CARD_H - 2)
-    .strokeColor(BORDER).lineWidth(0.5).stroke();
+    y += ROW_H;
+  });
+
+  // Borda externa da tabela
+  doc.rect(cx, startY, cw, TABLE_HDR_H + atletasList.length * ROW_H)
+    .strokeColor(DARK).lineWidth(0.8).stroke();
+
+  return y;
 }
 
 export function registerPdfExecutivoRoutes(app: any) {
   app.post("/api/report/pdf-executivo", async (req: Request, res: Response) => {
     try {
-      const { ids, temporada } = req.body as { ids?: number[]; temporada?: string };
+      const { ids, temporada, posicaoNome } = req.body as {
+        ids?: number[];
+        temporada?: string;
+        posicaoNome?: string;
+      };
       const db = await getDb();
       if (!db) return res.status(500).json({ error: "Database not available" });
 
-      const temporadaAlvo = temporada || "2025";
-
-      let atletasData: any[] = [];
-      if (ids && ids.length > 0) {
-        atletasData = await db.select().from(atletas).where(inArray(atletas.id, ids));
-      } else {
+      if (!ids || ids.length === 0) {
         return res.status(400).json({ error: "Nenhum atleta selecionado" });
       }
 
-      if (!atletasData.length) return res.status(404).json({ error: "Atletas não encontrados" });
+      // Buscar atletas mantendo a ordem dos IDs (ordem definida pelo usuário no Radar)
+      const atletasRaw = await db.select().from(atletas).where(inArray(atletas.id, ids));
+      const atletasMap = new Map<number, any>(atletasRaw.map((a: any) => [a.id, a]));
+      const atletasOrdenados = ids.map((id) => atletasMap.get(id)).filter(Boolean);
 
-      // Buscar fotos
-      const fotosData = await db.select().from(midias).where(
-        and(inArray(midias.atletaId, ids!), eq(midias.tipo, "foto"))
-      );
-      const fotoMap = new Map<number, string>();
-      fotosData.forEach((f: any) => {
-        if (!fotoMap.has(f.atletaId)) {
-          fotoMap.set(f.atletaId, f.s3Key
-            ? `https://manus-storage.s3.amazonaws.com/${f.s3Key}`
-            : f.url);
-        }
-      });
-
-      // Buscar estatísticas de temporada
-      const statsData = await db.select().from(estatisticasTemporada).where(
-        and(inArray(estatisticasTemporada.atletaId, ids!),
-            eq(estatisticasTemporada.temporada, temporadaAlvo))
-      );
-      const statsMap = new Map<number, any>();
-      statsData.forEach((s: any) => statsMap.set(s.atletaId, s));
-
-      // Pré-carregar fotos em paralelo
-      const atletasCompletos = atletasData.map((a: any) => ({
-        ...a,
-        fotoUrl: fotoMap.get(a.id) || a.fotoUrl || null,
-      }));
-
-      const fotoBuffers = await Promise.all(
-        atletasCompletos.map(async (a: any) => {
-          if (!a.fotoUrl) return null;
-          const fullUrl = a.fotoUrl.startsWith("http") ? a.fotoUrl : `https://manus-storage.s3.amazonaws.com/${a.fotoUrl}`;
-          return fetchImageBuffer(fullUrl);
-        })
-      );
+      if (!atletasOrdenados.length) {
+        return res.status(404).json({ error: "Atletas não encontrados" });
+      }
 
       // Gerar PDF
       const doc = new PDFDocument({
@@ -311,27 +214,14 @@ export function registerPdfExecutivoRoutes(app: any) {
       const chunks: Buffer[] = [];
       doc.on("data", (c: Buffer) => chunks.push(c));
 
-      // Distribuir atletas: 4 por página
-      const ATLETAS_POR_PAGINA = 4;
-      const totalPaginas = Math.ceil(atletasCompletos.length / ATLETAS_POR_PAGINA);
+      // Uma única página com todos os atletas (máx 10)
+      doc.addPage();
+      drawPageHeader(doc, posicaoNome);
 
-      for (let p = 0; p < totalPaginas; p++) {
-        doc.addPage();
-        drawPageHeader(doc);
+      const tableStartY = HEADER_H + 30; // abaixo do título da posição
+      drawAtletasTable(doc, atletasOrdenados, tableStartY);
 
-        const startIdx = p * ATLETAS_POR_PAGINA;
-        const pageAtletas = atletasCompletos.slice(startIdx, startIdx + ATLETAS_POR_PAGINA);
-
-        for (let j = 0; j < pageAtletas.length; j++) {
-          const atleta = pageAtletas[j];
-          const stats = statsMap.get(atleta.id) || null;
-          const fotoBuffer = fotoBuffers[startIdx + j];
-          const cardY = HEADER_H + 2 + j * CARD_H;
-          await drawAtletaCard(doc, atleta, stats, cardY, fotoBuffer);
-        }
-      }
-
-      // Rodapés com numeração
+      // Rodapé
       const range = doc.bufferedPageRange();
       for (let i = range.start; i < range.start + range.count; i++) {
         doc.switchToPage(i);
@@ -342,16 +232,16 @@ export function registerPdfExecutivoRoutes(app: any) {
       await new Promise<void>((resolve) => doc.on("end", resolve));
 
       const pdfBuffer = Buffer.concat(chunks);
-      const nomes = atletasCompletos.map((a: any) => a.nome?.split(" ")[0]).join("-");
-      const filename = `Relatorio_Tecnico_${nomes}_${temporadaAlvo}.pdf`;
+      const posSlug = (posicaoNome || "Radar").replace(/\s+/g, "_");
+      const filename = `Radar_${posSlug}_${temporada || "2025"}.pdf`;
 
       res.setHeader("Content-Type", "application/pdf");
       res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
       res.setHeader("Content-Length", pdfBuffer.length);
-      res.send(pdfBuffer);
-    } catch (error: any) {
-      console.error("[PDF Executivo] Error:", error);
-      res.status(500).json({ error: error.message });
+      res.end(pdfBuffer);
+    } catch (err: any) {
+      console.error("[PDF Executivo] Erro:", err);
+      res.status(500).json({ error: err.message || "Erro interno" });
     }
   });
 }

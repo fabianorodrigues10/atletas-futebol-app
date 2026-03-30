@@ -149,7 +149,7 @@ export default function RadarScreen() {
       const response = await fetch(`${baseUrl}/api/report/pdf-executivo`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids, temporada: "2025" }),
+        body: JSON.stringify({ ids, temporada: "2025", posicaoNome: posicaoSelecionada?.nome }),
       });
       if (!response.ok) throw new Error("Erro ao gerar relatório");
       const blob = await response.blob();
