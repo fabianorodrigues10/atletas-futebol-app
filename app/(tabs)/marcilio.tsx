@@ -233,8 +233,17 @@ function ModalEstatisticas({
       <Text style={styles.labelCampo}>{label}</Text>
       <TextInput
         style={styles.inputCampo}
-        value={stats[chave]?.toString() || ""}
-        onChangeText={(v) => setStats(prev => ({ ...prev, [chave]: tipo === "decimal" ? v : (parseInt(v) || 0) }))}
+        value={stats[chave] === 0 || stats[chave] === "0" ? "" : (stats[chave]?.toString() || "")}
+        onChangeText={(v) => {
+          if (v === "" || v === null) {
+            setStats(prev => ({ ...prev, [chave]: 0 }));
+          } else if (tipo === "decimal") {
+            setStats(prev => ({ ...prev, [chave]: v }));
+          } else {
+            const num = parseInt(v);
+            setStats(prev => ({ ...prev, [chave]: isNaN(num) ? 0 : num }));
+          }
+        }}
         keyboardType="numeric"
         placeholder="0"
       />
