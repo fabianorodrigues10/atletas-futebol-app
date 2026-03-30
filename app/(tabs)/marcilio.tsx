@@ -294,7 +294,6 @@ function ModalEstatisticas({
           <View style={styles.gridCampos}>
             {campo("Desarmes", "desarmes")}
             {campo("Interceptações", "interceptacoes")}
-            {campo("Duelos", "duelos")}
             {campo("Duelos Ganhos", "duelosGanhos")}
           </View>
 
