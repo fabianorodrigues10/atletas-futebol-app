@@ -8,17 +8,17 @@ import { trpc } from "@/lib/trpc";
 
 // ── Posições fixas do futebol ──────────────────────────────────────────────
 const POSICOES_RADAR = [
-  { nome: "Goleiro",       abrev: "GOL", cor: "#F59E0B", icon: "🧤" },
-  { nome: "Lateral Direito", abrev: "LD",  cor: "#3B82F6", icon: "⚡" },
-  { nome: "Zagueiro",      abrev: "ZAG", cor: "#1D4ED8", icon: "🛡️" },
-  { nome: "Lateral Esquerdo", abrev: "LE", cor: "#3B82F6", icon: "⚡" },
-  { nome: "Volante",       abrev: "VOL", cor: "#6366F1", icon: "⚙️" },
-  { nome: "Meia",          abrev: "MEI", cor: "#8B5CF6", icon: "🎯" },
-  { nome: "Meia Atacante", abrev: "MAT", cor: "#A855F7", icon: "🔮" },
-  { nome: "Extremo Direito", abrev: "ED", cor: "#EC4899", icon: "🏃" },
-  { nome: "Extremo Esquerdo", abrev: "EE", cor: "#EC4899", icon: "🏃" },
-  { nome: "Segundo Atacante", abrev: "SA", cor: "#EF4444", icon: "🔥" },
-  { nome: "Centroavante",  abrev: "CA",  cor: "#DC2626", icon: "⚽" },
+  { nome: "Goleiro",          abrev: "GOL", cor: "#F59E0B" },
+  { nome: "Lateral Direito",  abrev: "LD",  cor: "#3B82F6" },
+  { nome: "Zagueiro Destro",  abrev: "ZD",  cor: "#1D4ED8" },
+  { nome: "Zagueiro Canhoto", abrev: "ZC",  cor: "#2563EB" },
+  { nome: "Lateral Esquerdo", abrev: "LE",  cor: "#0EA5E9" },
+  { nome: "Volante Marcação", abrev: "VM",  cor: "#6366F1" },
+  { nome: "Volante Armação",  abrev: "VA",  cor: "#8B5CF6" },
+  { nome: "Meia",             abrev: "MEI", cor: "#A855F7" },
+  { nome: "Extremo Destro",   abrev: "ED",  cor: "#EC4899" },
+  { nome: "Centroavante",     abrev: "CA",  cor: "#EF4444" },
+  { nome: "Extremo Canhoto",  abrev: "EC",  cor: "#DC2626" },
 ];
 
 const LIMITE_POR_POSICAO = 10;
