@@ -1,5 +1,8 @@
-import { useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, TextInput, Modal, ScrollView, Alert, ActivityIndicator } from "react-native";
+import { useState, useCallback } from "react";
+import {
+  View, Text, FlatList, TouchableOpacity, TextInput, Modal,
+  ScrollView, Alert, ActivityIndicator, Platform,
+} from "react-native";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
 
@@ -11,43 +14,71 @@ interface Grupo {
   createdAt: Date;
 }
 
+interface AtletaEmGrupo {
+  atletaId: number;
+  atletaNome?: string;
+}
+
 const CORES = ["#FF6B35", "#FF1744", "#00BCD4", "#4CAF50", "#9C27B0", "#FFC107"];
 
 export default function GruposScreen() {
   const colors = useColors();
-  const [modalVisible, setModalVisible] = useState(false);
-  const [novoGrupo, setNovoGrupo] = useState({ nome: "", descricao: "", cor: "#FF6B35" });
-  const [selectedGrupo, setSelectedGrupo] = useState<Grupo | null>(null);
 
-  // Queries tRPC
-  const { data: grupos = [], isLoading, refetch } = trpc.grupos.list.useQuery();
-  const { data: atletasDoGrupo = [], refetch: refetchAtletas } = trpc.grupos.getAtletas.useQuery(
+  // Estados do modal de criar grupo
+  const [modalCriarVisible, setModalCriarVisible] = useState(false);
+  const [novoGrupo, setNovoGrupo] = useState({ nome: "", descricao: "", cor: "#FF6B35" });
+
+  // Estados do painel de atletas
+  const [selectedGrupo, setSelectedGrupo] = useState<Grupo | null>(null);
+  const [modalAdicionarVisible, setModalAdicionarVisible] = useState(false);
+  const [buscaNome, setBuscaNome] = useState("");
+
+  // ── Queries ────────────────────────────────────────────────────────────────
+  const { data: grupos = [], isLoading: loadingGrupos, refetch: refetchGrupos } =
+    trpc.atletas.list?.useQuery?.() ?? trpc.grupos.list.useQuery();
+
+  // Usar a query correta para grupos
+  const gruposQuery = trpc.grupos.list.useQuery();
+  const atletasDoGrupoQuery = trpc.grupos.getAtletas.useQuery(
     { grupoId: selectedGrupo?.id ?? 0 },
     { enabled: !!selectedGrupo }
   );
 
-  // Mutations tRPC
+  // Busca de atletas para adicionar ao grupo
+  const buscaAtletasQuery = trpc.atletas.search.useQuery(
+    { nome: buscaNome },
+    { enabled: modalAdicionarVisible && buscaNome.length >= 2 }
+  );
+
+  // ── Mutations ──────────────────────────────────────────────────────────────
   const createMutation = trpc.grupos.create.useMutation({
     onSuccess: () => {
       setNovoGrupo({ nome: "", descricao: "", cor: "#FF6B35" });
-      setModalVisible(false);
-      refetch();
+      setModalCriarVisible(false);
+      gruposQuery.refetch();
     },
-    onError: (err) => {
-      Alert.alert("Erro", err.message || "Não foi possível criar o grupo.");
-    },
+    onError: (err) => Alert.alert("Erro", err.message || "Não foi possível criar o grupo."),
   });
 
   const deleteMutation = trpc.grupos.delete.useMutation({
     onSuccess: () => {
       if (selectedGrupo) setSelectedGrupo(null);
-      refetch();
+      gruposQuery.refetch();
     },
-    onError: (err) => {
-      Alert.alert("Erro", err.message || "Não foi possível excluir o grupo.");
-    },
+    onError: (err) => Alert.alert("Erro", err.message || "Não foi possível excluir o grupo."),
   });
 
+  const addAtletaMutation = trpc.grupos.addAtleta.useMutation({
+    onSuccess: () => atletasDoGrupoQuery.refetch(),
+    onError: (err) => Alert.alert("Erro", err.message || "Não foi possível adicionar o atleta."),
+  });
+
+  const removeAtletaMutation = trpc.grupos.removeAtleta.useMutation({
+    onSuccess: () => atletasDoGrupoQuery.refetch(),
+    onError: (err) => Alert.alert("Erro", err.message || "Não foi possível remover o atleta."),
+  });
+
+  // ── Handlers ───────────────────────────────────────────────────────────────
   const handleCreateGrupo = () => {
     if (!novoGrupo.nome.trim()) {
       Alert.alert("Atenção", "O nome do grupo é obrigatório.");
@@ -61,73 +92,98 @@ export default function GruposScreen() {
   };
 
   const handleDeleteGrupo = (id: number) => {
-    Alert.alert("Excluir grupo", "Tem certeza que deseja excluir este grupo?", [
-      { text: "Cancelar", style: "cancel" },
-      { text: "Excluir", style: "destructive", onPress: () => deleteMutation.mutate({ id }) },
-    ]);
+    if (Platform.OS === "web") {
+      if (!confirm("Tem certeza que deseja excluir este grupo?")) return;
+      deleteMutation.mutate({ id });
+    } else {
+      Alert.alert("Excluir grupo", "Tem certeza que deseja excluir este grupo?", [
+        { text: "Cancelar", style: "cancel" },
+        { text: "Excluir", style: "destructive", onPress: () => deleteMutation.mutate({ id }) },
+      ]);
+    }
   };
 
-  const renderGrupo = ({ item }: { item: Grupo }) => (
-    <TouchableOpacity
-      onPress={() => setSelectedGrupo(item)}
-      style={{
-        backgroundColor: selectedGrupo?.id === item.id ? colors.surface : colors.surface,
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 12,
-        borderLeftWidth: 4,
-        borderLeftColor: item.cor,
-        borderWidth: selectedGrupo?.id === item.id ? 1.5 : 0,
-        borderColor: selectedGrupo?.id === item.id ? item.cor : "transparent",
-      }}
-    >
-      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-        <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 16, fontWeight: "600", color: colors.foreground }}>
-            {item.nome}
-          </Text>
-          {item.descricao ? (
-            <Text style={{ fontSize: 12, color: colors.muted, marginTop: 4 }}>
-              {item.descricao}
+  const handleAddAtleta = (atletaId: number) => {
+    if (!selectedGrupo) return;
+    const jaEsta = (atletasDoGrupoQuery.data ?? []).some((a: any) => a.atletaId === atletaId);
+    if (jaEsta) {
+      Alert.alert("Atenção", "Este atleta já está no grupo.");
+      return;
+    }
+    addAtletaMutation.mutate({ atletaId, grupoId: selectedGrupo.id });
+  };
+
+  const handleRemoveAtleta = (atletaId: number) => {
+    if (!selectedGrupo) return;
+    removeAtletaMutation.mutate({ atletaId, grupoId: selectedGrupo.id });
+  };
+
+  // IDs dos atletas já no grupo para marcar na busca
+  const idsNoGrupo = new Set((atletasDoGrupoQuery.data ?? []).map((a: any) => a.atletaId));
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+  const renderGrupo = ({ item }: { item: Grupo }) => {
+    const isSelected = selectedGrupo?.id === item.id;
+    return (
+      <TouchableOpacity
+        onPress={() => setSelectedGrupo(isSelected ? null : item)}
+        style={{
+          backgroundColor: colors.surface,
+          borderRadius: 12,
+          padding: 14,
+          marginBottom: 10,
+          borderLeftWidth: 4,
+          borderLeftColor: item.cor,
+          borderWidth: isSelected ? 1.5 : 0,
+          borderColor: isSelected ? item.cor : "transparent",
+        }}
+      >
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}>
+              {item.nome}
             </Text>
-          ) : null}
+            {item.descricao ? (
+              <Text style={{ fontSize: 12, color: colors.muted, marginTop: 2 }}>{item.descricao}</Text>
+            ) : null}
+          </View>
+          <TouchableOpacity onPress={() => handleDeleteGrupo(item.id)} style={{ padding: 8 }}>
+            <Text style={{ color: colors.error, fontSize: 18 }}>✕</Text>
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          onPress={() => handleDeleteGrupo(item.id)}
-          style={{ padding: 8 }}
-        >
-          <Text style={{ color: colors.error, fontSize: 18 }}>✕</Text>
-        </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Header */}
-      <View style={{ paddingHorizontal: 16, paddingVertical: 12, borderBottomColor: colors.border, borderBottomWidth: 1 }}>
-        <Text style={{ fontSize: 24, fontWeight: "bold", color: colors.foreground }}>Grupos</Text>
+      <View style={{
+        paddingHorizontal: 16, paddingVertical: 12,
+        borderBottomColor: colors.border, borderBottomWidth: 1,
+      }}>
+        <Text style={{ fontSize: 22, fontWeight: "bold", color: colors.foreground }}>Grupos</Text>
         <Text style={{ fontSize: 13, color: colors.muted, marginTop: 2 }}>
           Organize atletas em listas personalizadas
         </Text>
       </View>
 
       {/* Conteúdo */}
-      {isLoading ? (
+      {gruposQuery.isLoading ? (
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
           <ActivityIndicator color={colors.primary} />
         </View>
       ) : (
-        <ScrollView style={{ flex: 1, padding: 16 }}>
-          {grupos.length === 0 ? (
-            <View style={{ alignItems: "center", justifyContent: "center", marginTop: 60 }}>
+        <ScrollView style={{ flex: 1, padding: 16 }} contentContainerStyle={{ paddingBottom: 100 }}>
+          {(gruposQuery.data ?? []).length === 0 ? (
+            <View style={{ alignItems: "center", marginTop: 60 }}>
               <Text style={{ color: colors.muted, fontSize: 14, textAlign: "center" }}>
                 Nenhum grupo criado ainda.{"\n"}Toque em + para criar o primeiro grupo.
               </Text>
             </View>
           ) : (
             <FlatList
-              data={grupos as Grupo[]}
+              data={gruposQuery.data as Grupo[]}
               renderItem={renderGrupo}
               keyExtractor={(item) => item.id.toString()}
               scrollEnabled={false}
@@ -137,25 +193,64 @@ export default function GruposScreen() {
           {/* Painel de atletas do grupo selecionado */}
           {selectedGrupo && (
             <View style={{
-              marginTop: 8,
-              padding: 16,
+              marginTop: 4,
+              padding: 14,
               backgroundColor: colors.surface,
               borderRadius: 12,
               borderLeftWidth: 4,
               borderLeftColor: selectedGrupo.cor,
             }}>
-              <Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground, marginBottom: 8 }}>
-                Atletas em "{selectedGrupo.nome}"
-              </Text>
-              {atletasDoGrupo.length === 0 ? (
-                <Text style={{ color: colors.muted, fontSize: 13 }}>
+              {/* Cabeçalho do painel */}
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>
+                  Atletas em "{selectedGrupo.nome}"
+                </Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    setBuscaNome("");
+                    setModalAdicionarVisible(true);
+                  }}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    backgroundColor: selectedGrupo.cor,
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    borderRadius: 8,
+                    gap: 4,
+                  }}
+                >
+                  <Text style={{ color: "white", fontSize: 13, fontWeight: "600" }}>+ Adicionar</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Lista de atletas no grupo */}
+              {atletasDoGrupoQuery.isLoading ? (
+                <ActivityIndicator color={colors.primary} size="small" />
+              ) : (atletasDoGrupoQuery.data ?? []).length === 0 ? (
+                <Text style={{ color: colors.muted, fontSize: 13, fontStyle: "italic" }}>
                   Nenhum atleta neste grupo ainda.
                 </Text>
               ) : (
-                atletasDoGrupo.map((a: any) => (
-                  <Text key={a.atletaId} style={{ color: colors.foreground, fontSize: 13, paddingVertical: 4 }}>
-                    • Atleta #{a.atletaId}
-                  </Text>
+                (atletasDoGrupoQuery.data as any[]).map((a) => (
+                  <View key={a.atletaId} style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    paddingVertical: 8,
+                    borderBottomWidth: 1,
+                    borderBottomColor: colors.border,
+                  }}>
+                    <Text style={{ color: colors.foreground, fontSize: 14, flex: 1 }}>
+                      {a.atletaNome || `Atleta #${a.atletaId}`}
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => handleRemoveAtleta(a.atletaId)}
+                      style={{ padding: 6 }}
+                    >
+                      <Text style={{ color: colors.error, fontSize: 16 }}>✕</Text>
+                    </TouchableOpacity>
+                  </View>
                 ))
               )}
             </View>
@@ -167,7 +262,7 @@ export default function GruposScreen() {
       <TouchableOpacity
         onPress={() => {
           setNovoGrupo({ nome: "", descricao: "", cor: "#FF6B35" });
-          setModalVisible(true);
+          setModalCriarVisible(true);
         }}
         style={{
           position: "absolute",
@@ -189,39 +284,32 @@ export default function GruposScreen() {
         <Text style={{ fontSize: 28, color: "white", lineHeight: 32 }}>+</Text>
       </TouchableOpacity>
 
-      {/* Modal para criar grupo */}
+      {/* ── Modal: Criar Grupo ─────────────────────────────────────────────── */}
       <Modal
-        visible={modalVisible}
+        visible={modalCriarVisible}
         transparent
         animationType="slide"
-        onRequestClose={() => setModalVisible(false)}
+        onRequestClose={() => setModalCriarVisible(false)}
       >
         <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" }}>
-          <View
-            style={{
-              backgroundColor: colors.background,
-              borderTopLeftRadius: 20,
-              borderTopRightRadius: 20,
-              padding: 20,
-              paddingBottom: 40,
-            }}
-          >
+          <View style={{
+            backgroundColor: colors.background,
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            padding: 20,
+            paddingBottom: 40,
+          }}>
             <Text style={{ fontSize: 18, fontWeight: "bold", color: colors.foreground, marginBottom: 16 }}>
               Novo Grupo
             </Text>
 
-            {/* Campo Nome */}
             <Text style={{ color: colors.foreground, fontSize: 12, fontWeight: "600", marginBottom: 4 }}>
               Nome do Grupo *
             </Text>
             <TextInput
               style={{
-                borderWidth: 1,
-                borderColor: colors.border,
-                borderRadius: 8,
-                padding: 12,
-                marginBottom: 16,
-                color: colors.foreground,
+                borderWidth: 1, borderColor: colors.border, borderRadius: 8,
+                padding: 12, marginBottom: 16, color: colors.foreground,
                 backgroundColor: colors.surface,
               }}
               placeholder="Ex: Titulares, Reservas, Monitorados"
@@ -231,20 +319,14 @@ export default function GruposScreen() {
               returnKeyType="next"
             />
 
-            {/* Campo Descrição */}
             <Text style={{ color: colors.foreground, fontSize: 12, fontWeight: "600", marginBottom: 4 }}>
               Descrição (opcional)
             </Text>
             <TextInput
               style={{
-                borderWidth: 1,
-                borderColor: colors.border,
-                borderRadius: 8,
-                padding: 12,
-                marginBottom: 16,
-                color: colors.foreground,
-                backgroundColor: colors.surface,
-                height: 72,
+                borderWidth: 1, borderColor: colors.border, borderRadius: 8,
+                padding: 12, marginBottom: 16, color: colors.foreground,
+                backgroundColor: colors.surface, height: 72,
               }}
               placeholder="Descrição do grupo"
               placeholderTextColor={colors.muted}
@@ -253,7 +335,6 @@ export default function GruposScreen() {
               multiline
             />
 
-            {/* Seletor de Cor */}
             <Text style={{ color: colors.foreground, fontSize: 12, fontWeight: "600", marginBottom: 8 }}>
               Cor
             </Text>
@@ -263,10 +344,7 @@ export default function GruposScreen() {
                   key={cor}
                   onPress={() => setNovoGrupo({ ...novoGrupo, cor })}
                   style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 8,
-                    backgroundColor: cor,
+                    width: 36, height: 36, borderRadius: 8, backgroundColor: cor,
                     borderWidth: novoGrupo.cor === cor ? 3 : 1,
                     borderColor: novoGrupo.cor === cor ? colors.foreground : "transparent",
                   }}
@@ -274,17 +352,12 @@ export default function GruposScreen() {
               ))}
             </View>
 
-            {/* Botões */}
             <View style={{ flexDirection: "row", gap: 12 }}>
               <TouchableOpacity
-                onPress={() => setModalVisible(false)}
+                onPress={() => setModalCriarVisible(false)}
                 style={{
-                  flex: 1,
-                  paddingVertical: 12,
-                  borderRadius: 8,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                  alignItems: "center",
+                  flex: 1, paddingVertical: 12, borderRadius: 8,
+                  borderWidth: 1, borderColor: colors.border, alignItems: "center",
                 }}
               >
                 <Text style={{ color: colors.foreground, fontWeight: "600" }}>Cancelar</Text>
@@ -293,21 +366,121 @@ export default function GruposScreen() {
                 onPress={handleCreateGrupo}
                 disabled={createMutation.isPending}
                 style={{
-                  flex: 1,
-                  paddingVertical: 12,
-                  borderRadius: 8,
-                  backgroundColor: colors.primary,
-                  alignItems: "center",
+                  flex: 1, paddingVertical: 12, borderRadius: 8,
+                  backgroundColor: colors.primary, alignItems: "center",
                   opacity: createMutation.isPending ? 0.7 : 1,
                 }}
               >
-                {createMutation.isPending ? (
-                  <ActivityIndicator color="white" size="small" />
-                ) : (
-                  <Text style={{ color: "white", fontWeight: "600" }}>Criar</Text>
-                )}
+                {createMutation.isPending
+                  ? <ActivityIndicator color="white" size="small" />
+                  : <Text style={{ color: "white", fontWeight: "600" }}>Criar</Text>}
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ── Modal: Adicionar Atleta ao Grupo ──────────────────────────────── */}
+      <Modal
+        visible={modalAdicionarVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setModalAdicionarVisible(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" }}>
+          <View style={{
+            backgroundColor: colors.background,
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            padding: 20,
+            paddingBottom: 40,
+            maxHeight: "80%",
+          }}>
+            <Text style={{ fontSize: 17, fontWeight: "bold", color: colors.foreground, marginBottom: 12 }}>
+              Adicionar atleta a "{selectedGrupo?.nome}"
+            </Text>
+
+            {/* Campo de busca */}
+            <TextInput
+              style={{
+                borderWidth: 1, borderColor: colors.border, borderRadius: 8,
+                padding: 12, marginBottom: 12, color: colors.foreground,
+                backgroundColor: colors.surface,
+              }}
+              placeholder="Buscar atleta pelo nome..."
+              placeholderTextColor={colors.muted}
+              value={buscaNome}
+              onChangeText={setBuscaNome}
+              autoFocus
+            />
+
+            {/* Resultados */}
+            {buscaNome.length < 2 ? (
+              <Text style={{ color: colors.muted, fontSize: 13, textAlign: "center", marginTop: 8 }}>
+                Digite ao menos 2 letras para buscar
+              </Text>
+            ) : buscaAtletasQuery.isLoading ? (
+              <ActivityIndicator color={colors.primary} style={{ marginTop: 16 }} />
+            ) : (buscaAtletasQuery.data ?? []).length === 0 ? (
+              <Text style={{ color: colors.muted, fontSize: 13, textAlign: "center", marginTop: 8 }}>
+                Nenhum atleta encontrado
+              </Text>
+            ) : (
+              <FlatList
+                data={buscaAtletasQuery.data as any[]}
+                keyExtractor={(item) => item.id.toString()}
+                style={{ maxHeight: 320 }}
+                renderItem={({ item }) => {
+                  const jaEsta = idsNoGrupo.has(item.id);
+                  return (
+                    <TouchableOpacity
+                      onPress={() => !jaEsta && handleAddAtleta(item.id)}
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        paddingVertical: 12,
+                        paddingHorizontal: 4,
+                        borderBottomWidth: 1,
+                        borderBottomColor: colors.border,
+                        opacity: jaEsta ? 0.5 : 1,
+                      }}
+                    >
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>
+                          {item.nome}
+                        </Text>
+                        <Text style={{ fontSize: 12, color: colors.muted }}>
+                          {[item.posicao, item.clube].filter(Boolean).join(" • ")}
+                        </Text>
+                      </View>
+                      {jaEsta ? (
+                        <Text style={{ fontSize: 12, color: colors.muted, marginLeft: 8 }}>Já adicionado</Text>
+                      ) : addAtletaMutation.isPending ? (
+                        <ActivityIndicator size="small" color={colors.primary} />
+                      ) : (
+                        <View style={{
+                          backgroundColor: selectedGrupo?.cor ?? colors.primary,
+                          borderRadius: 6, paddingHorizontal: 10, paddingVertical: 4, marginLeft: 8,
+                        }}>
+                          <Text style={{ color: "white", fontSize: 12, fontWeight: "600" }}>+ Adicionar</Text>
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  );
+                }}
+              />
+            )}
+
+            <TouchableOpacity
+              onPress={() => setModalAdicionarVisible(false)}
+              style={{
+                marginTop: 16, paddingVertical: 12, borderRadius: 8,
+                borderWidth: 1, borderColor: colors.border, alignItems: "center",
+              }}
+            >
+              <Text style={{ color: colors.foreground, fontWeight: "600" }}>Fechar</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>

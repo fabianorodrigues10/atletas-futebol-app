@@ -603,9 +603,15 @@ export async function getAtletasDoGrupo(grupoId: number) {
   if (!db) return [];
   
   return db
-    .select({ atletaId: atletasEmGrupos.atletaId })
+    .select({
+      atletaId: atletasEmGrupos.atletaId,
+      atletaNome: atletas.nome,
+      posicao: atletas.posicao,
+    })
     .from(atletasEmGrupos)
-    .where(eq(atletasEmGrupos.grupoId, grupoId));
+    .leftJoin(atletas, eq(atletasEmGrupos.atletaId, atletas.id))
+    .where(eq(atletasEmGrupos.grupoId, grupoId))
+    .orderBy(atletas.nome);
 }
 
 /**
