@@ -32,11 +32,11 @@ const HEADER_H = 50;
 const FOOTER_H = 28;
 const USABLE_H = PAGE_H - HEADER_H - FOOTER_H; // ~764px
 
-// Cada ficha ocupa exatamente 1/3 da área útil
-const CARD_H = Math.floor(USABLE_H / 3); // ~254px
+// Cada ficha ocupa exatamente 1/4 da área útil
+const CARD_H = Math.floor(USABLE_H / 4); // ~191px
 const CARD_PADDING = 5;
 // Altura do cabeçalho da ficha
-const CARD_HDR_H_CONST = 24;
+const CARD_HDR_H_CONST = 20;
 
 function formatDate(dateStr: string | Date | null): string {
   if (!dateStr) return "—";
@@ -138,8 +138,8 @@ async function drawAtletaCard(
   const CONTENT_START_Y = cardY + CARD_HDR_H + 4;
 
   // Nome (na faixa escura)
-  doc.fontSize(12).fillColor(WHITE).font("Helvetica-Bold")
-    .text(atleta.nome || "—", INFO_X, cardY + 6, { width: INFO_W - 60 });
+  doc.fontSize(10).fillColor(WHITE).font("Helvetica-Bold")
+    .text(atleta.nome || "—", INFO_X, cardY + 5, { width: INFO_W - 70 });
 
   // Badge de posição (canto direito da faixa escura)
   const posicao = atleta.posicao || "—";
@@ -150,10 +150,10 @@ async function drawAtletaCard(
   };
   const posColor = posColors[posicao] || DARK;
   const posText = posicao;
-  const BADGE_W = 80;
-  doc.rect(cx + cw - BADGE_W - p, cardY + 4, BADGE_W, 16).fill(posColor);
-  doc.fontSize(7).fillColor(WHITE).font("Helvetica-Bold")
-    .text(posText.toUpperCase(), cx + cw - BADGE_W - p + 2, cardY + 8, { width: BADGE_W - 4, align: "center" });
+  const BADGE_W = 75;
+  doc.rect(cx + cw - BADGE_W - p, cardY + 3, BADGE_W, 14).fill(posColor);
+  doc.fontSize(6.5).fillColor(WHITE).font("Helvetica-Bold")
+    .text(posText.toUpperCase(), cx + cw - BADGE_W - p + 2, cardY + 7, { width: BADGE_W - 4, align: "center" });
 
   // ── DADOS PESSOAIS (linha compacta) ────────────────────────────────────
   let iy = CONTENT_START_Y;
@@ -167,9 +167,9 @@ async function drawAtletaCard(
     atleta.clube ? `${atleta.clube}` : null,
   ].filter(Boolean).join("  •  ");
 
-  doc.fontSize(7.5).fillColor(GRAY).font("Helvetica")
+  doc.fontSize(7).fillColor(GRAY).font("Helvetica")
     .text(dadosLinha, INFO_X, iy, { width: INFO_W });
-  iy += 14;
+  iy += 11;
 
   // ── ESTATÍSTICAS ────────────────────────────────────────────────────────
   if (stats) {
@@ -191,18 +191,18 @@ async function drawAtletaCard(
     ];
 
     const BOX_W = Math.floor(INFO_W / allStats.length) - 1;
-    const BOX_H = 40;
+    const BOX_H = 28;
 
     allStats.forEach(([label, valor], i) => {
       const bx = INFO_X + i * (BOX_W + 1);
       doc.rect(bx, iy, BOX_W, BOX_H).fill(WHITE).stroke(BORDER);
-      doc.rect(bx, iy, BOX_W, 10).fill(DARK);
-      doc.fontSize(5.5).fillColor(WHITE).font("Helvetica-Bold")
-        .text(String(label).toUpperCase(), bx + 1, iy + 3, { width: BOX_W - 2, align: "center" });
-      doc.fontSize(11).fillColor(DARK).font("Helvetica-Bold")
-        .text(String(valor), bx + 1, iy + 16, { width: BOX_W - 2, align: "center" });
+      doc.rect(bx, iy, BOX_W, 9).fill(DARK);
+      doc.fontSize(5).fillColor(WHITE).font("Helvetica-Bold")
+        .text(String(label).toUpperCase(), bx + 1, iy + 2, { width: BOX_W - 2, align: "center" });
+      doc.fontSize(9).fillColor(DARK).font("Helvetica-Bold")
+        .text(String(valor), bx + 1, iy + 12, { width: BOX_W - 2, align: "center" });
     });
-    iy += BOX_H + 8;
+    iy += BOX_H + 5;
 
     // ── NOTAS AVALIATIVAS (barras compactas inline) ─────────────────────
     const notas = [
@@ -217,23 +217,23 @@ async function drawAtletaCard(
       const nota = valor !== null && valor !== undefined ? parseFloat(String(valor)) : 0;
       const pct = Math.min(nota / 10, 1);
 
-      doc.fontSize(7.5).fillColor(GRAY).font("Helvetica")
+      doc.fontSize(6.5).fillColor(GRAY).font("Helvetica")
         .text(`${label}: ${nota > 0 ? nota.toFixed(1) : "—"}`, nx, iy, { width: NOTA_W });
 
       // Barra
-      doc.rect(nx, iy + 11, NOTA_W, 7).fill([220, 220, 228] as RGB);
+      doc.rect(nx, iy + 9, NOTA_W, 5).fill([220, 220, 228] as RGB);
       let barColor: RGB = [239, 68, 68];
       if (nota >= 7) barColor = [34, 197, 94];
       else if (nota >= 5) barColor = [245, 158, 11];
-      if (nota > 0) doc.rect(nx, iy + 11, NOTA_W * pct, 7).fill(barColor);
+      if (nota > 0) doc.rect(nx, iy + 9, NOTA_W * pct, 5).fill(barColor);
     });
-    iy += 24;
+    iy += 18;
 
-    // ── OBSERVAÇÕES ─────────────────────────────────────────────────────
+    // ── OBSERVAÇÕES (1 linha máximo) ─────────────────────────────────────────
     if (stats.observacoes) {
-      const obsMaxH = (cardY + CARD_H - 6) - iy;
-      if (obsMaxH > 10) {
-        doc.fontSize(6.5).fillColor(BLACK).font("Helvetica-Oblique")
+      const obsMaxH = (cardY + CARD_H - 4) - iy;
+      if (obsMaxH > 8) {
+        doc.fontSize(6).fillColor(BLACK).font("Helvetica-Oblique")
           .text(`Obs: ${stats.observacoes}`, INFO_X, iy, { width: INFO_W, height: obsMaxH, ellipsis: true });
       }
     }
@@ -311,8 +311,8 @@ export function registerPdfExecutivoRoutes(app: any) {
       const chunks: Buffer[] = [];
       doc.on("data", (c: Buffer) => chunks.push(c));
 
-      // Distribuir atletas: 3 por página
-      const ATLETAS_POR_PAGINA = 3;
+      // Distribuir atletas: 4 por página
+      const ATLETAS_POR_PAGINA = 4;
       const totalPaginas = Math.ceil(atletasCompletos.length / ATLETAS_POR_PAGINA);
 
       for (let p = 0; p < totalPaginas; p++) {
