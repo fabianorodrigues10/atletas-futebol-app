@@ -42,8 +42,12 @@ export default function RadarScreen() {
   // Modal de busca de atleta
   const [modalBuscaVisible, setModalBuscaVisible] = useState(false);
   const [buscaNome, setBuscaNome] = useState("");
-  // Geração de relatório
+  // Geração de relatório (posição única)
   const [gerandoRelatorio, setGerandoRelatorio] = useState(false);
+  // Modal de relatório multi-posição
+  const [modalMultiPdfVisible, setModalMultiPdfVisible] = useState(false);
+  const [posicoesSelPdf, setPosicoesSelPdf] = useState<Set<string>>(new Set());
+  const [gerandoMultiPdf, setGerandoMultiPdf] = useState(false);
 
   // ── Queries ────────────────────────────────────────────────────────────────
   const gruposQuery = trpc.grupos.list.useQuery();
@@ -68,7 +72,6 @@ export default function RadarScreen() {
   // ── Mutations ──────────────────────────────────────────────────────────────
   const createMutation = trpc.grupos.create.useMutation({
     onSuccess: (data) => {
-      // Define grupoAtual imediatamente — não espera refetch para não bloquear o botão
       if (posicaoSelecionada) {
         setGrupoAtual({ id: data.id, nome: posicaoSelecionada.nome, cor: posicaoSelecionada.cor });
       }
@@ -101,7 +104,6 @@ export default function RadarScreen() {
     if (grupoExistente) {
       setGrupoAtual(grupoExistente as Grupo);
     } else {
-      // Cria o grupo automaticamente
       createMutation.mutate({ nome: pos.nome, cor: pos.cor });
       setGrupoAtual(null);
     }
@@ -129,12 +131,12 @@ export default function RadarScreen() {
     const lista = [...(atletasDoGrupoQuery.data as any[] ?? [])];
     const novoIndex = direcao === "cima" ? index - 1 : index + 1;
     if (novoIndex < 0 || novoIndex >= lista.length) return;
-    // Troca os dois itens
     [lista[index], lista[novoIndex]] = [lista[novoIndex], lista[index]];
     const atletaIds = lista.map((a: any) => a.atletaId);
     reordenarMutation.mutate({ grupoId: grupoAtual.id, atletaIds });
   };
 
+  // Gera PDF de uma única posição (botão no painel lateral)
   const handleGerarRelatorio = async () => {
     if (!grupoAtual) return;
     const atletas = atletasDoGrupoQuery.data ?? [];
@@ -153,28 +155,7 @@ export default function RadarScreen() {
       });
       if (!response.ok) throw new Error("Erro ao gerar relatório");
       const blob = await response.blob();
-      if (Platform.OS === "web") {
-        const url = URL.createObjectURL(blob);
-        window.open(url, "_blank");
-        setTimeout(() => URL.revokeObjectURL(url), 10000);
-      } else {
-        const FileSystem = await import("expo-file-system/legacy");
-        const Sharing = await import("expo-sharing");
-        const reader = new FileReader();
-        reader.readAsDataURL(blob);
-        reader.onloadend = async () => {
-          const base64 = (reader.result as string).split(",")[1];
-          const dir = FileSystem.cacheDirectory || FileSystem.documentDirectory || "";
-          const posNome = posicaoSelecionada?.nome.replace(/\s+/g, "_") ?? "Radar";
-          const path = dir + `Radar_${posNome}_2025.pdf`;
-          await FileSystem.writeAsStringAsync(path, base64, { encoding: FileSystem.EncodingType.Base64 });
-          if (await Sharing.isAvailableAsync()) {
-            await Sharing.shareAsync(path, { mimeType: "application/pdf" });
-          } else {
-            Alert.alert("Sucesso", `PDF salvo em:\n${path}`);
-          }
-        };
-      }
+      await abrirPdfBlob(blob, `Radar_${(posicaoSelecionada?.nome ?? "Radar").replace(/\s+/g, "_")}_2025.pdf`);
     } catch (err: any) {
       Alert.alert("Erro", err.message || "Não foi possível gerar o relatório.");
     } finally {
@@ -182,15 +163,104 @@ export default function RadarScreen() {
     }
   };
 
+  // Gera PDF multi-posição
+  const handleGerarMultiPdf = async () => {
+    const posicoesSelecionadas = POSICOES_RADAR.filter((p) => posicoesSelPdf.has(p.nome));
+    if (posicoesSelecionadas.length === 0) {
+      Alert.alert("Selecione posições", "Marque ao menos uma posição para incluir no relatório.");
+      return;
+    }
+
+    // Monta o payload com os atletas de cada posição
+    const posicoes: Array<{ nome: string; ids: number[] }> = [];
+    for (const pos of posicoesSelecionadas) {
+      const grupo = gruposPorPosicao.get(pos.nome);
+      if (!grupo) continue; // posição sem grupo = sem atletas
+      // Buscar atletas do grupo via query cache (já carregados) ou via fetch direto
+      // Usamos a API diretamente para garantir os dados mais recentes
+      posicoes.push({ nome: pos.nome, ids: [] }); // preenchido abaixo
+    }
+
+    setGerandoMultiPdf(true);
+    try {
+      const baseUrl = getApiBaseUrl();
+
+      // Buscar atletas de cada posição selecionada
+      const posicoesComAtletas: Array<{ nome: string; ids: number[] }> = [];
+      for (const pos of posicoesSelecionadas) {
+        const grupo = gruposPorPosicao.get(pos.nome);
+        if (!grupo) continue;
+        const res = await fetch(
+          `${baseUrl}/api/trpc/grupos.getAtletas?input=${encodeURIComponent(JSON.stringify({ grupoId: grupo.id }))}`,
+          { headers: { "Content-Type": "application/json" } }
+        );
+        if (!res.ok) continue;
+        const json = await res.json();
+        const atletas: any[] = json?.result?.data ?? [];
+        if (atletas.length === 0) continue;
+        posicoesComAtletas.push({ nome: pos.nome, ids: atletas.map((a: any) => a.atletaId) });
+      }
+
+      if (posicoesComAtletas.length === 0) {
+        Alert.alert("Sem atletas", "As posições selecionadas não têm atletas cadastrados.");
+        setGerandoMultiPdf(false);
+        return;
+      }
+
+      const response = await fetch(`${baseUrl}/api/report/pdf-executivo`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ posicoes: posicoesComAtletas, temporada: "2025" }),
+      });
+      if (!response.ok) throw new Error("Erro ao gerar relatório");
+      const blob = await response.blob();
+      await abrirPdfBlob(blob, `Radar_Multiplas_Posicoes_2025.pdf`);
+      setModalMultiPdfVisible(false);
+    } catch (err: any) {
+      Alert.alert("Erro", err.message || "Não foi possível gerar o relatório.");
+    } finally {
+      setGerandoMultiPdf(false);
+    }
+  };
+
+  // Utilitário: abre/compartilha PDF
+  const abrirPdfBlob = async (blob: Blob, filename: string) => {
+    if (Platform.OS === "web") {
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+    } else {
+      const FileSystem = await import("expo-file-system/legacy");
+      const Sharing = await import("expo-sharing");
+      const reader = new FileReader();
+      reader.readAsDataURL(blob);
+      reader.onloadend = async () => {
+        const base64 = (reader.result as string).split(",")[1];
+        const dir = FileSystem.cacheDirectory || FileSystem.documentDirectory || "";
+        const path = dir + filename;
+        await FileSystem.writeAsStringAsync(path, base64, { encoding: FileSystem.EncodingType.Base64 });
+        if (await Sharing.isAvailableAsync()) {
+          await Sharing.shareAsync(path, { mimeType: "application/pdf" });
+        } else {
+          Alert.alert("Sucesso", `PDF salvo em:\n${path}`);
+        }
+      };
+    }
+  };
+
   // IDs já no grupo
   const idsNoGrupo = new Set((atletasDoGrupoQuery.data ?? []).map((a: any) => a.atletaId));
   const qtdNoGrupo = (atletasDoGrupoQuery.data ?? []).length;
 
-  // ── Contagem por posição (para exibir no card) ─────────────────────────────
-  // Usamos queries individuais por grupo — mas para evitar N queries, calculamos
-  // via gruposQuery + atletasDoGrupoQuery apenas para a posição selecionada.
-  // Para contagem geral, buscamos todos de uma vez:
-  const contagemQuery = trpc.grupos.list.useQuery(undefined, { enabled: false });
+  // Toggle posição no seletor de PDF
+  const togglePosicaoPdf = (nome: string) => {
+    setPosicoesSelPdf((prev) => {
+      const next = new Set(prev);
+      if (next.has(nome)) next.delete(nome);
+      else next.add(nome);
+      return next;
+    });
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -199,13 +269,30 @@ export default function RadarScreen() {
         paddingHorizontal: 16, paddingTop: 16, paddingBottom: 12,
         borderBottomWidth: 1, borderBottomColor: colors.border,
         backgroundColor: colors.background,
+        flexDirection: "row", alignItems: "center",
       }}>
-        <Text style={{ fontSize: 22, fontWeight: "800", color: colors.foreground, letterSpacing: 0.5 }}>
-          Radar
-        </Text>
-        <Text style={{ fontSize: 12, color: colors.muted, marginTop: 2 }}>
-          Atletas no radar para contratação · Máx. {LIMITE_POR_POSICAO} por posição
-        </Text>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 22, fontWeight: "800", color: colors.foreground, letterSpacing: 0.5 }}>
+            Radar
+          </Text>
+          <Text style={{ fontSize: 12, color: colors.muted, marginTop: 2 }}>
+            Atletas no radar para contratação · Máx. {LIMITE_POR_POSICAO} por posição
+          </Text>
+        </View>
+        {/* Botão de relatório multi-posição */}
+        <TouchableOpacity
+          onPress={() => {
+            setPosicoesSelPdf(new Set());
+            setModalMultiPdfVisible(true);
+          }}
+          style={{
+            flexDirection: "row", alignItems: "center",
+            backgroundColor: "#1D4ED8", borderRadius: 8,
+            paddingHorizontal: 12, paddingVertical: 8,
+          }}
+        >
+          <Text style={{ color: "white", fontSize: 12, fontWeight: "700" }}>📋 Relatório</Text>
+        </TouchableOpacity>
       </View>
 
       {/* ── Conteúdo principal ──────────────────────────────────────────────── */}
@@ -283,10 +370,11 @@ export default function RadarScreen() {
               borderBottomColor: colors.border,
               backgroundColor: posicaoSelecionada.cor + "15",
             }}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
                 <View style={{
                   backgroundColor: posicaoSelecionada.cor,
                   paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6,
+                  marginRight: 8,
                 }}>
                   <Text style={{ color: "white", fontSize: 11, fontWeight: "800" }}>
                     {posicaoSelecionada.abrev}
@@ -460,10 +548,11 @@ export default function RadarScreen() {
             minHeight: 400,
           }}>
             {/* Cabeçalho do modal */}
-            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14, gap: 8 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>
               <View style={{
                 backgroundColor: posicaoSelecionada?.cor ?? colors.primary,
                 paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6,
+                marginRight: 8,
               }}>
                 <Text style={{ color: "white", fontSize: 11, fontWeight: "800" }}>
                   {posicaoSelecionada?.abrev}
@@ -563,6 +652,146 @@ export default function RadarScreen() {
             >
               <Text style={{ color: colors.foreground, fontWeight: "600" }}>Fechar</Text>
             </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ── Modal: Relatório Multi-posição ────────────────────────────────────── */}
+      <Modal
+        visible={modalMultiPdfVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setModalMultiPdfVisible(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.55)", justifyContent: "center", alignItems: "center" }}>
+          <View style={{
+            backgroundColor: colors.background,
+            borderRadius: 20,
+            padding: 24,
+            width: "90%",
+            maxWidth: 480,
+            maxHeight: "85%",
+          }}>
+            {/* Cabeçalho */}
+            <Text style={{ fontSize: 18, fontWeight: "800", color: colors.foreground, marginBottom: 4 }}>
+              Relatório Multi-posição
+            </Text>
+            <Text style={{ fontSize: 13, color: colors.muted, marginBottom: 16 }}>
+              Selecione as posições que deseja incluir no PDF. Cada posição terá sua própria página.
+            </Text>
+
+            {/* Botões Selecionar Todos / Limpar */}
+            <View style={{ flexDirection: "row", marginBottom: 12 }}>
+              <TouchableOpacity
+                onPress={() => setPosicoesSelPdf(new Set(POSICOES_RADAR.map((p) => p.nome)))}
+                style={{
+                  flex: 1, paddingVertical: 6, borderRadius: 8, marginRight: 6,
+                  backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border,
+                  alignItems: "center",
+                }}
+              >
+                <Text style={{ fontSize: 12, color: colors.foreground, fontWeight: "600" }}>Selecionar todas</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setPosicoesSelPdf(new Set())}
+                style={{
+                  flex: 1, paddingVertical: 6, borderRadius: 8,
+                  backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border,
+                  alignItems: "center",
+                }}
+              >
+                <Text style={{ fontSize: 12, color: colors.foreground, fontWeight: "600" }}>Limpar</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Lista de posições com checkbox */}
+            <ScrollView style={{ maxHeight: 360 }} showsVerticalScrollIndicator={false}>
+              {POSICOES_RADAR.map((pos) => {
+                const grupo = gruposPorPosicao.get(pos.nome);
+                const isChecked = posicoesSelPdf.has(pos.nome);
+                const semAtletas = !grupo;
+
+                return (
+                  <TouchableOpacity
+                    key={pos.nome}
+                    onPress={() => !semAtletas && togglePosicaoPdf(pos.nome)}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      paddingVertical: 10,
+                      paddingHorizontal: 4,
+                      borderBottomWidth: 1,
+                      borderBottomColor: colors.border,
+                      opacity: semAtletas ? 0.4 : 1,
+                    }}
+                  >
+                    {/* Checkbox */}
+                    <View style={{
+                      width: 22, height: 22, borderRadius: 6,
+                      borderWidth: 2,
+                      borderColor: isChecked ? pos.cor : colors.border,
+                      backgroundColor: isChecked ? pos.cor : "transparent",
+                      justifyContent: "center", alignItems: "center",
+                      marginRight: 12,
+                    }}>
+                      {isChecked && <Text style={{ color: "white", fontSize: 13, fontWeight: "800" }}>✓</Text>}
+                    </View>
+
+                    {/* Badge abreviação */}
+                    <View style={{
+                      width: 32, height: 32, borderRadius: 6,
+                      backgroundColor: pos.cor,
+                      justifyContent: "center", alignItems: "center",
+                      marginRight: 10,
+                    }}>
+                      <Text style={{ color: "white", fontSize: 9, fontWeight: "800" }}>{pos.abrev}</Text>
+                    </View>
+
+                    {/* Nome */}
+                    <Text style={{ flex: 1, fontSize: 14, fontWeight: "600", color: colors.foreground }}>
+                      {pos.nome}
+                    </Text>
+
+                    {/* Status */}
+                    <Text style={{ fontSize: 11, color: semAtletas ? colors.muted : colors.success }}>
+                      {semAtletas ? "Vazio" : "Com atletas"}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+
+            {/* Rodapé com contagem e botões */}
+            <View style={{ marginTop: 16 }}>
+              <Text style={{ fontSize: 12, color: colors.muted, textAlign: "center", marginBottom: 12 }}>
+                {posicoesSelPdf.size} posição(ões) selecionada(s)
+              </Text>
+              <TouchableOpacity
+                onPress={handleGerarMultiPdf}
+                disabled={posicoesSelPdf.size === 0 || gerandoMultiPdf}
+                style={{
+                  paddingVertical: 14, borderRadius: 10, alignItems: "center",
+                  backgroundColor: posicoesSelPdf.size === 0 ? colors.border : "#1D4ED8",
+                  marginBottom: 8,
+                }}
+              >
+                {gerandoMultiPdf
+                  ? <ActivityIndicator color="white" />
+                  : <Text style={{ color: "white", fontWeight: "700", fontSize: 15 }}>
+                      📋 Gerar PDF ({posicoesSelPdf.size} posição{posicoesSelPdf.size !== 1 ? "ões" : ""})
+                    </Text>
+                }
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setModalMultiPdfVisible(false)}
+                style={{
+                  paddingVertical: 12, borderRadius: 10, alignItems: "center",
+                  borderWidth: 1, borderColor: colors.border,
+                }}
+              >
+                <Text style={{ color: colors.foreground, fontWeight: "600" }}>Cancelar</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>

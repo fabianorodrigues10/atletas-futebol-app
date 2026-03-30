@@ -182,26 +182,39 @@ function drawAtletasTable(
 export function registerPdfExecutivoRoutes(app: any) {
   app.post("/api/report/pdf-executivo", async (req: Request, res: Response) => {
     try {
-      const { ids, temporada, posicaoNome } = req.body as {
+      // Suporta dois modos:
+      // 1. Posição única: { ids, temporada, posicaoNome }
+      // 2. Multi-posição: { posicoes: [{ nome, ids }], temporada }
+      const body = req.body as {
         ids?: number[];
         temporada?: string;
         posicaoNome?: string;
+        posicoes?: Array<{ nome: string; ids: number[] }>;
       };
+
       const db = await getDb();
       if (!db) return res.status(500).json({ error: "Database not available" });
 
-      if (!ids || ids.length === 0) {
+      const temporadaAlvo = body.temporada || "2025";
+
+      // Normalizar para array de posições
+      let posicoes: Array<{ nome: string; ids: number[] }>;
+      if (body.posicoes && body.posicoes.length > 0) {
+        posicoes = body.posicoes.filter((p) => p.ids && p.ids.length > 0);
+      } else if (body.ids && body.ids.length > 0) {
+        posicoes = [{ nome: body.posicaoNome || "Atletas", ids: body.ids }];
+      } else {
         return res.status(400).json({ error: "Nenhum atleta selecionado" });
       }
 
-      // Buscar atletas mantendo a ordem dos IDs (ordem definida pelo usuário no Radar)
-      const atletasRaw = await db.select().from(atletas).where(inArray(atletas.id, ids));
-      const atletasMap = new Map<number, any>(atletasRaw.map((a: any) => [a.id, a]));
-      const atletasOrdenados = ids.map((id) => atletasMap.get(id)).filter(Boolean);
-
-      if (!atletasOrdenados.length) {
-        return res.status(404).json({ error: "Atletas não encontrados" });
+      if (posicoes.length === 0) {
+        return res.status(400).json({ error: "Nenhuma posição com atletas selecionada" });
       }
+
+      // Buscar todos os IDs de uma vez
+      const todosIds = posicoes.flatMap((p) => p.ids);
+      const atletasRaw = await db.select().from(atletas).where(inArray(atletas.id, todosIds));
+      const atletasMap = new Map<number, any>(atletasRaw.map((a: any) => [a.id, a]));
 
       // Gerar PDF
       const doc = new PDFDocument({
@@ -214,14 +227,19 @@ export function registerPdfExecutivoRoutes(app: any) {
       const chunks: Buffer[] = [];
       doc.on("data", (c: Buffer) => chunks.push(c));
 
-      // Uma única página com todos os atletas (máx 10)
-      doc.addPage();
-      drawPageHeader(doc, posicaoNome);
+      // Uma página por posição
+      for (const posicao of posicoes) {
+        const atletasOrdenados = posicao.ids
+          .map((id) => atletasMap.get(id))
+          .filter(Boolean);
+        if (atletasOrdenados.length === 0) continue;
 
-      const tableStartY = HEADER_H + 30; // abaixo do título da posição
-      drawAtletasTable(doc, atletasOrdenados, tableStartY);
+        doc.addPage();
+        drawPageHeader(doc, posicao.nome);
+        drawAtletasTable(doc, atletasOrdenados, HEADER_H + 30);
+      }
 
-      // Rodapé
+      // Rodapés com numeração
       const range = doc.bufferedPageRange();
       for (let i = range.start; i < range.start + range.count; i++) {
         doc.switchToPage(i);
@@ -232,8 +250,10 @@ export function registerPdfExecutivoRoutes(app: any) {
       await new Promise<void>((resolve) => doc.on("end", resolve));
 
       const pdfBuffer = Buffer.concat(chunks);
-      const posSlug = (posicaoNome || "Radar").replace(/\s+/g, "_");
-      const filename = `Radar_${posSlug}_${temporada || "2025"}.pdf`;
+      const posSlug = posicoes.length === 1
+        ? posicoes[0].nome.replace(/\s+/g, "_")
+        : "Radar_Multi";
+      const filename = `Radar_${posSlug}_${temporadaAlvo}.pdf`;
 
       res.setHeader("Content-Type", "application/pdf");
       res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
