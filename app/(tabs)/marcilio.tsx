@@ -994,8 +994,8 @@ const styles = StyleSheet.create({
     marginTop: 16, marginBottom: 8,
   },
   gridCampos: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  campoPar: { minWidth: "30%", flex: 1 },
-  labelCampo: { fontSize: 11, color: CORES.cinzaTexto, marginBottom: 3 },
+  campoPar: { minWidth: 100, flex: 1 },
+  labelCampo: { fontSize: 11, color: CORES.cinzaTexto, marginBottom: 3, flexWrap: "wrap" },
   inputCampo: {
     borderWidth: 1, borderColor: CORES.cinzaMedio, borderRadius: 8,
     padding: 8, fontSize: 14, color: CORES.preto, backgroundColor: CORES.cinzaClaro,
