@@ -397,7 +397,9 @@ async function startServer() {
       const existing = await dbConn.select().from(estatisticasTemporada)
         .where(and(eq(estatisticasTemporada.atletaId, atletaId), eq(estatisticasTemporada.userId, userId), eq(estatisticasTemporada.temporada, temporada)))
         .limit(1);
-      const payload = { atletaId, userId, temporada, ...dados };
+      // Remover campos internos que não devem ser enviados ao banco
+      const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, atletaId: _aId, userId: _uId, ...dadosLimpos } = dados;
+      const payload = { atletaId, userId, temporada, ...dadosLimpos };
       if (existing[0]) {
         await dbConn.update(estatisticasTemporada).set(payload)
           .where(and(eq(estatisticasTemporada.atletaId, atletaId), eq(estatisticasTemporada.userId, userId), eq(estatisticasTemporada.temporada, temporada)));

@@ -310,3 +310,7 @@
 ## Bug: Goleiros sumiram do Radar
 - [x] Investigar por que os atletas da posição Goleiro desapareceram da lista do Radar
 - [x] Corrigir e restaurar os goleiros (migrado grupo duplicado id=2 → id=60001; adicionada verificação anti-duplicata na criação de grupos)
+
+## Bug Crítico: Estatísticas não salvam no Elenco
+- [x] Investigar por que as alterações nos números dos atletas (estatísticas) não persistem
+- [x] Corrigir: campos internos (id, createdAt, updatedAt) eram enviados no payload causando erro no Drizzle ORM ao fazer UPDATE. Servidor agora remove esses campos antes de salvar.
