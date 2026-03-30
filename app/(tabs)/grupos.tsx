@@ -397,7 +397,7 @@ export default function GruposScreen() {
             borderTopRightRadius: 20,
             padding: 20,
             paddingBottom: 40,
-            maxHeight: "80%",
+            height: 520,
           }}>
             <Text style={{ fontSize: 17, fontWeight: "bold", color: colors.foreground, marginBottom: 12 }}>
               Adicionar atleta a "{selectedGrupo?.nome}"
@@ -432,7 +432,7 @@ export default function GruposScreen() {
               <FlatList
                 data={buscaAtletasQuery.data as any[]}
                 keyExtractor={(item) => item.id.toString()}
-                style={{ maxHeight: 320 }}
+                style={{ flex: 1 }}
                 renderItem={({ item }) => {
                   const jaEsta = idsNoGrupo.has(item.id);
                   return (
