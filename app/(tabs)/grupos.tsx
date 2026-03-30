@@ -59,7 +59,7 @@ export default function RadarScreen() {
   );
 
   const buscaAtletasQuery = trpc.atletas.search.useQuery(
-    { nome: buscaNome, limit: 50 },
+    { nome: buscaNome },
     { enabled: modalBuscaVisible && buscaNome.length >= 2 }
   );
 
@@ -452,6 +452,11 @@ export default function RadarScreen() {
                 data={buscaAtletasQuery.data as any[]}
                 keyExtractor={(item) => item.id.toString()}
                 style={{ flex: 1 }}
+                getItemLayout={(_, index) => ({ length: 57, offset: 57 * index, index })}
+                windowSize={10}
+                maxToRenderPerBatch={30}
+                initialNumToRender={20}
+                removeClippedSubviews
                 renderItem={({ item }) => {
                   const jaEsta = idsNoGrupo.has(item.id);
                   return (
