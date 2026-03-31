@@ -321,3 +321,7 @@
 ## Bug Crítico: Estatísticas do Elenco ainda não persistem
 - [x] Diagnosticar por que os dados preenchidos (ex: Davi Torres, Matheus Roldan) somem após salvar
 - [x] Corrigido: payload agora remove campos internos (id, createdAt, updatedAt) antes de enviar; após salvar, busca os dados confirmados do servidor para atualizar o estado local
+
+## Bug: Relatório individual do atleta não funciona no Expo Go
+- [x] Diagnosticar por que o relatório individual do atleta falha no Expo Go (getApiBaseUrl() retornava string vazia no nativo)
+- [x] Corrigido: app.config.ts agora injeta apiBaseUrl via extra; getApiBaseUrl() usa Constants.expoConfig.extra.apiBaseUrl no nativo

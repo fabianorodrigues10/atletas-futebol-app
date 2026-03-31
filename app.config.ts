@@ -35,6 +35,8 @@ const env = {
   scheme: schemeFromBundleId,
   iosBundleId: bundleId,
   androidPackage: bundleId,
+  // URL pública do servidor API - injetada via extra para funcionar no Expo Go (nativo)
+  apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL ?? "",
 };
 
 const config: ExpoConfig = {
@@ -120,6 +122,9 @@ const config: ExpoConfig = {
       },
     ],
   ],
+  extra: {
+    apiBaseUrl: env.apiBaseUrl,
+  },
   experiments: {
     typedRoutes: true,
     reactCompiler: true,
