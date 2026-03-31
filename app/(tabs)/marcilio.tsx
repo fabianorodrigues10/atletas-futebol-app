@@ -264,7 +264,9 @@ function ModalEstatisticas({
     try {
       const base = getApiBaseUrl();
       const atletaId = atleta.id;
-      const payload = { ...stats, temporada: "2025" };
+      // Extrair apenas os campos de estatísticas, sem campos internos do banco
+      const { id: _id, atletaId: _aId, userId: _uId, createdAt: _c, updatedAt: _u, temporada: _t, ...statsLimpos } = stats as any;
+      const payload = { ...statsLimpos, temporada: "2025" };
       const resp = await fetch(`${base}/api/atletas/${atletaId}/estatisticas`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -274,8 +276,11 @@ function ModalEstatisticas({
         const errText = await resp.text();
         throw new Error(`Falha ao salvar: ${errText}`);
       }
-      // Notifica o pai com o atletaId e os stats salvos
-      onSalvar(atletaId, payload);
+      // Buscar os dados atualizados do servidor para garantir consistência
+      const respStats = await fetch(`${base}/api/atletas/${atletaId}/estatisticas?temporada=2025`);
+      const statsAtualizados = respStats.ok ? await respStats.json() : payload;
+      // Notifica o pai com os dados confirmados pelo servidor
+      onSalvar(atletaId, statsAtualizados);
       // Fecha o modal
       onFechar();
     } catch (e: any) {

@@ -317,3 +317,7 @@
 
 ## Feature: Escudo do Marcílio Dias no Elenco
 - [x] Substituir a bolinha placeholder pelo escudo oficial do Marcílio Dias na página do Elenco
+
+## Bug Crítico: Estatísticas do Elenco ainda não persistem
+- [x] Diagnosticar por que os dados preenchidos (ex: Davi Torres, Matheus Roldan) somem após salvar
+- [x] Corrigido: payload agora remove campos internos (id, createdAt, updatedAt) antes de enviar; após salvar, busca os dados confirmados do servidor para atualizar o estado local
