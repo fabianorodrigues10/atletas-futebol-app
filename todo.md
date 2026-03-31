@@ -314,3 +314,6 @@
 ## Bug Crítico: Estatísticas não salvam no Elenco
 - [x] Investigar por que as alterações nos números dos atletas (estatísticas) não persistem
 - [x] Corrigir: campos internos (id, createdAt, updatedAt) eram enviados no payload causando erro no Drizzle ORM ao fazer UPDATE. Servidor agora remove esses campos antes de salvar.
+
+## Feature: Escudo do Marcílio Dias no Elenco
+- [x] Substituir a bolinha placeholder pelo escudo oficial do Marcílio Dias na página do Elenco

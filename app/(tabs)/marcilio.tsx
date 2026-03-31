@@ -12,6 +12,7 @@ import {
   StyleSheet,
   Dimensions,
   Platform,
+  Image,
 } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
 import { useRouter } from "expo-router";
@@ -796,9 +797,11 @@ export default function MarcilioScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerEsquerda}>
-          <View style={styles.escudoContainer}>
-            <Text style={styles.escudoTexto}>⚽</Text>
-          </View>
+          <Image
+            source={require("@/assets/images/marcilio-dias-shield.png")}
+            style={styles.escudoImg}
+            resizeMode="contain"
+          />
           <View>
             <Text style={styles.headerTitulo}>Análise de Elenco</Text>
             <Text style={styles.headerSubtitulo}>Marcílio Dias</Text>
@@ -865,12 +868,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   headerEsquerda: { flexDirection: "row", alignItems: "center", gap: 10 },
-  escudoContainer: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: CORES.vermelho,
-    alignItems: "center", justifyContent: "center",
+  escudoImg: {
+    width: 40,
+    height: 40,
   },
-  escudoTexto: { fontSize: 20 },
   headerTitulo: { color: CORES.branco, fontSize: 16, fontWeight: "800" },
   headerSubtitulo: { color: `${CORES.branco}99`, fontSize: 12 },
   btnAtualizar: { padding: 8, backgroundColor: `${CORES.branco}20`, borderRadius: 8 },
