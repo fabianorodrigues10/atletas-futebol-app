@@ -69,35 +69,6 @@ export function registerPdfJogoRoutes(app: Express) {
 
       let y = 130;
 
-      // ===== INFORMAÇÕES DO JOGO =====
-      const infoItems: [string, string][] = [];
-      if (jogo.arbitro) infoItems.push(["Árbitro", jogo.arbitro]);
-      if (jogo.assistente1) infoItems.push(["Assistente 1", jogo.assistente1]);
-      if (jogo.assistente2) infoItems.push(["Assistente 2", jogo.assistente2]);
-      if (jogo.gols) infoItems.push(["Gols", jogo.gols]);
-
-      if (infoItems.length > 0) {
-        doc.fontSize(12).fillColor(AZUL).font("Helvetica-Bold").text("Informações da Partida", 40, y);
-        y += 18;
-        doc.moveTo(40, y).lineTo(doc.page.width - 40, y).strokeColor(AZUL).lineWidth(1).stroke();
-        y += 8;
-
-        const colW = (doc.page.width - 80) / 2;
-        infoItems.forEach(([label, valor], i) => {
-          const x = i % 2 === 0 ? 40 : 40 + colW;
-          if (i % 2 === 0 && i > 0) y += 18;
-          doc.fontSize(9).fillColor(CINZA).font("Helvetica").text(label + ":", x, y, { width: colW * 0.35 });
-          doc.fontSize(9).fillColor("#333333").font("Helvetica-Bold").text(valor, x + colW * 0.36, y, { width: colW * 0.6 });
-        });
-        y += 22;
-      }
-
-      if (jogo.observacoes) {
-        doc.fontSize(9).fillColor(CINZA).font("Helvetica-Oblique")
-          .text(`Observações: ${jogo.observacoes}`, 40, y, { width: doc.page.width - 80 });
-        y += doc.heightOfString(jogo.observacoes, { width: doc.page.width - 80 }) + 10;
-      }
-
       y += 6;
 
       // ===== TABELA DE SCOUTS =====

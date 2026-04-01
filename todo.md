@@ -380,3 +380,6 @@
 ## Feature: Ajustes no relatório PDF do jogo
 - [x] Remover público e renda das informações da partida no PDF
 - [x] Corrigir emojis corrompidos (📍 → "Local:", 🟨🟥 → "CA"/"CV")
+
+## Feature: Simplificar relatório PDF do jogo
+- [x] Remover seção "Informações da Partida" (árbitro, assistentes, gols) do PDF, manter apenas o cabeçalho
