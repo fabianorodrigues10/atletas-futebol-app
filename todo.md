@@ -402,3 +402,7 @@
 ## Bug: Minutagem dos atletas no scout sempre aparece como 90
 - [x] Corrigir placeholder do campo minutosJogados de "90" para "-" (o placeholder era confundido com valor real)
 - [x] Melhorar lógica de edição dos campos numéricos para permitir apagar e redigitar sem travar
+
+## Bug: Atletas removidos da relação voltam a aparecer após salvar o scout
+- [x] Corrigir servidor para deletar scouts de atletas removidos da relação ao salvar
+- [x] Recalcular estatísticas dos atletas removidos após a deletão

@@ -616,6 +616,19 @@ async function startServer() {
       const dbConn = await getDb();
       if (!dbConn) return res.status(500).json({ error: "DB unavailable" });
 
+      // Deletar scouts de atletas que foram removidos da relação
+      const atletaIdsEnviados = scouts.map((s: any) => s.atletaId);
+      const scoutsExistentes = await dbConn.select({ atletaId: scoutJogo.atletaId })
+        .from(scoutJogo)
+        .where(eq(scoutJogo.jogoId, jogoId));
+      const atletasParaDeletar = scoutsExistentes
+        .map((s: any) => s.atletaId)
+        .filter((id: number) => !atletaIdsEnviados.includes(id));
+      if (atletasParaDeletar.length > 0) {
+        await dbConn.delete(scoutJogo)
+          .where(and(eq(scoutJogo.jogoId, jogoId), inArray(scoutJogo.atletaId, atletasParaDeletar)));
+      }
+
       // Upsert scouts
       for (const scout of scouts) {
         const { id: _id, createdAt: _c, updatedAt: _u, ...dadosLimpos } = scout;
@@ -637,8 +650,8 @@ async function startServer() {
         }
       }
 
-      // Recalcular estatísticas da temporada para cada atleta afetado
-      const atletaIds = [...new Set(scouts.map((s: any) => s.atletaId))];
+      // Recalcular estatísticas da temporada para cada atleta afetado (incluindo os removidos)
+      const atletaIds = [...new Set([...scouts.map((s: any) => s.atletaId), ...atletasParaDeletar])];
       const temporada = "2025";
       for (const atletaId of atletaIds) {
         // Buscar todos os scouts do atleta em todos os jogos
