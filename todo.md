@@ -366,3 +366,7 @@
 ## Bug: Botão Salvar do modal de jogo não funciona na web
 - [x] Diagnosticar por que clicar em Salvar no modal de jogo não faz nada na web (servidor falhava silenciosamente: campo dataExibicao não existe na tabela + publico como string vazia causava erro no banco)
 - [x] Corrigido: servidor agora remove dataExibicao e converte strings vazias para null antes de salvar
+
+## Feature: Ficha compacta de scout por atleta no modal de jogos
+- [x] Redesenhar o modal de scout para versão compacta: uma linha por atleta com campos essenciais em grade pequena
+- [x] Manter todos os campos disponíveis mas de forma condensada

@@ -1383,67 +1383,86 @@ export default function MarcilioScreen() {
                     />
                   </View>
                 );
+                // Campo numérico compacto
+                const campoCompacto = (label: string, campo: string) => (
+                  <View key={campo} style={{ alignItems: "center", minWidth: 52, flex: 1 }}>
+                    <Text style={{ fontSize: 9, color: CORES.cinzaTexto, marginBottom: 2, textAlign: "center" }}>{label}</Text>
+                    <TextInput
+                      style={{ borderWidth: 1, borderColor: CORES.cinzaMedio, borderRadius: 6, paddingHorizontal: 4, paddingVertical: 3, fontSize: 13, fontWeight: "700", textAlign: "center", width: "100%", backgroundColor: CORES.cinzaClaro, color: CORES.preto }}
+                      value={(scout as any)[campo] === 0 || (scout as any)[campo] === "" ? "" : String((scout as any)[campo] || "")}
+                      onChangeText={v => setScout(campo, v === "" ? 0 : (campo.startsWith("nota") ? v : parseInt(v) || 0))}
+                      keyboardType="numeric" placeholder="-"
+                    />
+                  </View>
+                );
                 return (
-                  <View key={atletaId} style={[styles.secaoCard, { marginBottom: 16 }]}>
+                  <View key={atletaId} style={{ backgroundColor: CORES.branco, borderRadius: 10, borderWidth: 1, borderColor: CORES.cinzaMedio, marginBottom: 10, padding: 10 }}>
+                    {/* Cabeçalho do atleta */}
                     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                      <Text style={styles.secaoTituloCard}>{atleta.nome}</Text>
-                      <Text style={{ fontSize: 11, color: CORES.azulClaro }}>{atleta.posicao}</Text>
-                    </View>
-                    {/* Titular e Minutos */}
-                    <View style={{ flexDirection: "row", gap: 10, marginBottom: 8, alignItems: "center" }}>
-                      <TouchableOpacity
-                        style={[styles.chipPosicao, (scout as any).titular && styles.chipPosicaoAtivo]}
-                        onPress={() => setScout("titular", !(scout as any).titular)}
-                      >
-                        <Text style={[styles.chipPosicaoTexto, (scout as any).titular && styles.chipPosicaoTextoAtivo]}>Titular</Text>
-                      </TouchableOpacity>
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.labelCampo}>Minutos Jogados</Text>
-                        <TextInput style={styles.inputCampo} value={(scout as any).minutosJogados === 0 ? "" : String((scout as any).minutosJogados || "")} onChangeText={v => setScout("minutosJogados", parseInt(v) || 0)} keyboardType="numeric" placeholder="90" />
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flex: 1 }}>
+                        <TouchableOpacity
+                          style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: (scout as any).titular ? CORES.azulEscuro : CORES.cinzaMedio, backgroundColor: (scout as any).titular ? CORES.azulEscuro : "transparent" }}
+                          onPress={() => setScout("titular", !(scout as any).titular)}
+                        >
+                          <Text style={{ fontSize: 10, fontWeight: "700", color: (scout as any).titular ? CORES.branco : CORES.cinzaTexto }}>TIT</Text>
+                        </TouchableOpacity>
+                        <Text style={{ fontSize: 13, fontWeight: "700", color: CORES.preto, flex: 1 }}>{atleta.nome}</Text>
+                      </View>
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                        <Text style={{ fontSize: 10, color: CORES.azulClaro, fontWeight: "600" }}>{atleta.posicao}</Text>
+                        <View style={{ width: 52 }}>
+                          <Text style={{ fontSize: 9, color: CORES.cinzaTexto, textAlign: "center" }}>Min</Text>
+                          <TextInput
+                            style={{ borderWidth: 1, borderColor: CORES.cinzaMedio, borderRadius: 6, paddingHorizontal: 4, paddingVertical: 3, fontSize: 12, fontWeight: "700", textAlign: "center", backgroundColor: CORES.cinzaClaro, color: CORES.preto }}
+                            value={(scout as any).minutosJogados === 0 ? "" : String((scout as any).minutosJogados || "")}
+                            onChangeText={v => setScout("minutosJogados", parseInt(v) || 0)}
+                            keyboardType="numeric" placeholder="90"
+                          />
+                        </View>
                       </View>
                     </View>
-                    {/* Ofensivo */}
-                    <Text style={[styles.secaoTitulo, { marginTop: 4 }]}>Ofensivo</Text>
-                    <View style={styles.gridCampos}>
-                      {campoNum("Gols", "gols")}
-                      {campoNum("Assist.", "assistencias")}
-                      {campoNum("Finaliz.", "finalizacoes")}
-                      {campoNum("Passes", "passes")}
-                      {campoNum("Passes Certos", "passesCompletos")}
+
+                    {/* Linha 1: Ofensivo */}
+                    <Text style={{ fontSize: 9, color: CORES.azulClaro, fontWeight: "700", textTransform: "uppercase", marginBottom: 4 }}>Ofensivo</Text>
+                    <View style={{ flexDirection: "row", gap: 4, marginBottom: 8 }}>
+                      {campoCompacto("Gols", "gols")}
+                      {campoCompacto("Assist.", "assistencias")}
+                      {campoCompacto("Finaliz.", "finalizacoes")}
+                      {campoCompacto("Passes", "passes")}
+                      {campoCompacto("P.Certos", "passesCompletos")}
                     </View>
-                    {/* Defensivo */}
-                    <Text style={[styles.secaoTitulo, { marginTop: 4 }]}>Defensivo</Text>
-                    <View style={styles.gridCampos}>
-                      {campoNum("Desarmes", "desarmes")}
-                      {campoNum("Intercept.", "interceptacoes")}
-                      {campoNum("Duelos", "duelos")}
-                      {campoNum("Duelos Ganhos", "duelosGanhos")}
-                      {campoNum("Jogo Aéreo", "jogosAereos")}
-                      {campoNum("Duelo Aéreo Perd.", "duelosAereosPerdidos")}
+
+                    {/* Linha 2: Defensivo */}
+                    <Text style={{ fontSize: 9, color: CORES.verde, fontWeight: "700", textTransform: "uppercase", marginBottom: 4 }}>Defensivo</Text>
+                    <View style={{ flexDirection: "row", gap: 4, marginBottom: 8 }}>
+                      {campoCompacto("Desarmes", "desarmes")}
+                      {campoCompacto("Intercept.", "interceptacoes")}
+                      {campoCompacto("Duelos", "duelos")}
+                      {campoCompacto("D.Ganhos", "duelosGanhos")}
+                      {campoCompacto("J.Aéreo", "jogosAereos")}
+                      {campoCompacto("D.Aér.Perd", "duelosAereosPerdidos")}
                     </View>
-                    {/* Disciplina */}
-                    <Text style={[styles.secaoTitulo, { marginTop: 4 }]}>Disciplina</Text>
-                    <View style={styles.gridCampos}>
-                      {campoNum("🟨 Amarelos", "cartoesAmarelos")}
-                      {campoNum("🟥 Vermelhos", "cartoesVermelhos")}
+
+                    {/* Linha 3: Disciplina + Notas */}
+                    <View style={{ flexDirection: "row", gap: 8 }}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 9, color: "#b45309", fontWeight: "700", textTransform: "uppercase", marginBottom: 4 }}>Disciplina</Text>
+                        <View style={{ flexDirection: "row", gap: 4 }}>
+                          {campoCompacto("🟨 Amar.", "cartoesAmarelos")}
+                          {campoCompacto("🟥 Verm.", "cartoesVermelhos")}
+                        </View>
+                      </View>
+                      <View style={{ flex: 3 }}>
+                        <Text style={{ fontSize: 9, color: "#7c3aed", fontWeight: "700", textTransform: "uppercase", marginBottom: 4 }}>Notas (0-10)</Text>
+                        <View style={{ flexDirection: "row", gap: 4 }}>
+                          {campoCompacto("Téc.", "notaTecnica")}
+                          {campoCompacto("Fís.", "notaFisica")}
+                          {campoCompacto("Tát.", "notaTatica")}
+                          {campoCompacto("Atit.", "notaAtitudinal")}
+                          {campoCompacto("Pot.", "notaPotencial")}
+                        </View>
+                      </View>
                     </View>
-                    {/* Notas */}
-                    <Text style={[styles.secaoTitulo, { marginTop: 4 }]}>Notas (0-10)</Text>
-                    <View style={styles.gridCampos}>
-                      {campoNum("Técnica", "notaTecnica")}
-                      {campoNum("Física", "notaFisica")}
-                      {campoNum("Tática", "notaTatica")}
-                      {campoNum("Atitudinal", "notaAtitudinal")}
-                      {campoNum("Potencial", "notaPotencial")}
-                    </View>
-                    {/* Observações */}
-                    <Text style={[styles.labelCampo, { marginTop: 8 }]}>Observações</Text>
-                    <TextInput
-                      style={[styles.inputCampo, { minHeight: 60 }]}
-                      value={(scout as any).observacoes || ""}
-                      onChangeText={v => setScout("observacoes", v)}
-                      multiline placeholder="Observações sobre o atleta neste jogo..."
-                    />
                   </View>
                 );
               })
