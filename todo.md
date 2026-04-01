@@ -383,3 +383,6 @@
 
 ## Feature: Simplificar relatório PDF do jogo
 - [x] Remover seção "Informações da Partida" (árbitro, assistentes, gols) do PDF, manter apenas o cabeçalho
+
+## Bug: Data do jogo no formato errado
+- [x] Corrigir data no cabeçalho da página de jogos de MM/DD/AAAA para DD/MM/AAAA

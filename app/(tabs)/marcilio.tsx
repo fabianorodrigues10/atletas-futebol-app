@@ -1068,7 +1068,7 @@ export default function MarcilioScreen() {
           <View key={jogo.id} style={styles.cardAtleta}>
             {/* Placar */}
             <View style={{ backgroundColor: CORES.azulEscuro, borderRadius: 10, padding: 12, margin: 10, alignItems: "center" }}>
-              <Text style={{ color: `${CORES.branco}80`, fontSize: 11, marginBottom: 4 }}>{jogo.competicao || ""} {jogo.data ? `• ${new Date(jogo.data).toLocaleDateString("pt-BR", { timeZone: "UTC" })}` : ""}</Text>
+              <Text style={{ color: `${CORES.branco}80`, fontSize: 11, marginBottom: 4 }}>{jogo.competicao || ""} {jogo.data ? `• ${new Date(jogo.data).toLocaleDateString("pt-BR", { timeZone: "UTC", day: "2-digit", month: "2-digit", year: "numeric" })}` : ""}</Text>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
                 <Text style={{ color: CORES.branco, fontSize: 13, fontWeight: "700", flex: 1, textAlign: "right" }}>{jogo.mandante}</Text>
                 <View style={{ backgroundColor: CORES.vermelho, borderRadius: 8, paddingHorizontal: 14, paddingVertical: 6 }}>
