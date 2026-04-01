@@ -406,3 +406,14 @@
 ## Bug: Atletas removidos da relação voltam a aparecer após salvar o scout
 - [x] Corrigir servidor para deletar scouts de atletas removidos da relação ao salvar
 - [x] Recalcular estatísticas dos atletas removidos após a deletão
+
+## Feature: Seleção manual de atletas e relatório comparativo nos filtros avançados
+- [x] Lista simplificada de atletas (chips com nomes) após aplicar filtros
+- [x] Seleção/deseleção individual de atletas clicando nos chips
+- [x] Botão "Todos" e "Limpar" para seleção rápida
+- [x] Contador de atletas selecionados no rodapé da seção
+- [x] Botão "Relatório" ativo para todos ou apenas selecionados
+- [x] Campo de busca por nome dentro da lista de chips
+- [x] Tags de filtros ativos com botão de remoção individual
+- [x] Filtros avançados redesenhados com chips e contadores de seleção por aba
+- [x] Relatório PDF comparativo com os atletas selecionados (rota existente reutilizada)

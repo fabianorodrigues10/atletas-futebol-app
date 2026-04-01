@@ -1,42 +1,11 @@
-"use client";
 
-import { View, Text, ScrollView, Dimensions, TouchableOpacity, Modal, FlatList } from "react-native";
+import { View, Text, ScrollView, Dimensions, TouchableOpacity, Modal, TextInput, Platform } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
 import { BarChart, PieChart } from "react-native-chart-kit";
 import { useMemo, useState } from "react";
-import { FilterDropdown } from "@/components/filter-dropdown";
-
-interface Atleta {
-  id: number;
-  nome: string;
-  posicao?: string;
-  segundaPosicao?: string;
-  idade?: number;
-  altura?: string;
-  escala?: string;
-  clube?: string;
-  link?: string;
-  valencia?: string;
-}
-
-interface Stats {
-  totalAtletas: number;
-  posicoes: Record<string, number>;
-  idades: Record<string, number>;
-  escalas: Record<string, number>;
-  clubes: Record<string, number>;
-  idadeMedia: number;
-  idadeMediana: number;
-  alturaMedia: number;
-  alturaMediana: number;
-  idadeMin: number;
-  idadeMax: number;
-  alturaMin: number;
-  alturaMax: number;
-}
 
 interface Filtros {
   posicoes: string[];
@@ -59,56 +28,48 @@ export default function StatsScreen() {
   });
   const [atletasSelecionados, setAtletasSelecionados] = useState<number[]>([]);
   const [showFiltros, setShowFiltros] = useState(false);
-  const [showSelecao, setShowSelecao] = useState(false);
   const [showTabela, setShowTabela] = useState(false);
   const [abaFiltros, setAbaFiltros] = useState<"posicao" | "idade" | "clube" | "escala" | "naturalidade">("posicao");
+  const [buscaAtleta, setBuscaAtleta] = useState("");
+  const [gerandoRelatorio, setGerandoRelatorio] = useState(false);
 
   const { data: atletas = [] } = trpc.atletas.list.useQuery();
 
   const atletasFiltrados = useMemo(() => {
     return atletas.filter((atleta: any) => {
-      if (filtros.posicoes.length > 0 && !filtros.posicoes.includes(atleta.posicao)) {
-        return false;
-      }
-      if (filtros.escalas.length > 0 && !filtros.escalas.includes(atleta.escala)) {
-        return false;
-      }
-      if (filtros.clubes.length > 0 && !filtros.clubes.includes(atleta.clube)) {
-        return false;
-      }
-      if (filtros.naturalidades.length > 0 && !filtros.naturalidades.includes(atleta.naturalidade)) {
-        return false;
-      }
+      if (filtros.posicoes.length > 0 && !filtros.posicoes.includes(atleta.posicao)) return false;
+      if (filtros.escalas.length > 0 && !filtros.escalas.includes(atleta.escala)) return false;
+      if (filtros.clubes.length > 0 && !filtros.clubes.includes(atleta.clube)) return false;
+      if (filtros.naturalidades.length > 0 && !filtros.naturalidades.includes(atleta.naturalidade)) return false;
       if (filtros.idades.length > 0 && atleta.idade) {
         const faixa = Math.floor(atleta.idade / 5) * 5;
-        if (!filtros.idades.includes(faixa)) {
-          return false;
-        }
+        if (!filtros.idades.includes(faixa)) return false;
       }
       return true;
     });
   }, [atletas, filtros]);
 
-  const stats = useMemo(() => {
-    const atletasParaAnalise = atletasSelecionados.length > 0
-      ? atletasFiltrados.filter((a: any) => atletasSelecionados.includes(a.id))
-      : atletasFiltrados;
+  // Atletas filtrados e com busca por nome aplicada
+  const atletasVisiveis = useMemo(() => {
+    if (!buscaAtleta.trim()) return atletasFiltrados;
+    const termo = buscaAtleta.toLowerCase().trim();
+    return atletasFiltrados.filter((a: any) => a.nome?.toLowerCase().includes(termo));
+  }, [atletasFiltrados, buscaAtleta]);
 
+  // Atletas efetivamente usados para estatísticas e relatório
+  const atletasParaAnalise = useMemo(() => {
+    if (atletasSelecionados.length > 0) {
+      return atletasFiltrados.filter((a: any) => atletasSelecionados.includes(a.id));
+    }
+    return atletasFiltrados;
+  }, [atletasFiltrados, atletasSelecionados]);
+
+  const stats = useMemo(() => {
     if (atletasParaAnalise.length === 0) {
       return {
-        totalAtletas: 0,
-        posicoes: {},
-        idades: {},
-        escalas: {},
-        clubes: {},
-        idadeMedia: 0,
-        idadeMediana: 0,
-        alturaMedia: 0,
-        alturaMediana: 0,
-        idadeMin: 0,
-        idadeMax: 0,
-        alturaMin: 0,
-        alturaMax: 0,
+        totalAtletas: 0, posicoes: {}, idades: {}, escalas: {}, clubes: {},
+        idadeMedia: 0, idadeMediana: 0, alturaMedia: 0, alturaMediana: 0,
+        idadeMin: 0, idadeMax: 0, alturaMin: 0, alturaMax: 0,
       };
     }
 
@@ -126,59 +87,48 @@ export default function StatsScreen() {
       if (atleta.idade) {
         idadesArray.push(atleta.idade);
         const faixa = Math.floor(atleta.idade / 5) * 5;
-        const label = `${faixa}-${faixa + 4}`;
-        idades[label] = (idades[label] || 0) + 1;
+        idades[`${faixa}-${faixa + 4}`] = (idades[`${faixa}-${faixa + 4}`] || 0) + 1;
       }
       if (atleta.altura) {
-        const altura = parseFloat(atleta.altura);
-        if (!isNaN(altura)) alturasArray.push(altura);
+        const h = parseFloat(atleta.altura);
+        if (!isNaN(h)) alturasArray.push(h);
       }
     });
 
-    const calcularMediana = (arr: number[]) => {
-      if (arr.length === 0) return 0;
-      const sorted = [...arr].sort((a, b) => a - b);
-      const mid = Math.floor(sorted.length / 2);
-      return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    const mediana = (arr: number[]) => {
+      if (!arr.length) return 0;
+      const s = [...arr].sort((a, b) => a - b);
+      const m = Math.floor(s.length / 2);
+      return s.length % 2 !== 0 ? s[m] : (s[m - 1] + s[m]) / 2;
     };
 
     return {
       totalAtletas: atletasParaAnalise.length,
-      posicoes,
-      idades,
-      escalas,
-      clubes,
-      idadeMedia: idadesArray.length > 0 ? Math.round(idadesArray.reduce((a, b) => a + b, 0) / idadesArray.length * 10) / 10 : 0,
-      idadeMediana: calcularMediana(idadesArray),
-      alturaMedia: alturasArray.length > 0 ? (alturasArray.reduce((a, b) => a + b, 0) / alturasArray.length).toFixed(2) : "0",
-      alturaMediana: calcularMediana(alturasArray).toFixed(2),
-      idadeMin: idadesArray.length > 0 ? Math.min(...idadesArray) : 0,
-      idadeMax: idadesArray.length > 0 ? Math.max(...idadesArray) : 0,
-      alturaMin: alturasArray.length > 0 ? Math.min(...alturasArray).toFixed(2) : "0",
-      alturaMax: alturasArray.length > 0 ? Math.max(...alturasArray).toFixed(2) : "0",
+      posicoes, idades, escalas, clubes,
+      idadeMedia: idadesArray.length ? Math.round(idadesArray.reduce((a, b) => a + b, 0) / idadesArray.length * 10) / 10 : 0,
+      idadeMediana: mediana(idadesArray),
+      alturaMedia: alturasArray.length ? (alturasArray.reduce((a, b) => a + b, 0) / alturasArray.length).toFixed(2) : "0",
+      alturaMediana: mediana(alturasArray).toFixed(2),
+      idadeMin: idadesArray.length ? Math.min(...idadesArray) : 0,
+      idadeMax: idadesArray.length ? Math.max(...idadesArray) : 0,
+      alturaMin: alturasArray.length ? Math.min(...alturasArray).toFixed(2) : "0",
+      alturaMax: alturasArray.length ? Math.max(...alturasArray).toFixed(2) : "0",
     };
-  }, [atletasFiltrados, atletasSelecionados]);
+  }, [atletasParaAnalise]);
 
-  const posicoes = useMemo(() => [...new Set(atletas.map((a: any) => a.posicao).filter(Boolean))], [atletas]);
-  const clubes = useMemo(() => [...new Set(atletas.map((a: any) => a.clube).filter(Boolean))], [atletas]);
-  const escalas = useMemo(() => [...new Set(atletas.map((a: any) => a.escala).filter(Boolean))], [atletas]);
-  const naturalidades = useMemo(() => [...new Set(atletas.map((a: any) => a.naturalidade).filter(Boolean))], [atletas]);
+  const posicoes = useMemo(() => [...new Set(atletas.map((a: any) => a.posicao).filter(Boolean))].sort() as string[], [atletas]);
+  const clubesList = useMemo(() => [...new Set(atletas.map((a: any) => a.clube).filter(Boolean))].sort() as string[], [atletas]);
+  const escalas = useMemo(() => [...new Set(atletas.map((a: any) => a.escala).filter(Boolean))].sort() as string[], [atletas]);
+  const naturalidades = useMemo(() => [...new Set(atletas.map((a: any) => a.naturalidade).filter(Boolean))].sort() as string[], [atletas]);
 
-  const posicoesPorcentagem = useMemo(() => {
-    return Object.entries(stats.posicoes).map(([name, value]) => ({
-      name,
-      population: value,
-      color: colors.primary,
-      legendFontColor: colors.foreground,
-    }));
-  }, [stats.posicoes, colors]);
+  const posicoesPorcentagem = useMemo(() =>
+    Object.entries(stats.posicoes).map(([name, value]) => ({
+      name, population: value, color: colors.primary, legendFontColor: colors.foreground,
+    })), [stats.posicoes, colors]);
 
-  const idadesPorcentagem = useMemo(() => {
-    return Object.entries(stats.idades).map(([name, value]) => ({
-      name,
-      population: value,
-    }));
-  }, [stats.idades]);
+  const idadesPorcentagem = useMemo(() =>
+    Object.entries(stats.idades).map(([name, value]) => ({ name, population: value })),
+    [stats.idades]);
 
   const chartConfig = {
     backgroundGradientFrom: colors.background,
@@ -193,182 +143,276 @@ export default function StatsScreen() {
   const gerarPDFMutation = trpc.relatorios.gerarPDF.useMutation();
 
   const handleGerarRelatorio = async () => {
+    if (atletasParaAnalise.length === 0) return;
+    setGerandoRelatorio(true);
     try {
-      const atletasParaRelatorio = atletasSelecionados.length > 0
-        ? atletasFiltrados.filter((a: any) => atletasSelecionados.includes(a.id))
-        : atletasFiltrados;
-
       const resultado = await gerarPDFMutation.mutateAsync({
-        titulo: `Relatório de Atletas - ${new Date().toLocaleDateString("pt-BR")}`,
+        titulo: `Relatório Comparativo — ${new Date().toLocaleDateString("pt-BR")}`,
         posicoes: filtros.posicoes,
         idades: filtros.idades,
         clubes: filtros.clubes,
-        atletaIds: atletasParaRelatorio.map((a: any) => a.id),
+        atletaIds: atletasParaAnalise.map((a: any) => a.id),
       });
 
       if (resultado.success && resultado.pdfBase64) {
-        // Converter Base64 para Blob
         const binaryString = atob(resultado.pdfBase64);
         const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
+        for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
         const blob = new Blob([bytes], { type: "application/pdf" });
-        
-        // Criar URL do blob
         const url = URL.createObjectURL(blob);
-        
-        // Criar link de download
         const link = document.createElement("a");
         link.href = url;
-        link.download = `Relatorio_Atletas_${new Date().toISOString().split("T")[0]}.pdf`;
+        link.download = `Relatorio_Comparativo_${new Date().toISOString().split("T")[0]}.pdf`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
-        
-        alert("Relatório baixado com sucesso!");
       }
-    } catch (error) {
-      console.error("Erro ao gerar relatório:", error);
-      alert("Erro ao gerar relatório");
+    } catch (e) {
+      console.error("Erro ao gerar relatório:", e);
+    } finally {
+      setGerandoRelatorio(false);
     }
   };
 
   const handleLimparFiltros = () => {
-    setFiltros({
-      posicoes: [],
-      escalas: [],
-      clubes: [],
-      idades: [],
-      naturalidades: [],
-    });
+    setFiltros({ posicoes: [], escalas: [], clubes: [], idades: [], naturalidades: [] });
+    setAtletasSelecionados([]);
+    setBuscaAtleta("");
   };
+
+  const toggleAtleta = (id: number) => {
+    setAtletasSelecionados(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
+  const selecionarTodos = () => {
+    setAtletasSelecionados(atletasVisiveis.map((a: any) => a.id));
+  };
+
+  const limparSelecao = () => setAtletasSelecionados([]);
+
+  const temFiltroAtivo = filtros.posicoes.length > 0 || filtros.idades.length > 0 ||
+    filtros.clubes.length > 0 || filtros.escalas.length > 0 || filtros.naturalidades.length > 0;
 
   return (
     <ScreenContainer className="bg-background">
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 20 }}>
-        {/* Header com Botão de Filtro */}
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 32 }}>
+
+        {/* Header */}
         <View className="flex-row justify-between items-center px-4 py-4">
-          <Text className="text-2xl font-bold text-foreground">Estatísticas</Text>
+          <View>
+            <Text className="text-2xl font-bold text-foreground">Análise de Elenco</Text>
+            <Text className="text-xs text-muted mt-0.5">
+              {atletasSelecionados.length > 0
+                ? `${atletasSelecionados.length} selecionado(s) de ${atletasFiltrados.length}`
+                : `${atletasFiltrados.length} atleta(s) filtrado(s)`}
+            </Text>
+          </View>
           <TouchableOpacity
             onPress={() => setShowFiltros(true)}
-            className="bg-primary rounded-full p-3"
+            style={{ backgroundColor: temFiltroAtivo ? colors.primary : colors.surface, borderWidth: 1, borderColor: temFiltroAtivo ? colors.primary : colors.border, borderRadius: 20, padding: 10 }}
           >
-            <IconSymbol name="line.horizontal.3" size={24} color={colors.background} />
+            <IconSymbol name="line.horizontal.3" size={22} color={temFiltroAtivo ? colors.background : colors.foreground} />
           </TouchableOpacity>
         </View>
 
-        {/* Filtros Ativos */}
-        {(filtros.posicoes.length > 0 || filtros.idades.length > 0 || filtros.clubes.length > 0 || filtros.escalas.length > 0) && (
-          <View className="px-4 mb-4">
-            <View className="flex-row flex-wrap gap-2">
-              {filtros.posicoes.map((p) => (
-                <View key={p} className="bg-primary/20 rounded-full px-3 py-1 flex-row items-center gap-2">
-                  <Text className="text-primary text-xs font-semibold">{p}</Text>
-                  <TouchableOpacity onPress={() => setFiltros({ ...filtros, posicoes: filtros.posicoes.filter((x) => x !== p) })}>
-                    <IconSymbol name="xmark" size={12} color={colors.primary} />
-                  </TouchableOpacity>
-                </View>
+        {/* Tags de filtros ativos */}
+        {temFiltroAtivo && (
+          <View className="px-4 mb-3">
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+              {filtros.posicoes.map(p => (
+                <TouchableOpacity key={p} onPress={() => setFiltros({ ...filtros, posicoes: filtros.posicoes.filter(x => x !== p) })}
+                  style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.primary + "22", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4, gap: 4 }}>
+                  <Text style={{ color: colors.primary, fontSize: 12, fontWeight: "600" }}>{p}</Text>
+                  <Text style={{ color: colors.primary, fontSize: 10 }}>✕</Text>
+                </TouchableOpacity>
               ))}
-              {filtros.idades.map((i) => (
-                <View key={i} className="bg-primary/20 rounded-full px-3 py-1 flex-row items-center gap-2">
-                  <Text className="text-primary text-xs font-semibold">{i}-{i + 4}</Text>
-                  <TouchableOpacity onPress={() => setFiltros({ ...filtros, idades: filtros.idades.filter((x) => x !== i) })}>
-                    <IconSymbol name="xmark" size={12} color={colors.primary} />
-                  </TouchableOpacity>
-                </View>
+              {filtros.idades.map(i => (
+                <TouchableOpacity key={i} onPress={() => setFiltros({ ...filtros, idades: filtros.idades.filter(x => x !== i) })}
+                  style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.primary + "22", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4, gap: 4 }}>
+                  <Text style={{ color: colors.primary, fontSize: 12, fontWeight: "600" }}>{i}–{i + 4} anos</Text>
+                  <Text style={{ color: colors.primary, fontSize: 10 }}>✕</Text>
+                </TouchableOpacity>
               ))}
-              {filtros.clubes.map((c) => (
-                <View key={c} className="bg-primary/20 rounded-full px-3 py-1 flex-row items-center gap-2">
-                  <Text className="text-primary text-xs font-semibold">{c}</Text>
-                  <TouchableOpacity onPress={() => setFiltros({ ...filtros, clubes: filtros.clubes.filter((x) => x !== c) })}>
-                    <IconSymbol name="xmark" size={12} color={colors.primary} />
-                  </TouchableOpacity>
-                </View>
+              {filtros.clubes.map(c => (
+                <TouchableOpacity key={c} onPress={() => setFiltros({ ...filtros, clubes: filtros.clubes.filter(x => x !== c) })}
+                  style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.primary + "22", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4, gap: 4 }}>
+                  <Text style={{ color: colors.primary, fontSize: 12, fontWeight: "600" }}>{c}</Text>
+                  <Text style={{ color: colors.primary, fontSize: 10 }}>✕</Text>
+                </TouchableOpacity>
               ))}
-            </View>
+              {filtros.escalas.map(e => (
+                <TouchableOpacity key={e} onPress={() => setFiltros({ ...filtros, escalas: filtros.escalas.filter(x => x !== e) })}
+                  style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.primary + "22", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4, gap: 4 }}>
+                  <Text style={{ color: colors.primary, fontSize: 12, fontWeight: "600" }}>{e}</Text>
+                  <Text style={{ color: colors.primary, fontSize: 10 }}>✕</Text>
+                </TouchableOpacity>
+              ))}
+              {filtros.naturalidades.map(n => (
+                <TouchableOpacity key={n} onPress={() => setFiltros({ ...filtros, naturalidades: filtros.naturalidades.filter(x => x !== n) })}
+                  style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.primary + "22", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4, gap: 4 }}>
+                  <Text style={{ color: colors.primary, fontSize: 12, fontWeight: "600" }}>{n}</Text>
+                  <Text style={{ color: colors.primary, fontSize: 10 }}>✕</Text>
+                </TouchableOpacity>
+              ))}
+              <TouchableOpacity onPress={handleLimparFiltros}
+                style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.error + "22", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 }}>
+                <Text style={{ color: colors.error, fontSize: 12, fontWeight: "600" }}>Limpar tudo</Text>
+              </TouchableOpacity>
+            </ScrollView>
           </View>
         )}
 
-        {/* Resumo */}
-        <View className="px-4 py-3 bg-surface mx-4 rounded-xl mb-4">
-          <Text className="text-foreground font-semibold">
-            {atletasSelecionados.length > 0 ? atletasSelecionados.length : atletasFiltrados.length} atleta(s) selecionado(s)
-          </Text>
+        {/* ─── SEÇÃO DE SELEÇÃO DE ATLETAS ─── */}
+        <View className="mx-4 mb-4 bg-surface rounded-2xl overflow-hidden" style={{ borderWidth: 1, borderColor: colors.border }}>
+          {/* Cabeçalho da seção */}
+          <View className="flex-row items-center justify-between px-4 py-3 border-b border-border">
+            <Text className="text-sm font-bold text-foreground">
+              Selecionar Atletas para Relatório
+            </Text>
+            <View className="flex-row gap-2">
+              <TouchableOpacity onPress={selecionarTodos}
+                style={{ backgroundColor: colors.primary + "22", borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 }}>
+                <Text style={{ color: colors.primary, fontSize: 11, fontWeight: "700" }}>Todos</Text>
+              </TouchableOpacity>
+              {atletasSelecionados.length > 0 && (
+                <TouchableOpacity onPress={limparSelecao}
+                  style={{ backgroundColor: colors.error + "22", borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 }}>
+                  <Text style={{ color: colors.error, fontSize: 11, fontWeight: "700" }}>Limpar</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+
+          {/* Campo de busca por nome */}
+          <View className="px-3 py-2 border-b border-border">
+            <TextInput
+              value={buscaAtleta}
+              onChangeText={setBuscaAtleta}
+              placeholder="Buscar por nome..."
+              placeholderTextColor={colors.muted}
+              style={{
+                backgroundColor: colors.background,
+                borderRadius: 10,
+                paddingHorizontal: 12,
+                paddingVertical: 7,
+                fontSize: 13,
+                color: colors.foreground,
+                borderWidth: 1,
+                borderColor: colors.border,
+              }}
+            />
+          </View>
+
+          {/* Lista de chips com nomes */}
+          <View className="px-3 py-3" style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
+            {atletasVisiveis.length === 0 ? (
+              <Text className="text-muted text-sm px-1 py-2">
+                {temFiltroAtivo ? "Nenhum atleta encontrado com esses filtros." : "Aplique filtros para ver os atletas."}
+              </Text>
+            ) : (
+              atletasVisiveis.map((atleta: any) => {
+                const selecionado = atletasSelecionados.includes(atleta.id);
+                return (
+                  <TouchableOpacity
+                    key={atleta.id}
+                    onPress={() => toggleAtleta(atleta.id)}
+                    style={{
+                      backgroundColor: selecionado ? colors.primary : colors.background,
+                      borderWidth: 1.5,
+                      borderColor: selecionado ? colors.primary : colors.border,
+                      borderRadius: 20,
+                      paddingHorizontal: 12,
+                      paddingVertical: 6,
+                    }}
+                  >
+                    <Text style={{
+                      color: selecionado ? colors.background : colors.foreground,
+                      fontSize: 13,
+                      fontWeight: selecionado ? "700" : "400",
+                    }}>
+                      {atleta.nome}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })
+            )}
+          </View>
+
+          {/* Rodapé com contador e botão de relatório */}
+          <View className="flex-row items-center justify-between px-4 py-3 border-t border-border">
+            <Text className="text-xs text-muted">
+              {atletasSelecionados.length > 0
+                ? `${atletasSelecionados.length} atleta(s) selecionado(s)`
+                : `${atletasVisiveis.length} atleta(s) disponíveis`}
+            </Text>
+            <TouchableOpacity
+              onPress={handleGerarRelatorio}
+              disabled={atletasParaAnalise.length === 0 || gerandoRelatorio}
+              style={{
+                backgroundColor: atletasParaAnalise.length > 0 ? colors.primary : colors.border,
+                borderRadius: 12,
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+                opacity: gerandoRelatorio ? 0.7 : 1,
+              }}
+            >
+              <Text style={{ color: atletasParaAnalise.length > 0 ? colors.background : colors.muted, fontSize: 13, fontWeight: "700" }}>
+                {gerandoRelatorio ? "Gerando..." : atletasSelecionados.length > 0 ? `📄 Relatório (${atletasSelecionados.length})` : "📄 Relatório (todos)"}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
-        {/* Botões de Ação */}
-        <View className="flex-row gap-3 px-4 mb-4">
-          <TouchableOpacity
-            onPress={() => setShowSelecao(true)}
-            className="flex-1 bg-primary rounded-lg py-3 items-center"
-          >
-            <Text className="text-background font-semibold">Selecionar</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setShowTabela(true)}
-            className="flex-1 bg-surface border border-border rounded-lg py-3 items-center"
-          >
-            <Text className="text-foreground font-semibold">Tabela</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={handleGerarRelatorio}
-            className="flex-1 bg-surface border border-border rounded-lg py-3 items-center"
-          >
-            <Text className="text-foreground font-semibold">Relatório</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Estatísticas */}
+        {/* ─── ESTATÍSTICAS ─── */}
         {stats.totalAtletas > 0 && (
           <>
-            <View className="px-4 py-4">
+            {/* Botão Tabela Comparativa */}
+            <TouchableOpacity
+              onPress={() => setShowTabela(true)}
+              className="mx-4 mb-4 bg-surface border border-border rounded-xl py-3 items-center"
+            >
+              <Text className="text-foreground font-semibold text-sm">📊 Ver Tabela Comparativa ({stats.totalAtletas} atletas)</Text>
+            </TouchableOpacity>
+
+            <View className="px-4 py-2">
               <Text className="text-base font-bold text-foreground mb-3">Estatísticas de Idade</Text>
               <View className="bg-surface rounded-xl overflow-hidden">
-                <View className="flex-row justify-between items-center px-4 py-3 border-b border-border">
-                  <Text className="text-foreground font-medium">Média</Text>
-                  <Text className="text-primary font-bold">{stats.idadeMedia} anos</Text>
-                </View>
-                <View className="flex-row justify-between items-center px-4 py-3 border-b border-border">
-                  <Text className="text-foreground font-medium">Mediana</Text>
-                  <Text className="text-primary font-bold">{stats.idadeMediana} anos</Text>
-                </View>
-                <View className="flex-row justify-between items-center px-4 py-3 border-b border-border">
-                  <Text className="text-foreground font-medium">Mínima</Text>
-                  <Text className="text-primary font-bold">{stats.idadeMin} anos</Text>
-                </View>
-                <View className="flex-row justify-between items-center px-4 py-3">
-                  <Text className="text-foreground font-medium">Máxima</Text>
-                  <Text className="text-primary font-bold">{stats.idadeMax} anos</Text>
-                </View>
+                {[
+                  ["Média", `${stats.idadeMedia} anos`],
+                  ["Mediana", `${stats.idadeMediana} anos`],
+                  ["Mínima", `${stats.idadeMin} anos`],
+                  ["Máxima", `${stats.idadeMax} anos`],
+                ].map(([label, value], i, arr) => (
+                  <View key={label} className={`flex-row justify-between items-center px-4 py-3 ${i < arr.length - 1 ? "border-b border-border" : ""}`}>
+                    <Text className="text-foreground font-medium">{label}</Text>
+                    <Text className="text-primary font-bold">{value}</Text>
+                  </View>
+                ))}
               </View>
             </View>
 
             <View className="px-4 py-4">
               <Text className="text-base font-bold text-foreground mb-3">Estatísticas de Altura</Text>
               <View className="bg-surface rounded-xl overflow-hidden">
-                <View className="flex-row justify-between items-center px-4 py-3 border-b border-border">
-                  <Text className="text-foreground font-medium">Média</Text>
-                  <Text className="text-primary font-bold">{stats.alturaMedia} m</Text>
-                </View>
-                <View className="flex-row justify-between items-center px-4 py-3 border-b border-border">
-                  <Text className="text-foreground font-medium">Mediana</Text>
-                  <Text className="text-primary font-bold">{stats.alturaMediana} m</Text>
-                </View>
-                <View className="flex-row justify-between items-center px-4 py-3 border-b border-border">
-                  <Text className="text-foreground font-medium">Mínima</Text>
-                  <Text className="text-primary font-bold">{stats.alturaMin} m</Text>
-                </View>
-                <View className="flex-row justify-between items-center px-4 py-3">
-                  <Text className="text-foreground font-medium">Máxima</Text>
-                  <Text className="text-primary font-bold">{stats.alturaMax} m</Text>
-                </View>
+                {[
+                  ["Média", `${stats.alturaMedia} m`],
+                  ["Mediana", `${stats.alturaMediana} m`],
+                  ["Mínima", `${stats.alturaMin} m`],
+                  ["Máxima", `${stats.alturaMax} m`],
+                ].map(([label, value], i, arr) => (
+                  <View key={label} className={`flex-row justify-between items-center px-4 py-3 ${i < arr.length - 1 ? "border-b border-border" : ""}`}>
+                    <Text className="text-foreground font-medium">{label}</Text>
+                    <Text className="text-primary font-bold">{value}</Text>
+                  </View>
+                ))}
               </View>
             </View>
 
             {posicoesPorcentagem.length > 0 && (
-              <View className="px-4 py-4">
+              <View className="px-4 py-2">
                 <Text className="text-base font-bold text-foreground mb-3">Distribuição de Posições</Text>
                 <View className="bg-surface rounded-xl p-3 items-center overflow-hidden">
                   <PieChart
@@ -391,12 +435,8 @@ export default function StatsScreen() {
                 <View className="bg-surface rounded-xl p-3 overflow-hidden">
                   <BarChart
                     data={{
-                      labels: idadesPorcentagem.map((item) => item.name),
-                      datasets: [
-                        {
-                          data: idadesPorcentagem.map((item) => item.population),
-                        },
-                      ],
+                      labels: idadesPorcentagem.map(item => item.name),
+                      datasets: [{ data: idadesPorcentagem.map(item => item.population) }],
                     }}
                     width={screenWidth - 60}
                     height={220}
@@ -414,270 +454,184 @@ export default function StatsScreen() {
         <View className="h-8" />
       </ScrollView>
 
-      {/* Modal de Filtros com Abas */}
+      {/* ─── MODAL DE FILTROS ─── */}
       <Modal visible={showFiltros} animationType="slide" transparent>
         <View className="flex-1 bg-black/50">
           <View className="flex-1 bg-background mt-12 rounded-t-3xl">
-            {/* Header */}
             <View className="flex-row justify-between items-center px-4 py-4 border-b border-border">
-              <Text className="text-xl font-bold text-foreground">Filtros</Text>
+              <Text className="text-xl font-bold text-foreground">Filtros Avançados</Text>
               <TouchableOpacity onPress={() => setShowFiltros(false)}>
                 <IconSymbol name="xmark" size={24} color={colors.foreground} />
               </TouchableOpacity>
             </View>
 
             {/* Abas */}
-            <View className="flex-row border-b border-border">
-              {(["posicao", "idade", "clube", "escala", "naturalidade"] as const).map((aba) => (
-                <TouchableOpacity
-                  key={aba}
-                  onPress={() => setAbaFiltros(aba)}
-                  className={`flex-1 py-3 items-center border-b-2 ${abaFiltros === aba ? "border-primary" : "border-transparent"}`}
-                >
-                  <Text className={`font-semibold capitalize ${abaFiltros === aba ? "text-primary" : "text-muted"}`}>
-                    {aba === "posicao" ? "Posição" : aba === "idade" ? "Idade" : aba === "clube" ? "Clube" : aba === "escala" ? "Escala" : "Naturalidade"}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="border-b border-border" contentContainerStyle={{ paddingHorizontal: 8 }}>
+              {(["posicao", "idade", "clube", "escala", "naturalidade"] as const).map((aba) => {
+                const labels = { posicao: "Posição", idade: "Idade", clube: "Clube", escala: "Escala", naturalidade: "Naturalidade" };
+                const counts = {
+                  posicao: filtros.posicoes.length,
+                  idade: filtros.idades.length,
+                  clube: filtros.clubes.length,
+                  escala: filtros.escalas.length,
+                  naturalidade: filtros.naturalidades.length,
+                };
+                return (
+                  <TouchableOpacity
+                    key={aba}
+                    onPress={() => setAbaFiltros(aba)}
+                    style={{ paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 2, borderBottomColor: abaFiltros === aba ? colors.primary : "transparent", flexDirection: "row", alignItems: "center", gap: 4 }}
+                  >
+                    <Text style={{ fontWeight: "600", color: abaFiltros === aba ? colors.primary : colors.muted, fontSize: 13 }}>
+                      {labels[aba]}
+                    </Text>
+                    {counts[aba] > 0 && (
+                      <View style={{ backgroundColor: colors.primary, borderRadius: 8, minWidth: 16, height: 16, alignItems: "center", justifyContent: "center", paddingHorizontal: 4 }}>
+                        <Text style={{ color: colors.background, fontSize: 10, fontWeight: "700" }}>{counts[aba]}</Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
 
-            {/* Conteúdo das Abas */}
+            {/* Conteúdo das abas */}
             <ScrollView className="flex-1 px-4 py-4">
               {abaFiltros === "posicao" && (
-                <View className="gap-2">
-                  {posicoes.map((pos) => (
-                    <TouchableOpacity
-                      key={pos}
-                      onPress={() => {
-                        setFiltros({
-                          ...filtros,
-                          posicoes: filtros.posicoes.includes(pos)
-                            ? filtros.posicoes.filter((p) => p !== pos)
-                            : [...filtros.posicoes, pos],
-                        });
-                      }}
-                      className={`p-3 rounded-lg border ${
-                        filtros.posicoes.includes(pos) ? "bg-primary/20 border-primary" : "bg-surface border-border"
-                      }`}
-                    >
-                      <Text className={`font-medium ${filtros.posicoes.includes(pos) ? "text-primary" : "text-foreground"}`}>
-                        {pos}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                  {posicoes.map((pos) => {
+                    const ativo = filtros.posicoes.includes(pos);
+                    return (
+                      <TouchableOpacity key={pos}
+                        onPress={() => setFiltros({ ...filtros, posicoes: ativo ? filtros.posicoes.filter(p => p !== pos) : [...filtros.posicoes, pos] })}
+                        style={{ backgroundColor: ativo ? colors.primary : colors.surface, borderWidth: 1.5, borderColor: ativo ? colors.primary : colors.border, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 }}>
+                        <Text style={{ color: ativo ? colors.background : colors.foreground, fontWeight: ativo ? "700" : "400", fontSize: 14 }}>{pos}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
               )}
 
               {abaFiltros === "idade" && (
-                <View className="gap-2">
-                  {[15, 20, 25, 30, 35, 40].map((idade) => (
-                    <TouchableOpacity
-                      key={idade}
-                      onPress={() => {
-                        setFiltros({
-                          ...filtros,
-                          idades: filtros.idades.includes(idade)
-                            ? filtros.idades.filter((i) => i !== idade)
-                            : [...filtros.idades, idade],
-                        });
-                      }}
-                      className={`p-3 rounded-lg border ${
-                        filtros.idades.includes(idade) ? "bg-primary/20 border-primary" : "bg-surface border-border"
-                      }`}
-                    >
-                      <Text className={`font-medium ${filtros.idades.includes(idade) ? "text-primary" : "text-foreground"}`}>
-                        {idade}-{idade + 4} anos
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                  {[15, 20, 25, 30, 35, 40].map((idade) => {
+                    const ativo = filtros.idades.includes(idade);
+                    return (
+                      <TouchableOpacity key={idade}
+                        onPress={() => setFiltros({ ...filtros, idades: ativo ? filtros.idades.filter(i => i !== idade) : [...filtros.idades, idade] })}
+                        style={{ backgroundColor: ativo ? colors.primary : colors.surface, borderWidth: 1.5, borderColor: ativo ? colors.primary : colors.border, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 }}>
+                        <Text style={{ color: ativo ? colors.background : colors.foreground, fontWeight: ativo ? "700" : "400", fontSize: 14 }}>{idade}–{idade + 4} anos</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
               )}
 
               {abaFiltros === "clube" && (
-                <View className="gap-2">
-                  {clubes.map((clube) => (
-                    <TouchableOpacity
-                      key={clube}
-                      onPress={() => {
-                        setFiltros({
-                          ...filtros,
-                          clubes: filtros.clubes.includes(clube)
-                            ? filtros.clubes.filter((c) => c !== clube)
-                            : [...filtros.clubes, clube],
-                        });
-                      }}
-                      className={`p-3 rounded-lg border ${
-                        filtros.clubes.includes(clube) ? "bg-primary/20 border-primary" : "bg-surface border-border"
-                      }`}
-                    >
-                      <Text className={`font-medium ${filtros.clubes.includes(clube) ? "text-primary" : "text-foreground"}`}>
-                        {clube}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                <View style={{ gap: 6 }}>
+                  {clubesList.map((clube) => {
+                    const ativo = filtros.clubes.includes(clube);
+                    return (
+                      <TouchableOpacity key={clube}
+                        onPress={() => setFiltros({ ...filtros, clubes: ativo ? filtros.clubes.filter(c => c !== clube) : [...filtros.clubes, clube] })}
+                        style={{ flexDirection: "row", alignItems: "center", backgroundColor: ativo ? colors.primary + "18" : colors.surface, borderWidth: 1.5, borderColor: ativo ? colors.primary : colors.border, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, gap: 8 }}>
+                        {ativo && <Text style={{ color: colors.primary, fontSize: 14 }}>✓</Text>}
+                        <Text style={{ color: ativo ? colors.primary : colors.foreground, fontWeight: ativo ? "700" : "400", fontSize: 14 }}>{clube}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
               )}
 
               {abaFiltros === "escala" && (
-                <View className="gap-2">
-                  {escalas.map((escala) => (
-                    <TouchableOpacity
-                      key={escala}
-                      onPress={() => {
-                        setFiltros({
-                          ...filtros,
-                          escalas: filtros.escalas.includes(escala)
-                            ? filtros.escalas.filter((e) => e !== escala)
-                            : [...filtros.escalas, escala],
-                        });
-                      }}
-                      className={`p-3 rounded-lg border ${
-                        filtros.escalas.includes(escala) ? "bg-primary/20 border-primary" : "bg-surface border-border"
-                      }`}
-                    >
-                      <Text className={`font-medium ${filtros.escalas.includes(escala) ? "text-primary" : "text-foreground"}`}>
-                        {escala}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                  {escalas.map((escala) => {
+                    const ativo = filtros.escalas.includes(escala);
+                    return (
+                      <TouchableOpacity key={escala}
+                        onPress={() => setFiltros({ ...filtros, escalas: ativo ? filtros.escalas.filter(e => e !== escala) : [...filtros.escalas, escala] })}
+                        style={{ backgroundColor: ativo ? colors.primary : colors.surface, borderWidth: 1.5, borderColor: ativo ? colors.primary : colors.border, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 }}>
+                        <Text style={{ color: ativo ? colors.background : colors.foreground, fontWeight: ativo ? "700" : "400", fontSize: 14 }}>{escala}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
               )}
 
               {abaFiltros === "naturalidade" && (
-                <View className="gap-2">
-                  {naturalidades.map((naturalidade) => (
-                    <TouchableOpacity
-                      key={naturalidade}
-                      onPress={() => {
-                        setFiltros({
-                          ...filtros,
-                          naturalidades: filtros.naturalidades.includes(naturalidade)
-                            ? filtros.naturalidades.filter((n) => n !== naturalidade)
-                            : [...filtros.naturalidades, naturalidade],
-                        });
-                      }}
-                      className={`p-3 rounded-lg border ${
-                        filtros.naturalidades.includes(naturalidade) ? "bg-primary/20 border-primary" : "bg-surface border-border"
-                      }`}
-                    >
-                      <Text className={`font-medium ${filtros.naturalidades.includes(naturalidade) ? "text-primary" : "text-foreground"}`}>
-                        {naturalidade}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                <View style={{ gap: 6 }}>
+                  {naturalidades.map((nat) => {
+                    const ativo = filtros.naturalidades.includes(nat);
+                    return (
+                      <TouchableOpacity key={nat}
+                        onPress={() => setFiltros({ ...filtros, naturalidades: ativo ? filtros.naturalidades.filter(n => n !== nat) : [...filtros.naturalidades, nat] })}
+                        style={{ flexDirection: "row", alignItems: "center", backgroundColor: ativo ? colors.primary + "18" : colors.surface, borderWidth: 1.5, borderColor: ativo ? colors.primary : colors.border, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, gap: 8 }}>
+                        {ativo && <Text style={{ color: colors.primary, fontSize: 14 }}>✓</Text>}
+                        <Text style={{ color: ativo ? colors.primary : colors.foreground, fontWeight: ativo ? "700" : "400", fontSize: 14 }}>{nat}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
               )}
             </ScrollView>
 
-            {/* Botões de Ação */}
+            {/* Rodapé do modal */}
             <View className="flex-row gap-3 px-4 py-4 border-t border-border">
-              <TouchableOpacity
-                onPress={handleLimparFiltros}
-                className="flex-1 bg-surface border border-border rounded-lg py-3 items-center"
-              >
-                <Text className="text-foreground font-semibold">Limpar</Text>
+              <TouchableOpacity onPress={handleLimparFiltros}
+                className="flex-1 bg-surface border border-border rounded-lg py-3 items-center">
+                <Text className="text-foreground font-semibold">Limpar Tudo</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => setShowFiltros(false)}
-                className="flex-1 bg-primary rounded-lg py-3 items-center"
-              >
-                <Text className="text-background font-semibold">Aplicar</Text>
+              <TouchableOpacity onPress={() => setShowFiltros(false)}
+                className="flex-1 bg-primary rounded-lg py-3 items-center">
+                <Text className="text-background font-semibold">Aplicar Filtros</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
 
-      {/* Modal de Seleção de Atletas */}
-      <Modal visible={showSelecao} animationType="slide" transparent>
-        <View className="flex-1 bg-black/50">
-          <View className="flex-1 bg-background mt-12 rounded-t-3xl">
-            <View className="flex-row justify-between items-center px-4 py-4 border-b border-border">
-              <Text className="text-xl font-bold text-foreground">Selecionar Atletas</Text>
-              <TouchableOpacity onPress={() => setShowSelecao(false)}>
-                <IconSymbol name="xmark" size={24} color={colors.foreground} />
-              </TouchableOpacity>
-            </View>
-
-            <FlatList
-              data={atletasFiltrados}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  onPress={() => {
-                    setAtletasSelecionados(
-                      atletasSelecionados.includes(item.id)
-                        ? atletasSelecionados.filter((id) => id !== item.id)
-                        : [...atletasSelecionados, item.id]
-                    );
-                  }}
-                  className={`px-4 py-3 border-b border-border flex-row items-center ${
-                    atletasSelecionados.includes(item.id) ? "bg-primary/10" : ""
-                  }`}
-                >
-                  <View className={`w-5 h-5 rounded border-2 mr-3 items-center justify-center ${
-                    atletasSelecionados.includes(item.id) ? "bg-primary border-primary" : "border-border"
-                  }`}>
-                    {atletasSelecionados.includes(item.id) && (
-                      <Text className="text-background font-bold text-xs">✓</Text>
-                    )}
-                  </View>
-                  <View className="flex-1">
-                    <Text className="text-foreground font-semibold">{item.nome}</Text>
-                    <Text className="text-muted text-xs">{item.posicao} • {item.idade} anos</Text>
-                  </View>
-                </TouchableOpacity>
-              )}
-            />
-
-            <View className="flex-row gap-3 px-4 py-4 border-t border-border">
-              <TouchableOpacity
-                onPress={() => setAtletasSelecionados([])}
-                className="flex-1 bg-surface border border-border rounded-lg py-3 items-center"
-              >
-                <Text className="text-foreground font-semibold">Limpar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => setShowSelecao(false)}
-                className="flex-1 bg-primary rounded-lg py-3 items-center"
-              >
-                <Text className="text-background font-semibold">Fechar</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Modal de Tabela */}
+      {/* ─── MODAL DE TABELA COMPARATIVA ─── */}
       <Modal visible={showTabela} animationType="slide" transparent>
         <View className="flex-1 bg-black/50">
           <View className="flex-1 bg-background mt-12 rounded-t-3xl">
             <View className="flex-row justify-between items-center px-4 py-4 border-b border-border">
-              <Text className="text-xl font-bold text-foreground">Comparativo de Atletas</Text>
+              <View>
+                <Text className="text-xl font-bold text-foreground">Tabela Comparativa</Text>
+                <Text className="text-xs text-muted">{atletasParaAnalise.length} atleta(s)</Text>
+              </View>
               <TouchableOpacity onPress={() => setShowTabela(false)}>
                 <IconSymbol name="xmark" size={24} color={colors.foreground} />
               </TouchableOpacity>
             </View>
 
-            <FlatList
-              data={atletasSelecionados.length > 0 ? atletasFiltrados.filter((a: any) => atletasSelecionados.includes(a.id)) : atletasFiltrados}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => (
-                <View className="px-4 py-3 border-b border-border">
+            <ScrollView className="flex-1">
+              {atletasParaAnalise.map((item: any) => (
+                <View key={item.id} className="px-4 py-3 border-b border-border">
                   <Text className="text-foreground font-semibold">{item.nome}</Text>
-                  <View className="flex-row gap-2 mt-2 flex-wrap">
-                    <View className="bg-surface rounded px-2 py-1">
-                      <Text className="text-muted text-xs">{item.posicao}</Text>
-                    </View>
-                    <View className="bg-surface rounded px-2 py-1">
-                      <Text className="text-muted text-xs">{item.idade} anos</Text>
-                    </View>
-                    <View className="bg-surface rounded px-2 py-1">
-                      <Text className="text-muted text-xs">{item.altura}m</Text>
-                    </View>
+                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 6 }}>
+                    {item.posicao && (
+                      <View style={{ backgroundColor: colors.primary + "18", borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 }}>
+                        <Text style={{ color: colors.primary, fontSize: 11, fontWeight: "600" }}>{item.posicao}</Text>
+                      </View>
+                    )}
+                    {item.idade && (
+                      <View style={{ backgroundColor: colors.surface, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 }}>
+                        <Text style={{ color: colors.muted, fontSize: 11 }}>{item.idade} anos</Text>
+                      </View>
+                    )}
+                    {item.altura && (
+                      <View style={{ backgroundColor: colors.surface, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 }}>
+                        <Text style={{ color: colors.muted, fontSize: 11 }}>{item.altura} m</Text>
+                      </View>
+                    )}
+                    {item.clube && (
+                      <View style={{ backgroundColor: colors.surface, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 }}>
+                        <Text style={{ color: colors.muted, fontSize: 11 }}>{item.clube}</Text>
+                      </View>
+                    )}
                     {item.segundaPosicao && (
-                      <View className="bg-surface rounded px-2 py-1">
-                        <Text className="text-muted text-xs">{item.segundaPosicao}</Text>
+                      <View style={{ backgroundColor: colors.surface, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 }}>
+                        <Text style={{ color: colors.muted, fontSize: 11 }}>2ª: {item.segundaPosicao}</Text>
                       </View>
                     )}
                   </View>
@@ -685,15 +639,21 @@ export default function StatsScreen() {
                     <Text className="text-muted text-xs mt-2 italic">{item.valencia}</Text>
                   )}
                 </View>
-              )}
-            />
+              ))}
+            </ScrollView>
 
-            <TouchableOpacity
-              onPress={() => setShowTabela(false)}
-              className="m-4 bg-primary rounded-lg py-3 items-center"
-            >
-              <Text className="text-background font-semibold">Fechar</Text>
-            </TouchableOpacity>
+            <View className="flex-row gap-3 px-4 py-4 border-t border-border">
+              <TouchableOpacity onPress={handleGerarRelatorio} disabled={gerandoRelatorio}
+                style={{ flex: 1, backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 12, alignItems: "center", opacity: gerandoRelatorio ? 0.7 : 1 }}>
+                <Text style={{ color: colors.background, fontWeight: "700" }}>
+                  {gerandoRelatorio ? "Gerando..." : "📄 Gerar Relatório PDF"}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setShowTabela(false)}
+                className="flex-1 bg-surface border border-border rounded-xl py-3 items-center">
+                <Text className="text-foreground font-semibold">Fechar</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
