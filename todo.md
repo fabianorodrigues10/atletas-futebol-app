@@ -328,3 +328,7 @@
 
 ## Feature: Remover avaliação ao lado da altura no Elenco
 - [x] Remover a avaliação (badge escala) exibida ao lado da altura na página de Análise do Elenco
+
+## Feature: Reorganizar seções de estatísticas no modal do Elenco
+- [x] Remover a seção "Passe" do modal de estatísticas
+- [x] Mover "Passes" e "Passes Certos" para a seção "Ofensivo"

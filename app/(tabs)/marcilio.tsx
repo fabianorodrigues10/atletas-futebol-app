@@ -317,6 +317,8 @@ function ModalEstatisticas({
             {campo("Gols", "gols")}
             {campo("Assistências", "assistencias")}
             {campo("Finalizações", "finalizacoes")}
+            {campo("Passes", "passes")}
+            {campo("Passes Certos", "passesCompletos")}
           </View>
 
           <Text style={styles.secaoTitulo}>🛡 Defensivo</Text>
@@ -324,12 +326,6 @@ function ModalEstatisticas({
             {campo("Desarmes", "desarmes")}
             {campo("Interceptações", "interceptacoes")}
             {campo("Duelos Ganhos", "duelosGanhos")}
-          </View>
-
-          <Text style={styles.secaoTitulo}>🎯 Passe</Text>
-          <View style={styles.gridCampos}>
-            {campo("Passes", "passes")}
-            {campo("Passes Certos", "passesCompletos")}
           </View>
 
           <Text style={styles.secaoTitulo}>🟨 Disciplina</Text>
