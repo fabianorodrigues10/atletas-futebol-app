@@ -1440,7 +1440,16 @@ export default function MarcilioScreen() {
                     <TextInput
                       style={{ borderWidth: 1, borderColor: CORES.cinzaMedio, borderRadius: 6, paddingHorizontal: 4, paddingVertical: 3, fontSize: 13, fontWeight: "700", textAlign: "center", width: "100%", backgroundColor: CORES.cinzaClaro, color: CORES.preto }}
                       value={displayValue}
-                      onChangeText={v => setScout(campo, v === "" ? (isNota ? "" : 0) : (isNota ? v : parseInt(v) || 0))}
+                      onChangeText={v => {
+                        if (v === "" || v === null) {
+                          setScout(campo, isNota ? "" : 0);
+                        } else if (isNota) {
+                          setScout(campo, v);
+                        } else {
+                          const num = parseInt(v);
+                          setScout(campo, isNaN(num) ? 0 : num);
+                        }
+                      }}
                       keyboardType="numeric" placeholder="-"
                     />
                   </View>
@@ -1465,9 +1474,17 @@ export default function MarcilioScreen() {
                           <Text style={{ fontSize: 9, color: CORES.cinzaTexto, textAlign: "center" }}>Min</Text>
                           <TextInput
                             style={{ borderWidth: 1, borderColor: CORES.cinzaMedio, borderRadius: 6, paddingHorizontal: 4, paddingVertical: 3, fontSize: 12, fontWeight: "700", textAlign: "center", backgroundColor: CORES.cinzaClaro, color: CORES.preto }}
-                            value={(scout as any).minutosJogados === 0 ? "" : String((scout as any).minutosJogados || "")}
-                            onChangeText={v => setScout("minutosJogados", parseInt(v) || 0)}
-                            keyboardType="numeric" placeholder="90"
+                            value={(scout as any).minutosJogados === 0 || (scout as any).minutosJogados == null ? "" : String((scout as any).minutosJogados)}
+                            onChangeText={v => {
+                              // Permite digitar livremente; converte para número apenas ao sair do campo
+                              if (v === "" || v === null) {
+                                setScout("minutosJogados", 0);
+                              } else {
+                                const num = parseInt(v);
+                                setScout("minutosJogados", isNaN(num) ? 0 : num);
+                              }
+                            }}
+                            keyboardType="numeric" placeholder="-"
                           />
                         </View>
                       </View>

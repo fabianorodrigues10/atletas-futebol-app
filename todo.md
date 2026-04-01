@@ -398,3 +398,7 @@
 - [x] Banner de sucesso/erro após salvar (compatível com web)
 - [x] Atletas ordenados por posição no scout (Goleiro → Defensor → Meio → Atacante)
 - [x] Notas decimais (ex: 7.5) exibidas corretamente nos campos de edição
+
+## Bug: Minutagem dos atletas no scout sempre aparece como 90
+- [x] Corrigir placeholder do campo minutosJogados de "90" para "-" (o placeholder era confundido com valor real)
+- [x] Melhorar lógica de edição dos campos numéricos para permitir apagar e redigitar sem travar
