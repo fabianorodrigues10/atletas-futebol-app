@@ -68,6 +68,8 @@ type EstatisticasTemporada = {
   duelosGanhos: number;
   passes: number;
   passesCompletos: number;
+  jogosAereos: number;
+  duelosAereosPerdidos: number;
   cartoesAmarelos: number;
   cartoesVermelhos: number;
   notaTecnica: string | null;
@@ -83,6 +85,7 @@ const STATS_VAZIA: EstatisticasTemporada = {
   gols: 0, assistencias: 0, finalizacoes: 0,
   desarmes: 0, interceptacoes: 0, duelos: 0, duelosGanhos: 0,
   passes: 0, passesCompletos: 0,
+  jogosAereos: 0, duelosAereosPerdidos: 0,
   cartoesAmarelos: 0, cartoesVermelhos: 0,
   notaTecnica: null, notaFisica: null, notaTatica: null, notaAtitudinal: null, notaPotencial: null,
   observacoes: null,
@@ -326,6 +329,8 @@ function ModalEstatisticas({
             {campo("Desarmes", "desarmes")}
             {campo("Interceptações", "interceptacoes")}
             {campo("Duelos Ganhos", "duelosGanhos")}
+            {campo("Jogos Aéreos", "jogosAereos")}
+            {campo("Duelo Aéreo Perdido", "duelosAereosPerdidos")}
           </View>
 
           <Text style={styles.secaoTitulo}>🟨 Disciplina</Text>

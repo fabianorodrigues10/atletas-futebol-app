@@ -195,6 +195,8 @@ export const estatisticasTemporada = mysqlTable("estatisticasTemporada", {
   duelosGanhos: int("duelosGanhos").default(0),
   passes: int("passes").default(0),
   passesCompletos: int("passesCompletos").default(0),
+  jogosAereos: int("jogosAereos").default(0),
+  duelosAereosPerdidos: int("duelosAereosPerdidos").default(0),
   cartoesAmarelos: int("cartoesAmarelos").default(0),
   cartoesVermelhos: int("cartoesVermelhos").default(0),
   notaTecnica: decimal("notaTecnica", { precision: 3, scale: 1 }),

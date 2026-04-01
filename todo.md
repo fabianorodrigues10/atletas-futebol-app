@@ -332,3 +332,8 @@
 ## Feature: Reorganizar seções de estatísticas no modal do Elenco
 - [x] Remover a seção "Passe" do modal de estatísticas
 - [x] Mover "Passes" e "Passes Certos" para a seção "Ofensivo"
+
+## Feature: Novos campos aéreos na seção Defensivo
+- [x] Adicionar campo "Jogos Aéreos" na seção Defensivo do modal de estatísticas
+- [x] Adicionar campo "Duelo Aéreo Perdido" na seção Defensivo do modal de estatísticas
+- [x] Adicionar os campos no tipo, estado inicial e schema do banco (colunas jogosAereos e duelosAereosPerdidos criadas via ALTER TABLE)

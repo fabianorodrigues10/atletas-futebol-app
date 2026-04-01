@@ -57,6 +57,13 @@
       "when": 1774838083321,
       "tag": "0007_opposite_living_tribunal",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1775055221800,
+      "tag": "0008_glamorous_gargoyle",
+      "breakpoints": true
     }
   ]
 }
