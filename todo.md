@@ -325,3 +325,6 @@
 ## Bug: Relatório individual do atleta não funciona no Expo Go
 - [x] Diagnosticar por que o relatório individual do atleta falha no Expo Go (getApiBaseUrl() retornava string vazia no nativo)
 - [x] Corrigido: app.config.ts agora injeta apiBaseUrl via extra; getApiBaseUrl() usa Constants.expoConfig.extra.apiBaseUrl no nativo
+
+## Feature: Remover avaliação ao lado da altura no Elenco
+- [x] Remover a avaliação (badge escala) exibida ao lado da altura na página de Análise do Elenco

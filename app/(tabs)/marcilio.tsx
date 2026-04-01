@@ -390,7 +390,6 @@ function CardAtleta({
           <View style={{ flexDirection: "row", gap: 8, marginTop: 2 }}>
             {idade && <Text style={styles.cardInfo}>{idade} anos</Text>}
             {atleta.altura && <Text style={styles.cardInfo}>{parseFloat(atleta.altura).toFixed(2)}m</Text>}
-            {atleta.escala && <View style={styles.badgeEscala}><Text style={styles.badgeEscalaTexto}>{atleta.escala}</Text></View>}
           </View>
         </View>
         <TouchableOpacity
