@@ -390,3 +390,11 @@
 ## Bug Crítico: Scout dos atletas nos jogos não salva
 - [x] Diagnosticar por que os dados dos atletas no scout do jogo não persistem (servidor falhava: notaAtitudinal e notaPotencial como string vazia causavam erro no banco)
 - [x] Corrigido: servidor converte strings vazias em null antes de salvar o scout
+
+## Feature: Edição do scout de jogo já preenchido
+- [x] Ao abrir o scout de um jogo já preenchido, carregar os dados salvos nos campos
+- [x] Permitir editar e salvar as alterações normalmente
+- [x] Indicador de carregamento enquanto busca dados do servidor
+- [x] Banner de sucesso/erro após salvar (compatível com web)
+- [x] Atletas ordenados por posição no scout (Goleiro → Defensor → Meio → Atacante)
+- [x] Notas decimais (ex: 7.5) exibidas corretamente nos campos de edição

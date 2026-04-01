@@ -532,6 +532,8 @@ export default function MarcilioScreen() {
   const [atletasRelacionados, setAtletasRelacionados] = useState<number[]>([]);
   const [salvandoScout, setSalvandoScout] = useState(false);
   const [gerandoPdfJogo, setGerandoPdfJogo] = useState(false);
+  const [carregandoScout, setCarregandoScout] = useState(false);
+  const [mensagemSucesso, setMensagemSucesso] = useState<string | null>(null);
 
   const carregarJogos = useCallback(async () => {
     setCarregandoJogos(true);
@@ -544,6 +546,7 @@ export default function MarcilioScreen() {
   }, []);
 
   const carregarScoutsDoJogo = useCallback(async (jogoId: number) => {
+    setCarregandoScout(true);
     try {
       const base = getApiBaseUrl();
       const resp = await fetch(`${base}/api/jogos/${jogoId}/scouts`);
@@ -570,11 +573,11 @@ export default function MarcilioScreen() {
             duelosAereosPerdidos: s.duelosAereosPerdidos || 0,
             cartoesAmarelos: s.cartoesAmarelos || 0,
             cartoesVermelhos: s.cartoesVermelhos || 0,
-            notaTecnica: s.notaTecnica || "",
-            notaFisica: s.notaFisica || "",
-            notaTatica: s.notaTatica || "",
-            notaAtitudinal: s.notaAtitudinal || "",
-            notaPotencial: s.notaPotencial || "",
+            notaTecnica: s.notaTecnica != null ? String(s.notaTecnica) : "",
+            notaFisica: s.notaFisica != null ? String(s.notaFisica) : "",
+            notaTatica: s.notaTatica != null ? String(s.notaTatica) : "",
+            notaAtitudinal: s.notaAtitudinal != null ? String(s.notaAtitudinal) : "",
+            notaPotencial: s.notaPotencial != null ? String(s.notaPotencial) : "",
             observacoes: s.observacoes || "",
           };
         });
@@ -582,6 +585,7 @@ export default function MarcilioScreen() {
         setAtletasRelacionados(relacionados);
       }
     } catch (e) { console.error("Erro ao carregar scouts:", e); }
+    finally { setCarregandoScout(false); }
   }, []);
 
   useEffect(() => {
@@ -649,6 +653,11 @@ export default function MarcilioScreen() {
     }
   };
 
+  const mostrarMensagem = (msg: string) => {
+    setMensagemSucesso(msg);
+    setTimeout(() => setMensagemSucesso(null), 3000);
+  };
+
   const salvarScouts = async () => {
     if (!jogoSelecionado) return;
     setSalvandoScout(true);
@@ -663,13 +672,15 @@ export default function MarcilioScreen() {
         body: JSON.stringify({ scouts }),
       });
       if (resp.ok) {
-        Alert.alert("Sucesso", "Scout salvo! As estat\u00edsticas da temporada foram atualizadas.");
+        mostrarMensagem("Scout salvo com sucesso! Estatísticas da temporada atualizadas.");
         await carregarElenco();
-        setModalScoutVisivel(false);
       } else {
-        Alert.alert("Erro", "N\u00e3o foi poss\u00edvel salvar o scout.");
+        const errData = await resp.json().catch(() => ({}));
+        mostrarMensagem(`Erro ao salvar: ${errData.error || "Tente novamente."}`);
       }
-    } catch (e: any) { Alert.alert("Erro", e.message); }
+    } catch (e: any) {
+      mostrarMensagem(`Erro: ${e.message}`);
+    }
     finally { setSalvandoScout(false); }
   };
 
@@ -1342,6 +1353,25 @@ export default function MarcilioScreen() {
               }
             </TouchableOpacity>
           </View>
+
+          {/* Banner de sucesso/erro */}
+          {mensagemSucesso && (
+            <View style={{
+              backgroundColor: mensagemSucesso.startsWith("Erro") ? CORES.vermelho : CORES.verde,
+              paddingVertical: 10, paddingHorizontal: 16,
+            }}>
+              <Text style={{ color: CORES.branco, fontSize: 13, fontWeight: "600", textAlign: "center" }}>
+                {mensagemSucesso}
+              </Text>
+            </View>
+          )}
+
+          {carregandoScout ? (
+            <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+              <ActivityIndicator size="large" color={CORES.azulClaro} />
+              <Text style={{ color: CORES.cinzaTexto, marginTop: 12 }}>Carregando dados do scout...</Text>
+            </View>
+          ) : (
           <ScrollView contentContainerStyle={{ padding: 16 }}>
             {/* Seleção de atletas */}
             <Text style={styles.secaoTitulo}>Selecionar Atletas Relacionados</Text>
@@ -1365,7 +1395,20 @@ export default function MarcilioScreen() {
             {atletasRelacionados.length === 0 ? (
               <Text style={{ color: CORES.cinzaTexto, textAlign: "center", marginTop: 20 }}>Selecione atletas acima para preencher o scout.</Text>
             ) : (
-              atletasRelacionados.map(atletaId => {
+              [...atletasRelacionados].sort((a, b) => {
+                const ordemPosicao = (pos: string | null) => {
+                  if (!pos) return 99;
+                  const p = pos.toLowerCase();
+                  if (p.includes("goleiro") || p === "gl") return 1;
+                  if (p.includes("lateral") || p.includes("zagueiro") || p.includes("defensor") || p === "ld" || p === "le" || p === "zg") return 2;
+                  if (p.includes("volante") || p.includes("meia") || p.includes("meio") || p === "vol" || p === "mc" || p === "md" || p === "me") return 3;
+                  if (p.includes("atacante") || p.includes("ponta") || p.includes("centroavante") || p === "ca" || p === "pe" || p === "pd") return 4;
+                  return 5;
+                };
+                const atletaA = elenco.find(x => x.id === a);
+                const atletaB = elenco.find(x => x.id === b);
+                return ordemPosicao(atletaA?.posicao || null) - ordemPosicao(atletaB?.posicao || null);
+              }).map(atletaId => {
                 const atleta = elenco.find(a => a.id === atletaId);
                 if (!atleta) return null;
                 const scout = scoutsDoJogo[atletaId] || {};
@@ -1384,17 +1427,25 @@ export default function MarcilioScreen() {
                   </View>
                 );
                 // Campo numérico compacto
-                const campoCompacto = (label: string, campo: string) => (
+                const campoCompacto = (label: string, campo: string) => {
+                  const val = (scout as any)[campo];
+                  const isNota = campo.startsWith("nota");
+                  // Para notas: mostrar string diretamente; para números: mostrar 0 como vazio
+                  const displayValue = isNota
+                    ? (val == null || val === "" ? "" : String(val))
+                    : (val === 0 || val === "" || val == null ? "" : String(val));
+                  return (
                   <View key={campo} style={{ alignItems: "center", minWidth: 52, flex: 1 }}>
                     <Text style={{ fontSize: 9, color: CORES.cinzaTexto, marginBottom: 2, textAlign: "center" }}>{label}</Text>
                     <TextInput
                       style={{ borderWidth: 1, borderColor: CORES.cinzaMedio, borderRadius: 6, paddingHorizontal: 4, paddingVertical: 3, fontSize: 13, fontWeight: "700", textAlign: "center", width: "100%", backgroundColor: CORES.cinzaClaro, color: CORES.preto }}
-                      value={(scout as any)[campo] === 0 || (scout as any)[campo] === "" ? "" : String((scout as any)[campo] || "")}
-                      onChangeText={v => setScout(campo, v === "" ? 0 : (campo.startsWith("nota") ? v : parseInt(v) || 0))}
+                      value={displayValue}
+                      onChangeText={v => setScout(campo, v === "" ? (isNota ? "" : 0) : (isNota ? v : parseInt(v) || 0))}
                       keyboardType="numeric" placeholder="-"
                     />
                   </View>
-                );
+                  );
+                };
                 return (
                   <View key={atletaId} style={{ backgroundColor: CORES.branco, borderRadius: 10, borderWidth: 1, borderColor: CORES.cinzaMedio, marginBottom: 10, padding: 10 }}>
                     {/* Cabeçalho do atleta */}
@@ -1466,6 +1517,7 @@ export default function MarcilioScreen() {
               })
             )}
           </ScrollView>
+          )}
         </View>
       </Modal>
 
