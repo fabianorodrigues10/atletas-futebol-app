@@ -1458,8 +1458,6 @@ export default function MarcilioScreen() {
                           {campoCompacto("Téc.", "notaTecnica")}
                           {campoCompacto("Fís.", "notaFisica")}
                           {campoCompacto("Tát.", "notaTatica")}
-                          {campoCompacto("Atit.", "notaAtitudinal")}
-                          {campoCompacto("Pot.", "notaPotencial")}
                         </View>
                       </View>
                     </View>

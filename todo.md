@@ -370,3 +370,6 @@
 ## Feature: Ficha compacta de scout por atleta no modal de jogos
 - [x] Redesenhar o modal de scout para versão compacta: uma linha por atleta com campos essenciais em grade pequena
 - [x] Manter todos os campos disponíveis mas de forma condensada
+
+## Feature: Simplificar notas no scout do jogo
+- [x] Remover Atitudinal e Potencial das notas no scout do jogo, manter apenas Técnica, Física e Tática
