@@ -376,3 +376,7 @@
 
 ## Bug: Emojis corrompidos no PDF do jogo
 - [x] Remover emojis (📍 e outros) do gerador de PDF do jogo que aparecem como Ø=ÜÍ (substituido por texto: Local: ... e CA/CV para cartões)
+
+## Feature: Ajustes no relatório PDF do jogo
+- [x] Remover público e renda das informações da partida no PDF
+- [x] Corrigir emojis corrompidos (📍 → "Local:", 🟨🟥 → "CA"/"CV")

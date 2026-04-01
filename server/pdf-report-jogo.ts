@@ -74,8 +74,6 @@ export function registerPdfJogoRoutes(app: Express) {
       if (jogo.arbitro) infoItems.push(["Árbitro", jogo.arbitro]);
       if (jogo.assistente1) infoItems.push(["Assistente 1", jogo.assistente1]);
       if (jogo.assistente2) infoItems.push(["Assistente 2", jogo.assistente2]);
-      if (jogo.publico) infoItems.push(["Público", String(jogo.publico)]);
-      if (jogo.renda) infoItems.push(["Renda", jogo.renda]);
       if (jogo.gols) infoItems.push(["Gols", jogo.gols]);
 
       if (infoItems.length > 0) {
