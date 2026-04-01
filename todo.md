@@ -337,3 +337,23 @@
 - [x] Adicionar campo "Jogos Aéreos" na seção Defensivo do modal de estatísticas
 - [x] Adicionar campo "Duelo Aéreo Perdido" na seção Defensivo do modal de estatísticas
 - [x] Adicionar os campos no tipo, estado inicial e schema do banco (colunas jogosAereos e duelosAereosPerdidos criadas via ALTER TABLE)
+
+## Feature: Módulo Scout por Jogo
+- [ ] Criar tabela `jogos` no banco (jogo, competição, data, horário, local, árbitro, assistentes, renda, público, gols, placar, userId)
+- [ ] Criar tabela `scoutJogo` no banco (jogoId, atletaId, userId + todos os campos de estatísticas + notas)
+- [ ] Criar rotas no servidor para CRUD de jogos e scout
+- [ ] Criar tela de listagem de jogos dentro da seção Elenco
+- [ ] Criar tela de cadastro/edição do jogo (cabeçalho com todos os campos)
+- [ ] Criar tela de scout do jogo: seleção de atletas do elenco + preenchimento de estatísticas por atleta
+- [ ] Implementar soma automática: ao salvar scout, recalcular e atualizar estatísticas da temporada do atleta
+- [ ] Implementar geração de relatório PDF do jogo no servidor
+- [ ] Botão "Gerar Relatório" na tela do jogo
+
+## Feature: Módulo Scout por Jogo (Série D)
+- [x] Criar tabelas no banco (jogos e scoutJogo)
+- [x] Criar rotas CRUD de jogos no servidor
+- [x] Criar rota POST /api/jogos/:id/scouts com soma automática nas fichas individuais
+- [x] Criar aba "Jogos" dentro da tela Elenco
+- [x] Modal de cadastro/edição de jogo com todos os campos do cabeçalho (placar, competição, data, horário, local, árbitro, assistentes, renda, público, gols)
+- [x] Modal de scout por jogo com seleção de atletas e planilha de estatísticas
+- [x] Geração de relatório PDF do jogo com cabeçalho, tabela de scouts e avaliações individuais

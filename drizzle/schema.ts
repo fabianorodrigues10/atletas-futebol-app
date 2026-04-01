@@ -211,6 +211,71 @@ export const estatisticasTemporada = mysqlTable("estatisticasTemporada", {
 export type EstatisticaTemporada = typeof estatisticasTemporada.$inferSelect;
 export type InsertEstatisticaTemporada = typeof estatisticasTemporada.$inferInsert;
 
+// Tabela de jogos (scout por jogo)
+export const jogos = mysqlTable("jogos", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  mandante: varchar("mandante", { length: 255 }).notNull().default("Marcílio Dias"),
+  visitante: varchar("visitante", { length: 255 }).notNull(),
+  competicao: varchar("competicao", { length: 255 }),
+  data: date("data"),
+  horario: varchar("horario", { length: 10 }), // ex: "16:00"
+  local: varchar("local", { length: 255 }),
+  arbitro: varchar("arbitro", { length: 255 }),
+  assistente1: varchar("assistente1", { length: 255 }),
+  assistente2: varchar("assistente2", { length: 255 }),
+  renda: varchar("renda", { length: 100 }),
+  publico: int("publico"),
+  gols: text("gols"), // texto livre: "Davi Torres 23', Alan Costa 67'"
+  placarMandante: int("placarMandante"),
+  placarVisitante: int("placarVisitante"),
+  observacoes: text("observacoes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Jogo = typeof jogos.$inferSelect;
+export type InsertJogo = typeof jogos.$inferInsert;
+
+// Tabela de scout por atleta por jogo
+export const scoutJogo = mysqlTable("scoutJogo", {
+  id: int("id").autoincrement().primaryKey(),
+  jogoId: int("jogoId").notNull(),
+  atletaId: int("atletaId").notNull(),
+  userId: int("userId").notNull(),
+  // Participação
+  titular: boolean("titular").default(false),
+  minutosJogados: int("minutosJogados").default(0),
+  // Ofensivo
+  gols: int("gols").default(0),
+  assistencias: int("assistencias").default(0),
+  finalizacoes: int("finalizacoes").default(0),
+  passes: int("passes").default(0),
+  passesCompletos: int("passesCompletos").default(0),
+  // Defensivo
+  desarmes: int("desarmes").default(0),
+  interceptacoes: int("interceptacoes").default(0),
+  duelos: int("duelos").default(0),
+  duelosGanhos: int("duelosGanhos").default(0),
+  jogosAereos: int("jogosAereos").default(0),
+  duelosAereosPerdidos: int("duelosAereosPerdidos").default(0),
+  // Disciplina
+  cartoesAmarelos: int("cartoesAmarelos").default(0),
+  cartoesVermelhos: int("cartoesVermelhos").default(0),
+  // Notas
+  notaTecnica: decimal("notaTecnica", { precision: 3, scale: 1 }),
+  notaFisica: decimal("notaFisica", { precision: 3, scale: 1 }),
+  notaTatica: decimal("notaTatica", { precision: 3, scale: 1 }),
+  notaAtitudinal: decimal("notaAtitudinal", { precision: 3, scale: 1 }),
+  notaPotencial: decimal("notaPotencial", { precision: 3, scale: 1 }),
+  observacoes: text("observacoes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ScoutJogo = typeof scoutJogo.$inferSelect;
+export type InsertScoutJogo = typeof scoutJogo.$inferInsert;
+
 // Tipos TypeScript adicionais
 export type Atleta = typeof atletas.$inferSelect;
 export type InsertAtleta = typeof atletas.$inferInsert;

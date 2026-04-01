@@ -52,6 +52,68 @@ type Atleta = {
   estatisticas: EstatisticasTemporada | null;
 };
 
+type Jogo = {
+  id?: number;
+  mandante: string;
+  visitante: string;
+  competicao: string;
+  data: string;
+  horario: string;
+  local: string;
+  arbitro: string;
+  assistente1: string;
+  assistente2: string;
+  renda: string;
+  publico: string;
+  gols: string;
+  placarMandante: string;
+  placarVisitante: string;
+  observacoes: string;
+};
+
+const JOGO_VAZIO: Jogo = {
+  mandante: "Marcílio Dias",
+  visitante: "",
+  competicao: "",
+  data: "",
+  horario: "",
+  local: "",
+  arbitro: "",
+  assistente1: "",
+  assistente2: "",
+  renda: "",
+  publico: "",
+  gols: "",
+  placarMandante: "",
+  placarVisitante: "",
+  observacoes: "",
+};
+
+type ScoutAtleta = {
+  atletaId: number;
+  titular: boolean;
+  minutosJogados: number;
+  gols: number;
+  assistencias: number;
+  finalizacoes: number;
+  passes: number;
+  passesCompletos: number;
+  desarmes: number;
+  interceptacoes: number;
+  duelos: number;
+  duelosGanhos: number;
+  jogosAereos: number;
+  duelosAereosPerdidos: number;
+  cartoesAmarelos: number;
+  cartoesVermelhos: number;
+  notaTecnica: string;
+  notaFisica: string;
+  notaTatica: string;
+  notaAtitudinal: string;
+  notaPotencial: string;
+  observacoes: string;
+};
+
 type EstatisticasTemporada = {
   id?: number;
   atletaId?: number;
@@ -455,7 +517,191 @@ export default function MarcilioScreen() {
   const [selecionados, setSelecionados] = useState<number[]>([]);
   const [atletaEditando, setAtletaEditando] = useState<Atleta | null>(null);
   const [modalStatsVisivel, setModalStatsVisivel] = useState(false);
-  const [abaAtiva, setAbaAtiva] = useState<"elenco" | "comparar" | "radar">("elenco");
+  const [abaAtiva, setAbaAtiva] = useState<"elenco" | "comparar" | "radar" | "jogos">("elenco");
+
+  // ===== ESTADO DO MÓDULO JOGOS =====
+  const [jogos, setJogos] = useState<any[]>([]);
+  const [carregandoJogos, setCarregandoJogos] = useState(false);
+  const [jogoSelecionado, setJogoSelecionado] = useState<any | null>(null);
+  const [modalJogoVisivel, setModalJogoVisivel] = useState(false);
+  const [modalScoutVisivel, setModalScoutVisivel] = useState(false);
+  const [jogoEditando, setJogoEditando] = useState<Jogo>({ ...JOGO_VAZIO });
+  const [scoutsDoJogo, setScoutsDoJogo] = useState<Record<number, ScoutAtleta>>({});
+  const [atletasRelacionados, setAtletasRelacionados] = useState<number[]>([]);
+  const [salvandoScout, setSalvandoScout] = useState(false);
+  const [gerandoPdfJogo, setGerandoPdfJogo] = useState(false);
+
+  const carregarJogos = useCallback(async () => {
+    setCarregandoJogos(true);
+    try {
+      const base = getApiBaseUrl();
+      const resp = await fetch(`${base}/api/jogos`);
+      if (resp.ok) setJogos(await resp.json());
+    } catch (e) { console.error("Erro ao carregar jogos:", e); }
+    finally { setCarregandoJogos(false); }
+  }, []);
+
+  const carregarScoutsDoJogo = useCallback(async (jogoId: number) => {
+    try {
+      const base = getApiBaseUrl();
+      const resp = await fetch(`${base}/api/jogos/${jogoId}/scouts`);
+      if (resp.ok) {
+        const data: any[] = await resp.json();
+        const mapa: Record<number, ScoutAtleta> = {};
+        const relacionados: number[] = [];
+        data.forEach((s: any) => {
+          relacionados.push(s.atletaId);
+          mapa[s.atletaId] = {
+            atletaId: s.atletaId,
+            titular: s.titular || false,
+            minutosJogados: s.minutosJogados || 0,
+            gols: s.gols || 0,
+            assistencias: s.assistencias || 0,
+            finalizacoes: s.finalizacoes || 0,
+            passes: s.passes || 0,
+            passesCompletos: s.passesCompletos || 0,
+            desarmes: s.desarmes || 0,
+            interceptacoes: s.interceptacoes || 0,
+            duelos: s.duelos || 0,
+            duelosGanhos: s.duelosGanhos || 0,
+            jogosAereos: s.jogosAereos || 0,
+            duelosAereosPerdidos: s.duelosAereosPerdidos || 0,
+            cartoesAmarelos: s.cartoesAmarelos || 0,
+            cartoesVermelhos: s.cartoesVermelhos || 0,
+            notaTecnica: s.notaTecnica || "",
+            notaFisica: s.notaFisica || "",
+            notaTatica: s.notaTatica || "",
+            notaAtitudinal: s.notaAtitudinal || "",
+            notaPotencial: s.notaPotencial || "",
+            observacoes: s.observacoes || "",
+          };
+        });
+        setScoutsDoJogo(mapa);
+        setAtletasRelacionados(relacionados);
+      }
+    } catch (e) { console.error("Erro ao carregar scouts:", e); }
+  }, []);
+
+  useEffect(() => {
+    if (abaAtiva === "jogos" && jogos.length === 0) carregarJogos();
+  }, [abaAtiva, carregarJogos]);
+
+  const salvarJogo = async () => {
+    try {
+      const base = getApiBaseUrl();
+      const payload: any = { ...jogoEditando };
+      if (payload.placarMandante !== "") payload.placarMandante = parseInt(payload.placarMandante) || 0;
+      if (payload.placarVisitante !== "") payload.placarVisitante = parseInt(payload.placarVisitante) || 0;
+      if (payload.publico !== "") payload.publico = parseInt(payload.publico) || 0;
+      let resp;
+      if (jogoEditando.id) {
+        resp = await fetch(`${base}/api/jogos/${jogoEditando.id}`, {
+          method: "PUT", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        resp = await fetch(`${base}/api/jogos`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
+      if (resp.ok) {
+        await carregarJogos();
+        setModalJogoVisivel(false);
+      } else {
+        Alert.alert("Erro", "N\u00e3o foi poss\u00edvel salvar o jogo.");
+      }
+    } catch (e: any) { Alert.alert("Erro", e.message); }
+  };
+
+  const deletarJogo = async (id: number) => {
+    Alert.alert("Confirmar", "Deseja excluir este jogo e todos os seus dados de scout?", [
+      { text: "Cancelar", style: "cancel" },
+      { text: "Excluir", style: "destructive", onPress: async () => {
+        const base = getApiBaseUrl();
+        await fetch(`${base}/api/jogos/${id}`, { method: "DELETE" });
+        await carregarJogos();
+        if (jogoSelecionado?.id === id) setJogoSelecionado(null);
+      }},
+    ]);
+  };
+
+  const toggleAtletaRelacionado = (atletaId: number) => {
+    setAtletasRelacionados(prev =>
+      prev.includes(atletaId) ? prev.filter(id => id !== atletaId) : [...prev, atletaId]
+    );
+    if (!scoutsDoJogo[atletaId]) {
+      setScoutsDoJogo(prev => ({
+        ...prev,
+        [atletaId]: {
+          atletaId, titular: false, minutosJogados: 0,
+          gols: 0, assistencias: 0, finalizacoes: 0,
+          passes: 0, passesCompletos: 0,
+          desarmes: 0, interceptacoes: 0, duelos: 0, duelosGanhos: 0,
+          jogosAereos: 0, duelosAereosPerdidos: 0,
+          cartoesAmarelos: 0, cartoesVermelhos: 0,
+          notaTecnica: "", notaFisica: "", notaTatica: "",
+          notaAtitudinal: "", notaPotencial: "", observacoes: "",
+        },
+      }));
+    }
+  };
+
+  const salvarScouts = async () => {
+    if (!jogoSelecionado) return;
+    setSalvandoScout(true);
+    try {
+      const base = getApiBaseUrl();
+      const scouts = atletasRelacionados.map(id => ({
+        ...scoutsDoJogo[id],
+        atletaId: id,
+      })).filter(Boolean);
+      const resp = await fetch(`${base}/api/jogos/${jogoSelecionado.id}/scouts`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scouts }),
+      });
+      if (resp.ok) {
+        Alert.alert("Sucesso", "Scout salvo! As estat\u00edsticas da temporada foram atualizadas.");
+        await carregarElenco();
+        setModalScoutVisivel(false);
+      } else {
+        Alert.alert("Erro", "N\u00e3o foi poss\u00edvel salvar o scout.");
+      }
+    } catch (e: any) { Alert.alert("Erro", e.message); }
+    finally { setSalvandoScout(false); }
+  };
+
+  const gerarRelatorioJogo = async (jogo: any) => {
+    setGerandoPdfJogo(true);
+    try {
+      const base = getApiBaseUrl();
+      const resp = await fetch(`${base}/api/jogos/${jogo.id}/relatorio`, { method: "POST" });
+      if (!resp.ok) throw new Error("Erro ao gerar relat\u00f3rio");
+      const blob = await resp.blob();
+      if (Platform.OS === "web") {
+        const url = URL.createObjectURL(blob);
+        window.open(url, "_blank");
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+      } else {
+        const FileSystem = await import("expo-file-system/legacy");
+        const Sharing = await import("expo-sharing");
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onloadend = async () => {
+          const base64 = (reader.result as string).split(",")[1];
+          const dir = FileSystem.cacheDirectory || FileSystem.documentDirectory || "";
+          const path = dir + `Scout_${jogo.mandante}_x_${jogo.visitante}.pdf`;
+          await FileSystem.writeAsStringAsync(path, base64, { encoding: FileSystem.EncodingType.Base64 });
+          if (await Sharing.isAvailableAsync()) {
+            await Sharing.shareAsync(path, { mimeType: "application/pdf" });
+          } else {
+            Alert.alert("Sucesso", `PDF salvo em:\n${path}`);
+          }
+        };
+      }
+    } catch (e: any) { Alert.alert("Erro", e.message); }
+    finally { setGerandoPdfJogo(false); }
+  };
 
   const carregarElenco = useCallback(async () => {
     try {
@@ -797,6 +1043,93 @@ export default function MarcilioScreen() {
     );
   };
 
+  const renderJogos = () => (
+    <View>
+      {/* Botão Novo Jogo */}
+      <TouchableOpacity
+        style={[styles.btnRelatorio, { backgroundColor: CORES.verde, marginBottom: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", padding: 12 }]}
+        onPress={() => { setJogoEditando({ ...JOGO_VAZIO }); setModalJogoVisivel(true); }}
+      >
+        <Text style={[styles.btnRelatorioTexto, { fontSize: 14 }]}>+ Novo Jogo</Text>
+      </TouchableOpacity>
+
+      {carregandoJogos ? (
+        <ActivityIndicator size="large" color={CORES.azulClaro} style={{ marginTop: 40 }} />
+      ) : jogos.length === 0 ? (
+        <View style={styles.estadoVazio}>
+          <Text style={styles.estadoVazioIcone}>⚽</Text>
+          <Text style={styles.estadoVazioTitulo}>Nenhum jogo cadastrado</Text>
+          <Text style={styles.estadoVazioTexto}>Toque em "+ Novo Jogo" para registrar a primeira partida.</Text>
+        </View>
+      ) : (
+        jogos.map((jogo: any) => (
+          <View key={jogo.id} style={styles.cardAtleta}>
+            {/* Placar */}
+            <View style={{ backgroundColor: CORES.azulEscuro, borderRadius: 10, padding: 12, margin: 10, alignItems: "center" }}>
+              <Text style={{ color: `${CORES.branco}80`, fontSize: 11, marginBottom: 4 }}>{jogo.competicao || ""} {jogo.data ? `• ${new Date(jogo.data).toLocaleDateString("pt-BR", { timeZone: "UTC" })}` : ""}</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                <Text style={{ color: CORES.branco, fontSize: 13, fontWeight: "700", flex: 1, textAlign: "right" }}>{jogo.mandante}</Text>
+                <View style={{ backgroundColor: CORES.vermelho, borderRadius: 8, paddingHorizontal: 14, paddingVertical: 6 }}>
+                  <Text style={{ color: CORES.branco, fontSize: 20, fontWeight: "900" }}>
+                    {jogo.placarMandante ?? "—"} x {jogo.placarVisitante ?? "—"}
+                  </Text>
+                </View>
+                <Text style={{ color: CORES.branco, fontSize: 13, fontWeight: "700", flex: 1 }}>{jogo.visitante}</Text>
+              </View>
+              {jogo.local ? <Text style={{ color: `${CORES.branco}70`, fontSize: 11, marginTop: 4 }}>📍 {jogo.local}</Text> : null}
+            </View>
+            {/* Ações */}
+            <View style={{ flexDirection: "row", gap: 8, padding: 10 }}>
+              <TouchableOpacity
+                style={[styles.btnEditar, { flex: 1 }]}
+                onPress={() => {
+                  setJogoEditando({
+                    ...JOGO_VAZIO,
+                    ...jogo,
+                    placarMandante: jogo.placarMandante?.toString() ?? "",
+                    placarVisitante: jogo.placarVisitante?.toString() ?? "",
+                    publico: jogo.publico?.toString() ?? "",
+                    data: jogo.data ? jogo.data.split("T")[0] : "",
+                  });
+                  setModalJogoVisivel(true);
+                }}
+              >
+                <Text style={styles.btnEditarTexto}>✏️ Editar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.btnVerPerfil, { flex: 2 }]}
+                onPress={async () => {
+                  setJogoSelecionado(jogo);
+                  await carregarScoutsDoJogo(jogo.id);
+                  setModalScoutVisivel(true);
+                }}
+              >
+                <Text style={styles.btnVerPerfilTexto}>📋 Scout do Jogo</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.btnEditar, { backgroundColor: CORES.vermelho }]}
+                onPress={() => deletarJogo(jogo.id)}
+              >
+                <Text style={[styles.btnEditarTexto, { color: CORES.branco }]}>🗑</Text>
+              </TouchableOpacity>
+            </View>
+            {/* Botão Relatório */}
+            <TouchableOpacity
+              style={[styles.btnRelatorio, { margin: 10, marginTop: 0, flexDirection: "row", alignItems: "center", justifyContent: "center", padding: 10 }]}
+              onPress={() => gerarRelatorioJogo(jogo)}
+              disabled={gerandoPdfJogo}
+            >
+              {gerandoPdfJogo
+                ? <ActivityIndicator size="small" color={CORES.branco} />
+                : <Text style={styles.btnRelatorioTexto}>📄 Gerar Relatório do Jogo</Text>
+              }
+            </TouchableOpacity>
+          </View>
+        ))
+      )}
+    </View>
+  );
+
   return (
     <ScreenContainer>
       {/* Header */}
@@ -819,17 +1152,18 @@ export default function MarcilioScreen() {
 
       {/* Abas */}
       <View style={styles.abas}>
-        {(["elenco", "comparar", "radar"] as const).map(aba => (
+           {(["elenco", "comparar", "radar", "jogos"] as const).map(aba => (
           <TouchableOpacity
             key={aba}
             style={[styles.aba, abaAtiva === aba && styles.abaAtiva]}
             onPress={() => setAbaAtiva(aba)}
           >
             <Text style={[styles.abaTexto, abaAtiva === aba && styles.abaTextoAtivo]}>
-              {aba === "elenco" ? "🏟 Elenco" : aba === "comparar" ? "⚖️ Comparar" : "🕸️ Radar"}
+              {aba === "elenco" ? "🏙 Elenco" : aba === "comparar" ? "⚖️ Comparar" : aba === "radar" ? "🕸️ Radar" : "⚽ Jogos"}
             </Text>
           </TouchableOpacity>
         ))}
+      
       </View>
 
       {carregando ? (
@@ -850,6 +1184,7 @@ export default function MarcilioScreen() {
           {abaAtiva === "elenco" && renderDashboard()}
           {abaAtiva === "comparar" && renderComparar()}
           {abaAtiva === "radar" && renderRadar()}
+          {abaAtiva === "jogos" && renderJogos()}
         </ScrollView>
       )}
 
@@ -859,6 +1194,231 @@ export default function MarcilioScreen() {
         onFechar={() => { setModalStatsVisivel(false); setAtletaEditando(null); }}
         onSalvar={handleSalvarStats}
       />
+
+      {/* Modal Cadastro de Jogo */}
+      <Modal visible={modalJogoVisivel} animationType="slide" presentationStyle="pageSheet">
+        <View style={{ flex: 1, backgroundColor: CORES.branco }}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity style={styles.btnFechar} onPress={() => setModalJogoVisivel(false)}>
+              <Text style={{ color: CORES.branco, fontSize: 16 }}>✕</Text>
+            </TouchableOpacity>
+            <Text style={styles.modalTitulo}>{jogoEditando.id ? "Editar Jogo" : "Novo Jogo"}</Text>
+            <TouchableOpacity style={styles.btnSalvar} onPress={salvarJogo}>
+              <Text style={{ color: CORES.branco, fontWeight: "700", fontSize: 13 }}>Salvar</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView contentContainerStyle={{ padding: 16 }}>
+            {/* Placar */}
+            <Text style={styles.secaoTitulo}>Placar</Text>
+            <View style={{ flexDirection: "row", gap: 10, alignItems: "center", marginBottom: 12 }}>
+              <View style={{ flex: 2 }}>
+                <Text style={styles.labelCampo}>Mandante</Text>
+                <TextInput style={styles.inputCampo} value={jogoEditando.mandante} onChangeText={v => setJogoEditando(p => ({ ...p, mandante: v }))} placeholder="Marcílio Dias" />
+              </View>
+              <View style={{ flex: 1, alignItems: "center" }}>
+                <Text style={styles.labelCampo}>Gols</Text>
+                <TextInput style={[styles.inputCampo, { textAlign: "center", fontWeight: "800", fontSize: 18 }]} value={jogoEditando.placarMandante} onChangeText={v => setJogoEditando(p => ({ ...p, placarMandante: v }))} keyboardType="numeric" placeholder="0" />
+              </View>
+              <Text style={{ fontSize: 18, fontWeight: "800", color: CORES.preto, paddingTop: 16 }}>x</Text>
+              <View style={{ flex: 1, alignItems: "center" }}>
+                <Text style={styles.labelCampo}>Gols</Text>
+                <TextInput style={[styles.inputCampo, { textAlign: "center", fontWeight: "800", fontSize: 18 }]} value={jogoEditando.placarVisitante} onChangeText={v => setJogoEditando(p => ({ ...p, placarVisitante: v }))} keyboardType="numeric" placeholder="0" />
+              </View>
+              <View style={{ flex: 2 }}>
+                <Text style={styles.labelCampo}>Visitante</Text>
+                <TextInput style={styles.inputCampo} value={jogoEditando.visitante} onChangeText={v => setJogoEditando(p => ({ ...p, visitante: v }))} placeholder="Adversário" />
+              </View>
+            </View>
+
+            {/* Informações do Jogo */}
+            <Text style={styles.secaoTitulo}>Informações do Jogo</Text>
+            <View style={styles.gridCampos}>
+              <View style={styles.campoPar}>
+                <Text style={styles.labelCampo}>Competição</Text>
+                <TextInput style={styles.inputCampo} value={jogoEditando.competicao} onChangeText={v => setJogoEditando(p => ({ ...p, competicao: v }))} placeholder="Ex: Série D" />
+              </View>
+              <View style={styles.campoPar}>
+                <Text style={styles.labelCampo}>Data (AAAA-MM-DD)</Text>
+                <TextInput style={styles.inputCampo} value={jogoEditando.data} onChangeText={v => setJogoEditando(p => ({ ...p, data: v }))} placeholder="2025-04-06" />
+              </View>
+              <View style={styles.campoPar}>
+                <Text style={styles.labelCampo}>Horário</Text>
+                <TextInput style={styles.inputCampo} value={jogoEditando.horario} onChangeText={v => setJogoEditando(p => ({ ...p, horario: v }))} placeholder="16:00" />
+              </View>
+              <View style={styles.campoPar}>
+                <Text style={styles.labelCampo}>Local</Text>
+                <TextInput style={styles.inputCampo} value={jogoEditando.local} onChangeText={v => setJogoEditando(p => ({ ...p, local: v }))} placeholder="Estádio" />
+              </View>
+            </View>
+
+            {/* Arbitragem */}
+            <Text style={styles.secaoTitulo}>Arbitragem</Text>
+            <View style={styles.gridCampos}>
+              <View style={styles.campoPar}>
+                <Text style={styles.labelCampo}>Árbitro</Text>
+                <TextInput style={styles.inputCampo} value={jogoEditando.arbitro} onChangeText={v => setJogoEditando(p => ({ ...p, arbitro: v }))} />
+              </View>
+              <View style={styles.campoPar}>
+                <Text style={styles.labelCampo}>Assistente 1</Text>
+                <TextInput style={styles.inputCampo} value={jogoEditando.assistente1} onChangeText={v => setJogoEditando(p => ({ ...p, assistente1: v }))} />
+              </View>
+              <View style={styles.campoPar}>
+                <Text style={styles.labelCampo}>Assistente 2</Text>
+                <TextInput style={styles.inputCampo} value={jogoEditando.assistente2} onChangeText={v => setJogoEditando(p => ({ ...p, assistente2: v }))} />
+              </View>
+            </View>
+
+            {/* Dados da Partida */}
+            <Text style={styles.secaoTitulo}>Dados da Partida</Text>
+            <View style={styles.gridCampos}>
+              <View style={styles.campoPar}>
+                <Text style={styles.labelCampo}>Público</Text>
+                <TextInput style={styles.inputCampo} value={jogoEditando.publico} onChangeText={v => setJogoEditando(p => ({ ...p, publico: v }))} keyboardType="numeric" />
+              </View>
+              <View style={styles.campoPar}>
+                <Text style={styles.labelCampo}>Renda</Text>
+                <TextInput style={styles.inputCampo} value={jogoEditando.renda} onChangeText={v => setJogoEditando(p => ({ ...p, renda: v }))} placeholder="R$ 0,00" />
+              </View>
+            </View>
+            <View style={{ marginTop: 10 }}>
+              <Text style={styles.labelCampo}>Gols (descritivo)</Text>
+              <TextInput style={[styles.inputCampo, { minHeight: 60 }]} value={jogoEditando.gols} onChangeText={v => setJogoEditando(p => ({ ...p, gols: v }))} multiline placeholder="Ex: Davi Torres 23', Alan Costa 67'" />
+            </View>
+            <View style={{ marginTop: 10 }}>
+              <Text style={styles.labelCampo}>Observações</Text>
+              <TextInput style={[styles.inputCampo, { minHeight: 80 }]} value={jogoEditando.observacoes} onChangeText={v => setJogoEditando(p => ({ ...p, observacoes: v }))} multiline placeholder="Observações gerais sobre o jogo..." />
+            </View>
+          </ScrollView>
+        </View>
+      </Modal>
+
+      {/* Modal Scout do Jogo */}
+      <Modal visible={modalScoutVisivel} animationType="slide" presentationStyle="pageSheet">
+        <View style={{ flex: 1, backgroundColor: CORES.branco }}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity style={styles.btnFechar} onPress={() => setModalScoutVisivel(false)}>
+              <Text style={{ color: CORES.branco, fontSize: 16 }}>✕</Text>
+            </TouchableOpacity>
+            <Text style={styles.modalTitulo} numberOfLines={1}>
+              {jogoSelecionado ? `${jogoSelecionado.mandante} x ${jogoSelecionado.visitante}` : "Scout"}
+            </Text>
+            <TouchableOpacity style={styles.btnSalvar} onPress={salvarScouts} disabled={salvandoScout}>
+              {salvandoScout
+                ? <ActivityIndicator size="small" color={CORES.branco} />
+                : <Text style={{ color: CORES.branco, fontWeight: "700", fontSize: 13 }}>Salvar</Text>
+              }
+            </TouchableOpacity>
+          </View>
+          <ScrollView contentContainerStyle={{ padding: 16 }}>
+            {/* Seleção de atletas */}
+            <Text style={styles.secaoTitulo}>Selecionar Atletas Relacionados</Text>
+            <Text style={{ fontSize: 12, color: CORES.cinzaTexto, marginBottom: 8 }}>Toque no atleta para incluir/remover da relação:</Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
+              {elenco.map(a => {
+                const incl = atletasRelacionados.includes(a.id);
+                return (
+                  <TouchableOpacity
+                    key={a.id}
+                    style={[styles.chipPosicao, incl && styles.chipPosicaoAtivo, { marginBottom: 4 }]}
+                    onPress={() => toggleAtletaRelacionado(a.id)}
+                  >
+                    <Text style={[styles.chipPosicaoTexto, incl && styles.chipPosicaoTextoAtivo]}>{a.nome.split(" ")[0]}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {/* Planilha de scout por atleta */}
+            {atletasRelacionados.length === 0 ? (
+              <Text style={{ color: CORES.cinzaTexto, textAlign: "center", marginTop: 20 }}>Selecione atletas acima para preencher o scout.</Text>
+            ) : (
+              atletasRelacionados.map(atletaId => {
+                const atleta = elenco.find(a => a.id === atletaId);
+                if (!atleta) return null;
+                const scout = scoutsDoJogo[atletaId] || {};
+                const setScout = (campo: string, valor: any) => {
+                  setScoutsDoJogo(prev => ({ ...prev, [atletaId]: { ...prev[atletaId], [campo]: valor } }));
+                };
+                const campoNum = (label: string, campo: string) => (
+                  <View style={styles.campoPar} key={campo}>
+                    <Text style={styles.labelCampo}>{label}</Text>
+                    <TextInput
+                      style={styles.inputCampo}
+                      value={(scout as any)[campo] === 0 || (scout as any)[campo] === "" ? "" : String((scout as any)[campo] || "")}
+                      onChangeText={v => setScout(campo, v === "" ? 0 : (campo.startsWith("nota") ? v : parseInt(v) || 0))}
+                      keyboardType="numeric" placeholder="0"
+                    />
+                  </View>
+                );
+                return (
+                  <View key={atletaId} style={[styles.secaoCard, { marginBottom: 16 }]}>
+                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                      <Text style={styles.secaoTituloCard}>{atleta.nome}</Text>
+                      <Text style={{ fontSize: 11, color: CORES.azulClaro }}>{atleta.posicao}</Text>
+                    </View>
+                    {/* Titular e Minutos */}
+                    <View style={{ flexDirection: "row", gap: 10, marginBottom: 8, alignItems: "center" }}>
+                      <TouchableOpacity
+                        style={[styles.chipPosicao, (scout as any).titular && styles.chipPosicaoAtivo]}
+                        onPress={() => setScout("titular", !(scout as any).titular)}
+                      >
+                        <Text style={[styles.chipPosicaoTexto, (scout as any).titular && styles.chipPosicaoTextoAtivo]}>Titular</Text>
+                      </TouchableOpacity>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.labelCampo}>Minutos Jogados</Text>
+                        <TextInput style={styles.inputCampo} value={(scout as any).minutosJogados === 0 ? "" : String((scout as any).minutosJogados || "")} onChangeText={v => setScout("minutosJogados", parseInt(v) || 0)} keyboardType="numeric" placeholder="90" />
+                      </View>
+                    </View>
+                    {/* Ofensivo */}
+                    <Text style={[styles.secaoTitulo, { marginTop: 4 }]}>Ofensivo</Text>
+                    <View style={styles.gridCampos}>
+                      {campoNum("Gols", "gols")}
+                      {campoNum("Assist.", "assistencias")}
+                      {campoNum("Finaliz.", "finalizacoes")}
+                      {campoNum("Passes", "passes")}
+                      {campoNum("Passes Certos", "passesCompletos")}
+                    </View>
+                    {/* Defensivo */}
+                    <Text style={[styles.secaoTitulo, { marginTop: 4 }]}>Defensivo</Text>
+                    <View style={styles.gridCampos}>
+                      {campoNum("Desarmes", "desarmes")}
+                      {campoNum("Intercept.", "interceptacoes")}
+                      {campoNum("Duelos", "duelos")}
+                      {campoNum("Duelos Ganhos", "duelosGanhos")}
+                      {campoNum("Jogo Aéreo", "jogosAereos")}
+                      {campoNum("Duelo Aéreo Perd.", "duelosAereosPerdidos")}
+                    </View>
+                    {/* Disciplina */}
+                    <Text style={[styles.secaoTitulo, { marginTop: 4 }]}>Disciplina</Text>
+                    <View style={styles.gridCampos}>
+                      {campoNum("🟨 Amarelos", "cartoesAmarelos")}
+                      {campoNum("🟥 Vermelhos", "cartoesVermelhos")}
+                    </View>
+                    {/* Notas */}
+                    <Text style={[styles.secaoTitulo, { marginTop: 4 }]}>Notas (0-10)</Text>
+                    <View style={styles.gridCampos}>
+                      {campoNum("Técnica", "notaTecnica")}
+                      {campoNum("Física", "notaFisica")}
+                      {campoNum("Tática", "notaTatica")}
+                      {campoNum("Atitudinal", "notaAtitudinal")}
+                      {campoNum("Potencial", "notaPotencial")}
+                    </View>
+                    {/* Observações */}
+                    <Text style={[styles.labelCampo, { marginTop: 8 }]}>Observações</Text>
+                    <TextInput
+                      style={[styles.inputCampo, { minHeight: 60 }]}
+                      value={(scout as any).observacoes || ""}
+                      onChangeText={v => setScout("observacoes", v)}
+                      multiline placeholder="Observações sobre o atleta neste jogo..."
+                    />
+                  </View>
+                );
+              })
+            )}
+          </ScrollView>
+        </View>
+      </Modal>
+
     </ScreenContainer>
   );
 }
