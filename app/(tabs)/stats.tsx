@@ -140,6 +140,40 @@ export default function StatsScreen() {
     decimalPlaces: 0,
   };
 
+  // IDs dos atletas para buscar estatísticas (selecionados ou todos os filtrados)
+  const idsParaEstatisticas = atletasSelecionados.length > 0
+    ? atletasSelecionados
+    : atletasFiltrados.map((a: any) => a.id);
+
+  const { data: estatisticasTemporada = [] } = trpc.estatisticas.getByAtletaIds.useQuery(
+    { atletaIds: idsParaEstatisticas },
+    { enabled: idsParaEstatisticas.length > 0 }
+  );
+
+  // Resumo dinâmico calculado a partir dos atletas para análise + estatísticas
+  const resumoDinamico = useMemo(() => {
+    const base = atletasParaAnalise;
+    const totalAtletas = base.length;
+
+    const idades = base.map((a: any) => a.idade).filter(Boolean) as number[];
+    const mediaIdade = idades.length
+      ? Math.round(idades.reduce((s, v) => s + v, 0) / idades.length * 10) / 10
+      : null;
+
+    const alturas = base.map((a: any) => parseFloat(a.altura)).filter(v => !isNaN(v)) as number[];
+    const mediaAltura = alturas.length
+      ? (alturas.reduce((s, v) => s + v, 0) / alturas.length).toFixed(2)
+      : null;
+
+    const statsMap = new Map((estatisticasTemporada as any[]).map(s => [s.atletaId, s]));
+    const totalGols = base.reduce((sum: number, a: any) => {
+      const s = statsMap.get(a.id);
+      return sum + (s?.gols || 0);
+    }, 0);
+
+    return { totalAtletas, mediaIdade, mediaAltura, totalGols };
+  }, [atletasParaAnalise, estatisticasTemporada]);
+
   const gerarPDFMutation = trpc.relatorios.gerarPDF.useMutation();
 
   const handleGerarRelatorio = async () => {
@@ -262,6 +296,41 @@ export default function StatsScreen() {
                 <Text style={{ color: colors.error, fontSize: 12, fontWeight: "600" }}>Limpar tudo</Text>
               </TouchableOpacity>
             </ScrollView>
+          </View>
+        )}
+
+        {/* ─── PAINEL DE RESUMO DINÂMICO ─── */}
+        {atletasParaAnalise.length > 0 && (
+          <View className="mx-4 mb-4">
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              {[
+                { label: "Atletas", value: String(resumoDinamico.totalAtletas), icon: "👤" },
+                { label: "Méd. Idade", value: resumoDinamico.mediaIdade != null ? `${resumoDinamico.mediaIdade}a` : "—", icon: "📅" },
+                { label: "Méd. Altura", value: resumoDinamico.mediaAltura != null ? `${resumoDinamico.mediaAltura}m` : "—", icon: "📏" },
+                { label: "Gols", value: String(resumoDinamico.totalGols), icon: "⚽" },
+              ].map(({ label, value, icon }) => (
+                <View key={label} style={{
+                  flex: 1,
+                  backgroundColor: colors.surface,
+                  borderRadius: 14,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  paddingVertical: 10,
+                  paddingHorizontal: 6,
+                  alignItems: "center",
+                  gap: 2,
+                }}>
+                  <Text style={{ fontSize: 18 }}>{icon}</Text>
+                  <Text style={{ fontSize: 16, fontWeight: "800", color: colors.primary }}>{value}</Text>
+                  <Text style={{ fontSize: 10, color: colors.muted, textAlign: "center" }}>{label}</Text>
+                </View>
+              ))}
+            </View>
+            {atletasSelecionados.length > 0 && (
+              <Text style={{ fontSize: 11, color: colors.muted, textAlign: "center", marginTop: 6 }}>
+                Dados referentes aos {atletasSelecionados.length} atleta(s) selecionado(s)
+              </Text>
+            )}
           </View>
         )}
 

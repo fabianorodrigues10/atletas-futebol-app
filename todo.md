@@ -417,3 +417,10 @@
 - [x] Tags de filtros ativos com botão de remoção individual
 - [x] Filtros avançados redesenhados com chips e contadores de seleção por aba
 - [x] Relatório PDF comparativo com os atletas selecionados (rota existente reutilizada)
+
+## Feature: Painel de resumo dinâmico com dados dos atletas selecionados
+- [x] Exibir painel com: nº de atletas, média de idade, média de altura e total de gols dos selecionados
+- [x] Painel atualiza em tempo real ao clicar nos chips
+- [x] Quando nenhum atleta está selecionado, exibir dados de todos os filtrados
+- [x] Nova rota tRPC estatisticas.getByAtletaIds para buscar gols de múltiplos atletas em uma chamada
+- [x] Legenda indicando quantos atletas estão selecionados abaixo do painel

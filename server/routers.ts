@@ -512,6 +512,36 @@ export const appRouter = router({
       }),
   }),
 
+  // ==================== ESTATISTICAS DA TEMPORADA ====================
+  estatisticas: router({
+    // Buscar estatísticas da temporada de múltiplos atletas de uma vez
+    getByAtletaIds: publicProcedure
+      .input(z.object({
+        atletaIds: z.array(z.number()),
+        temporada: z.string().optional(),
+      }))
+      .query(async ({ ctx, input }) => {
+        try {
+          const userId = ctx.user?.id || 1;
+          if (!input.atletaIds.length) return [];
+          const dbConn = await db.getDb();
+          if (!dbConn) return [];
+          const { estatisticasTemporada } = await import("../drizzle/schema");
+          const { and, inArray, eq } = await import("drizzle-orm");
+          const temporada = input.temporada || "2025";
+          const result = await dbConn.select().from(estatisticasTemporada)
+            .where(and(
+              inArray(estatisticasTemporada.atletaId, input.atletaIds),
+              eq(estatisticasTemporada.userId, userId),
+              eq(estatisticasTemporada.temporada, temporada),
+            ));
+          return result;
+        } catch (e) {
+          return [];
+        }
+      }),
+  }),
+
   // ==================== RELATORIOS ====================
   relatorios: router({
     // Gerar relatório em PDF
