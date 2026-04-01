@@ -506,11 +506,17 @@ async function startServer() {
     try {
       const userId = 1;
       const dados = req.body;
+      // Remover campos que não existem na tabela
+      const { id: _id, createdAt: _c, updatedAt: _u, userId: _uid, dataExibicao: _de, ...dadosLimpos } = dados;
+      // Converter strings vazias para null em campos numéricos
+      if (dadosLimpos.publico === "" || dadosLimpos.publico === undefined) dadosLimpos.publico = null;
+      if (dadosLimpos.placarMandante === "" || dadosLimpos.placarMandante === undefined) dadosLimpos.placarMandante = null;
+      if (dadosLimpos.placarVisitante === "" || dadosLimpos.placarVisitante === undefined) dadosLimpos.placarVisitante = null;
       const { getDb } = await import("../../server/db");
       const { jogos } = await import("../../drizzle/schema");
       const dbConn = await getDb();
       if (!dbConn) return res.status(500).json({ error: "DB unavailable" });
-      const [result] = await dbConn.insert(jogos).values({ ...dados, userId });
+      const [result] = await dbConn.insert(jogos).values({ ...dadosLimpos, userId });
       res.json({ success: true, id: (result as any).insertId });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -543,7 +549,11 @@ async function startServer() {
       const id = Number(req.params.id);
       const userId = 1;
       const dados = req.body;
-      const { id: _id, createdAt: _c, updatedAt: _u, userId: _uid, ...dadosLimpos } = dados;
+      const { id: _id, createdAt: _c, updatedAt: _u, userId: _uid, dataExibicao: _de, ...dadosLimpos } = dados;
+      // Converter strings vazias para null em campos numéricos
+      if (dadosLimpos.publico === "" || dadosLimpos.publico === undefined) dadosLimpos.publico = null;
+      if (dadosLimpos.placarMandante === "" || dadosLimpos.placarMandante === undefined) dadosLimpos.placarMandante = null;
+      if (dadosLimpos.placarVisitante === "" || dadosLimpos.placarVisitante === undefined) dadosLimpos.placarVisitante = null;
       const { getDb } = await import("../../server/db");
       const { jogos } = await import("../../drizzle/schema");
       const { eq, and } = await import("drizzle-orm");

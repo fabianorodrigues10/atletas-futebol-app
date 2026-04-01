@@ -362,3 +362,7 @@
 - [x] Campo de data do jogo no formato DD/MM/AAAA com barras automáticas ao digitar
 - [x] Converter DD/MM/AAAA para AAAA-MM-DD ao salvar no banco
 - [x] Exibir data no formato DD/MM/AAAA ao editar jogo existente
+
+## Bug: Botão Salvar do modal de jogo não funciona na web
+- [x] Diagnosticar por que clicar em Salvar no modal de jogo não faz nada na web (servidor falhava silenciosamente: campo dataExibicao não existe na tabela + publico como string vazia causava erro no banco)
+- [x] Corrigido: servidor agora remove dataExibicao e converte strings vazias para null antes de salvar
