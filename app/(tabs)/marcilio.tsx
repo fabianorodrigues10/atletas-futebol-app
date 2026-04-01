@@ -329,7 +329,7 @@ function ModalEstatisticas({
             {campo("Desarmes", "desarmes")}
             {campo("Interceptações", "interceptacoes")}
             {campo("Duelos Ganhos", "duelosGanhos")}
-            {campo("Jogos Aéreos", "jogosAereos")}
+            {campo("Jogo Aéreo", "jogosAereos")}
             {campo("Duelo Aéreo Perdido", "duelosAereosPerdidos")}
           </View>
 
