@@ -619,6 +619,13 @@ async function startServer() {
       // Upsert scouts
       for (const scout of scouts) {
         const { id: _id, createdAt: _c, updatedAt: _u, ...dadosLimpos } = scout;
+        // Converter strings vazias em null para campos de decimal (notas)
+        if (dadosLimpos.notaTecnica === "" || dadosLimpos.notaTecnica === null) dadosLimpos.notaTecnica = null;
+        if (dadosLimpos.notaFisica === "" || dadosLimpos.notaFisica === null) dadosLimpos.notaFisica = null;
+        if (dadosLimpos.notaTatica === "" || dadosLimpos.notaTatica === null) dadosLimpos.notaTatica = null;
+        if (dadosLimpos.notaAtitudinal === "" || dadosLimpos.notaAtitudinal === null) dadosLimpos.notaAtitudinal = null;
+        if (dadosLimpos.notaPotencial === "" || dadosLimpos.notaPotencial === null) dadosLimpos.notaPotencial = null;
+        if (dadosLimpos.observacoes === "") dadosLimpos.observacoes = null;
         const existing = await dbConn.select().from(scoutJogo)
           .where(and(eq(scoutJogo.jogoId, jogoId), eq(scoutJogo.atletaId, scout.atletaId)))
           .limit(1);

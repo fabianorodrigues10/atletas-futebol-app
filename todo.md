@@ -386,3 +386,7 @@
 
 ## Bug: Data do jogo no formato errado
 - [x] Corrigir data no cabeçalho da página de jogos de MM/DD/AAAA para DD/MM/AAAA
+
+## Bug Crítico: Scout dos atletas nos jogos não salva
+- [x] Diagnosticar por que os dados dos atletas no scout do jogo não persistem (servidor falhava: notaAtitudinal e notaPotencial como string vazia causavam erro no banco)
+- [x] Corrigido: servidor converte strings vazias em null antes de salvar o scout
