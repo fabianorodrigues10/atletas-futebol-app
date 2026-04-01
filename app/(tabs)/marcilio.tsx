@@ -58,6 +58,7 @@ type Jogo = {
   visitante: string;
   competicao: string;
   data: string;
+  dataExibicao?: string; // DD/MM/AAAA para exibição
   horario: string;
   local: string;
   arbitro: string;
@@ -76,6 +77,7 @@ const JOGO_VAZIO: Jogo = {
   visitante: "",
   competicao: "",
   data: "",
+  dataExibicao: "",
   horario: "",
   local: "",
   arbitro: "",
@@ -1083,13 +1085,21 @@ export default function MarcilioScreen() {
               <TouchableOpacity
                 style={[styles.btnEditar, { flex: 1 }]}
                 onPress={() => {
+                  // Converter data de AAAA-MM-DD para DD/MM/AAAA
+                  const dataISO = jogo.data ? jogo.data.split("T")[0] : "";
+                  let dataExibicao = "";
+                  if (dataISO && dataISO.length === 10) {
+                    const [aaaa, mm, dd] = dataISO.split("-");
+                    dataExibicao = `${dd}/${mm}/${aaaa}`;
+                  }
                   setJogoEditando({
                     ...JOGO_VAZIO,
                     ...jogo,
                     placarMandante: jogo.placarMandante?.toString() ?? "",
                     placarVisitante: jogo.placarVisitante?.toString() ?? "",
                     publico: jogo.publico?.toString() ?? "",
-                    data: jogo.data ? jogo.data.split("T")[0] : "",
+                    data: dataISO,
+                    dataExibicao,
                   });
                   setModalJogoVisivel(true);
                 }}
@@ -1238,8 +1248,31 @@ export default function MarcilioScreen() {
                 <TextInput style={styles.inputCampo} value={jogoEditando.competicao} onChangeText={v => setJogoEditando(p => ({ ...p, competicao: v }))} placeholder="Ex: Série D" />
               </View>
               <View style={styles.campoPar}>
-                <Text style={styles.labelCampo}>Data (AAAA-MM-DD)</Text>
-                <TextInput style={styles.inputCampo} value={jogoEditando.data} onChangeText={v => setJogoEditando(p => ({ ...p, data: v }))} placeholder="2025-04-06" />
+                <Text style={styles.labelCampo}>Data (DD/MM/AAAA)</Text>
+                <TextInput
+                  style={styles.inputCampo}
+                  value={jogoEditando.dataExibicao ?? ""}
+                  onChangeText={v => {
+                    // Remove tudo que não é dígito
+                    const digits = v.replace(/\D/g, "").slice(0, 8);
+                    // Aplica máscara DD/MM/AAAA
+                    let masked = digits;
+                    if (digits.length > 2) masked = digits.slice(0, 2) + "/" + digits.slice(2);
+                    if (digits.length > 4) masked = digits.slice(0, 2) + "/" + digits.slice(2, 4) + "/" + digits.slice(4);
+                    // Converte para AAAA-MM-DD para salvar no banco
+                    let iso = "";
+                    if (digits.length === 8) {
+                      const dd = digits.slice(0, 2);
+                      const mm = digits.slice(2, 4);
+                      const aaaa = digits.slice(4, 8);
+                      iso = `${aaaa}-${mm}-${dd}`;
+                    }
+                    setJogoEditando(p => ({ ...p, dataExibicao: masked, data: iso || masked }));
+                  }}
+                  placeholder="06/04/2025"
+                  keyboardType="numeric"
+                  maxLength={10}
+                />
               </View>
               <View style={styles.campoPar}>
                 <Text style={styles.labelCampo}>Horário</Text>

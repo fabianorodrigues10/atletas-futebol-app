@@ -357,3 +357,8 @@
 - [x] Modal de cadastro/edição de jogo com todos os campos do cabeçalho (placar, competição, data, horário, local, árbitro, assistentes, renda, público, gols)
 - [x] Modal de scout por jogo com seleção de atletas e planilha de estatísticas
 - [x] Geração de relatório PDF do jogo com cabeçalho, tabela de scouts e avaliações individuais
+
+## Feature: Máscara DD/MM/AAAA no campo de data do jogo
+- [x] Campo de data do jogo no formato DD/MM/AAAA com barras automáticas ao digitar
+- [x] Converter DD/MM/AAAA para AAAA-MM-DD ao salvar no banco
+- [x] Exibir data no formato DD/MM/AAAA ao editar jogo existente
