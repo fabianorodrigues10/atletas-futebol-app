@@ -64,7 +64,7 @@ export function registerPdfJogoRoutes(app: Express) {
 
       if (jogo.local) {
         doc.fontSize(10).fillColor(`${BRANCO}99`)
-          .text(`📍 ${jogo.local}`, 40, 80, { align: "center", width: doc.page.width - 80 });
+          .text(`Local: ${jogo.local}`, 40, 80, { align: "center", width: doc.page.width - 80 });
       }
 
       let y = 130;
@@ -125,7 +125,7 @@ export function registerPdfJogoRoutes(app: Express) {
         const colMin = 35;
         const colNum = 28;
         const cols = [colNome, colPos, colMin, colNum, colNum, colNum, colNum, colNum, colNum, colNum, colNum, colNum, colNum, colNum];
-        const headers = ["Atleta", "Posição", "Min", "G", "A", "Fin", "Pas", "P.C", "Des", "Int", "Aér", "A.P", "🟨", "🟥"];
+        const headers = ["Atleta", "Posição", "Min", "G", "A", "Fin", "Pas", "P.C", "Des", "Int", "Aér", "A.P", "CA", "CV"];
         const fields = ["", "", "minutosJogados", "gols", "assistencias", "finalizacoes", "passes", "passesCompletos", "desarmes", "interceptacoes", "jogosAereos", "duelosAereosPerdidos", "cartoesAmarelos", "cartoesVermelhos"];
 
         const rowH = 18;

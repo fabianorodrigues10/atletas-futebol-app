@@ -373,3 +373,6 @@
 
 ## Feature: Simplificar notas no scout do jogo
 - [x] Remover Atitudinal e Potencial das notas no scout do jogo, manter apenas Técnica, Física e Tática
+
+## Bug: Emojis corrompidos no PDF do jogo
+- [x] Remover emojis (📍 e outros) do gerador de PDF do jogo que aparecem como Ø=ÜÍ (substituido por texto: Local: ... e CA/CV para cartões)
