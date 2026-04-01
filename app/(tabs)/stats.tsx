@@ -140,10 +140,18 @@ export default function StatsScreen() {
     decimalPlaces: 0,
   };
 
-  // IDs dos atletas para buscar estatísticas (selecionados ou todos os filtrados)
-  const idsParaEstatisticas = atletasSelecionados.length > 0
-    ? atletasSelecionados
-    : atletasFiltrados.map((a: any) => a.id);
+  const temFiltroAtivo = filtros.posicoes.length > 0 || filtros.idades.length > 0 ||
+    filtros.clubes.length > 0 || filtros.escalas.length > 0 || filtros.naturalidades.length > 0;
+
+  // IDs dos atletas para buscar estatísticas
+  // Quando há selecionados: usa apenas eles
+  // Quando há filtros mas sem seleção: usa os filtrados (lista menor)
+  // Sem filtros e sem seleção: não busca (evita query com 1732 IDs)
+  const idsParaEstatisticas = useMemo(() => {
+    if (atletasSelecionados.length > 0) return atletasSelecionados;
+    if (temFiltroAtivo) return atletasFiltrados.map((a: any) => a.id);
+    return [];
+  }, [atletasSelecionados, atletasFiltrados, temFiltroAtivo]);
 
   const { data: estatisticasTemporada = [] } = trpc.estatisticas.getByAtletaIds.useQuery(
     { atletaIds: idsParaEstatisticas },
@@ -227,9 +235,6 @@ export default function StatsScreen() {
 
   const limparSelecao = () => setAtletasSelecionados([]);
 
-  const temFiltroAtivo = filtros.posicoes.length > 0 || filtros.idades.length > 0 ||
-    filtros.clubes.length > 0 || filtros.escalas.length > 0 || filtros.naturalidades.length > 0;
-
   return (
     <ScreenContainer className="bg-background">
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 32 }}>
@@ -300,7 +305,7 @@ export default function StatsScreen() {
         )}
 
         {/* ─── PAINEL DE RESUMO DINÂMICO ─── */}
-        {atletasParaAnalise.length > 0 && (
+        {atletas.length > 0 && (
           <View className="mx-4 mb-4">
             <View style={{ flexDirection: "row", gap: 8 }}>
               {[
@@ -376,10 +381,19 @@ export default function StatsScreen() {
           </View>
 
           {/* Lista de chips com nomes */}
+          {/* Aviso quando sem filtros e sem busca: orientar o usuário */}
+          {!temFiltroAtivo && !buscaAtleta.trim() && (
+            <View className="px-3 pb-1">
+              <Text style={{ fontSize: 11, color: colors.muted, fontStyle: "italic" }}>
+                Use a busca acima ou aplique filtros para localizar atletas específicos.
+              </Text>
+            </View>
+          )}
+
           <View className="px-3 py-3" style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
             {atletasVisiveis.length === 0 ? (
               <Text className="text-muted text-sm px-1 py-2">
-                {temFiltroAtivo ? "Nenhum atleta encontrado com esses filtros." : "Aplique filtros para ver os atletas."}
+                {temFiltroAtivo || buscaAtleta.trim() ? "Nenhum atleta encontrado." : ""}
               </Text>
             ) : (
               atletasVisiveis.map((atleta: any) => {

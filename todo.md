@@ -424,3 +424,9 @@
 - [x] Quando nenhum atleta está selecionado, exibir dados de todos os filtrados
 - [x] Nova rota tRPC estatisticas.getByAtletaIds para buscar gols de múltiplos atletas em uma chamada
 - [x] Legenda indicando quantos atletas estão selecionados abaixo do painel
+
+## Bug: Seleção de chips não atualiza o painel de resumo
+- [x] Corrigido: chips só apareciam com filtros ativos — agora aparecem também ao buscar por nome
+- [x] Painel de resumo agora aparece sempre (não só quando há atletas para análise)
+- [x] Removida declaração duplicada de temFiltroAtivo
+- [x] Query de estatísticas otimizada: sem filtros e sem seleção, não envia 1732 IDs
