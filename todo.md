@@ -430,3 +430,8 @@
 - [x] Painel de resumo agora aparece sempre (não só quando há atletas para análise)
 - [x] Removida declaração duplicada de temFiltroAtivo
 - [x] Query de estatísticas otimizada: sem filtros e sem seleção, não envia 1732 IDs
+
+## Bug: Painel de resumo não atualiza ao selecionar chips de atletas
+- [x] Corrigido: chips não apareciam sem filtros ativos — agora exibem atletas do elenco por padrão
+- [x] Painel atualiza em tempo real ao clicar nos chips (Atletas, Méd. Idade, Méd. Altura, Gols)
+- [x] Legenda "X selecionado(s) de 1732" e "Dados referentes aos X atleta(s) selecionado(s)" funcionando
