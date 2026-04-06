@@ -1637,6 +1637,9 @@ export default function MarcilioScreen() {
             <View style={{ width: 60 }} />
           </View>
 
+          {/* ScrollView único cobrindo cabeçalho + cards */}
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 100 }}>
+
           {/* Cabeçalho do jogo */}
           {jogoStatsVisualizado && (
             <View style={{ backgroundColor: CORES.azulEscuro, paddingHorizontal: 16, paddingVertical: 14 }}>
@@ -1759,7 +1762,7 @@ export default function MarcilioScreen() {
           )}
 
           {carregandoStatsJogo ? (
-            <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+            <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 40 }}>
               <ActivityIndicator size="large" color={CORES.azulClaro} />
               <Text style={{ color: CORES.cinzaTexto, marginTop: 12 }}>Carregando dados...</Text>
             </View>
@@ -1770,7 +1773,7 @@ export default function MarcilioScreen() {
               <Text style={styles.estadoVazioTexto}>Nenhum scout registrado para este jogo.</Text>
             </View>
           ) : (
-            <ScrollView contentContainerStyle={{ padding: 12, paddingBottom: 100 }}>
+            <View style={{ padding: 12 }}>
               {/* Título da seção */}
               <Text style={{ fontSize: 11, color: CORES.cinzaTexto, fontWeight: "700", textTransform: "uppercase", marginBottom: 8, letterSpacing: 0.5 }}>
                 {scoutsStatsJogo.length} atleta{scoutsStatsJogo.length !== 1 ? "s" : ""} avaliado{scoutsStatsJogo.length !== 1 ? "s" : ""}
@@ -1908,8 +1911,10 @@ export default function MarcilioScreen() {
                   </View>
                 );
               })}
-            </ScrollView>
+            </View>
           )}
+
+          </ScrollView>
 
           {/* Botão fixo de download */}
           {!carregandoStatsJogo && scoutsStatsJogo.length > 0 && jogoStatsVisualizado && (
