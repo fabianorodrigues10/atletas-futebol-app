@@ -435,3 +435,16 @@
 - [x] Corrigido: chips não apareciam sem filtros ativos — agora exibem atletas do elenco por padrão
 - [x] Painel atualiza em tempo real ao clicar nos chips (Atletas, Méd. Idade, Méd. Altura, Gols)
 - [x] Legenda "X selecionado(s) de 1732" e "Dados referentes aos X atleta(s) selecionado(s)" funcionando
+
+## Feature: Campo "Cruzamento" na seção ofensiva do scout de jogos
+- [ ] Adicionar campo cruzamento no frontend (marcilio.tsx)
+- [ ] Adicionar campo cruzamento no banco de dados e servidor
+
+## Feature: Novos campos no scout de jogos (ofensivo e defensivo)
+- [x] Adicionar campo "Cruzamentos" na seção ofensiva (linha 1: Gols | Assist. | Finaliz. | Cruzam.)
+- [x] Adicionar campo "Faltas Sofridas" na seção ofensiva (linha 2: Passes | P.Certos | F.Sofrid. | _)
+- [x] Adicionar campo "Faltas Cometidas" na seção defensiva (linha 2: J.Aéreo | D.Aér.Perd | F.Comet. | _)
+- [x] Layout simétrico: 2 linhas de 4 campos para ofensivo e 2 linhas de 4 para defensivo
+- [x] Schema do banco atualizado (scoutJogo + estatisticasTemporada)
+- [x] Colunas adicionadas via SQL direto no banco TiDB
+- [x] Servidor atualizado para incluir novos campos no recálculo de estatísticas

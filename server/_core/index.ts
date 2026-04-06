@@ -661,9 +661,9 @@ async function startServer() {
         const soma: any = {
           minutosJogados: 0, jogos: todosScouts.length, jogosTitular: 0,
           gols: 0, assistencias: 0, finalizacoes: 0,
-          passes: 0, passesCompletos: 0,
+          passes: 0, passesCompletos: 0, cruzamentos: 0, faltasSofridas: 0,
           desarmes: 0, interceptacoes: 0, duelos: 0, duelosGanhos: 0,
-          jogosAereos: 0, duelosAereosPerdidos: 0,
+          jogosAereos: 0, duelosAereosPerdidos: 0, faltasCometidas: 0,
           cartoesAmarelos: 0, cartoesVermelhos: 0,
         };
         const notas: any = { notaTecnica: [], notaFisica: [], notaTatica: [], notaAtitudinal: [], notaPotencial: [] };
@@ -675,12 +675,15 @@ async function startServer() {
           soma.finalizacoes += s.finalizacoes || 0;
           soma.passes += s.passes || 0;
           soma.passesCompletos += s.passesCompletos || 0;
+          soma.cruzamentos += (s as any).cruzamentos || 0;
+          soma.faltasSofridas += (s as any).faltasSofridas || 0;
           soma.desarmes += s.desarmes || 0;
           soma.interceptacoes += s.interceptacoes || 0;
           soma.duelos += s.duelos || 0;
           soma.duelosGanhos += s.duelosGanhos || 0;
           soma.jogosAereos += s.jogosAereos || 0;
           soma.duelosAereosPerdidos += s.duelosAereosPerdidos || 0;
+          soma.faltasCometidas += (s as any).faltasCometidas || 0;
           soma.cartoesAmarelos += s.cartoesAmarelos || 0;
           soma.cartoesVermelhos += s.cartoesVermelhos || 0;
           if (s.notaTecnica) notas.notaTecnica.push(parseFloat(s.notaTecnica));

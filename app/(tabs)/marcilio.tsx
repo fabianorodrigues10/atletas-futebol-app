@@ -100,12 +100,15 @@ type ScoutAtleta = {
   finalizacoes: number;
   passes: number;
   passesCompletos: number;
+  cruzamentos: number;
+  faltasSofridas: number;
   desarmes: number;
   interceptacoes: number;
   duelos: number;
   duelosGanhos: number;
   jogosAereos: number;
   duelosAereosPerdidos: number;
+  faltasCometidas: number;
   cartoesAmarelos: number;
   cartoesVermelhos: number;
   notaTecnica: string;
@@ -132,8 +135,11 @@ type EstatisticasTemporada = {
   duelosGanhos: number;
   passes: number;
   passesCompletos: number;
+  cruzamentos: number;
+  faltasSofridas: number;
   jogosAereos: number;
   duelosAereosPerdidos: number;
+  faltasCometidas: number;
   cartoesAmarelos: number;
   cartoesVermelhos: number;
   notaTecnica: string | null;
@@ -148,8 +154,8 @@ const STATS_VAZIA: EstatisticasTemporada = {
   minutosJogados: 0, jogos: 0, jogosTitular: 0,
   gols: 0, assistencias: 0, finalizacoes: 0,
   desarmes: 0, interceptacoes: 0, duelos: 0, duelosGanhos: 0,
-  passes: 0, passesCompletos: 0,
-  jogosAereos: 0, duelosAereosPerdidos: 0,
+  passes: 0, passesCompletos: 0, cruzamentos: 0, faltasSofridas: 0,
+  jogosAereos: 0, duelosAereosPerdidos: 0, faltasCometidas: 0,
   cartoesAmarelos: 0, cartoesVermelhos: 0,
   notaTecnica: null, notaFisica: null, notaTatica: null, notaAtitudinal: null, notaPotencial: null,
   observacoes: null,
@@ -565,12 +571,15 @@ export default function MarcilioScreen() {
             finalizacoes: s.finalizacoes || 0,
             passes: s.passes || 0,
             passesCompletos: s.passesCompletos || 0,
+            cruzamentos: s.cruzamentos || 0,
+            faltasSofridas: s.faltasSofridas || 0,
             desarmes: s.desarmes || 0,
             interceptacoes: s.interceptacoes || 0,
             duelos: s.duelos || 0,
             duelosGanhos: s.duelosGanhos || 0,
             jogosAereos: s.jogosAereos || 0,
             duelosAereosPerdidos: s.duelosAereosPerdidos || 0,
+            faltasCometidas: s.faltasCometidas || 0,
             cartoesAmarelos: s.cartoesAmarelos || 0,
             cartoesVermelhos: s.cartoesVermelhos || 0,
             notaTecnica: s.notaTecnica != null ? String(s.notaTecnica) : "",
@@ -642,9 +651,9 @@ export default function MarcilioScreen() {
         [atletaId]: {
           atletaId, titular: false, minutosJogados: 0,
           gols: 0, assistencias: 0, finalizacoes: 0,
-          passes: 0, passesCompletos: 0,
+          passes: 0, passesCompletos: 0, cruzamentos: 0, faltasSofridas: 0,
           desarmes: 0, interceptacoes: 0, duelos: 0, duelosGanhos: 0,
-          jogosAereos: 0, duelosAereosPerdidos: 0,
+          jogosAereos: 0, duelosAereosPerdidos: 0, faltasCometidas: 0,
           cartoesAmarelos: 0, cartoesVermelhos: 0,
           notaTecnica: "", notaFisica: "", notaTatica: "",
           notaAtitudinal: "", notaPotencial: "", observacoes: "",
@@ -1490,25 +1499,36 @@ export default function MarcilioScreen() {
                       </View>
                     </View>
 
-                    {/* Linha 1: Ofensivo */}
+                    {/* Ofensivo - linha 1 (4 campos) */}
                     <Text style={{ fontSize: 9, color: CORES.azulClaro, fontWeight: "700", textTransform: "uppercase", marginBottom: 4 }}>Ofensivo</Text>
-                    <View style={{ flexDirection: "row", gap: 4, marginBottom: 8 }}>
+                    <View style={{ flexDirection: "row", gap: 4, marginBottom: 4 }}>
                       {campoCompacto("Gols", "gols")}
                       {campoCompacto("Assist.", "assistencias")}
                       {campoCompacto("Finaliz.", "finalizacoes")}
+                      {campoCompacto("Cruzam.", "cruzamentos")}
+                    </View>
+                    {/* Ofensivo - linha 2 (4 campos) */}
+                    <View style={{ flexDirection: "row", gap: 4, marginBottom: 8 }}>
                       {campoCompacto("Passes", "passes")}
                       {campoCompacto("P.Certos", "passesCompletos")}
+                      {campoCompacto("F.Sofrid.", "faltasSofridas")}
+                      <View style={{ flex: 1 }} />
                     </View>
 
-                    {/* Linha 2: Defensivo */}
+                    {/* Defensivo - linha 1 (4 campos) */}
                     <Text style={{ fontSize: 9, color: CORES.verde, fontWeight: "700", textTransform: "uppercase", marginBottom: 4 }}>Defensivo</Text>
-                    <View style={{ flexDirection: "row", gap: 4, marginBottom: 8 }}>
+                    <View style={{ flexDirection: "row", gap: 4, marginBottom: 4 }}>
                       {campoCompacto("Desarmes", "desarmes")}
                       {campoCompacto("Intercept.", "interceptacoes")}
                       {campoCompacto("Duelos", "duelos")}
                       {campoCompacto("D.Ganhos", "duelosGanhos")}
+                    </View>
+                    {/* Defensivo - linha 2 (4 campos) */}
+                    <View style={{ flexDirection: "row", gap: 4, marginBottom: 8 }}>
                       {campoCompacto("J.Aéreo", "jogosAereos")}
                       {campoCompacto("D.Aér.Perd", "duelosAereosPerdidos")}
+                      {campoCompacto("F.Comet.", "faltasCometidas")}
+                      <View style={{ flex: 1 }} />
                     </View>
 
                     {/* Linha 3: Disciplina + Notas */}

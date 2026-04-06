@@ -195,8 +195,11 @@ export const estatisticasTemporada = mysqlTable("estatisticasTemporada", {
   duelosGanhos: int("duelosGanhos").default(0),
   passes: int("passes").default(0),
   passesCompletos: int("passesCompletos").default(0),
+  cruzamentos: int("cruzamentos").default(0),
+  faltasSofridas: int("faltasSofridas").default(0),
   jogosAereos: int("jogosAereos").default(0),
   duelosAereosPerdidos: int("duelosAereosPerdidos").default(0),
+  faltasCometidas: int("faltasCometidas").default(0),
   cartoesAmarelos: int("cartoesAmarelos").default(0),
   cartoesVermelhos: int("cartoesVermelhos").default(0),
   notaTecnica: decimal("notaTecnica", { precision: 3, scale: 1 }),
@@ -252,6 +255,8 @@ export const scoutJogo = mysqlTable("scoutJogo", {
   finalizacoes: int("finalizacoes").default(0),
   passes: int("passes").default(0),
   passesCompletos: int("passesCompletos").default(0),
+  cruzamentos: int("cruzamentos").default(0),
+  faltasSofridas: int("faltasSofridas").default(0),
   // Defensivo
   desarmes: int("desarmes").default(0),
   interceptacoes: int("interceptacoes").default(0),
@@ -259,6 +264,7 @@ export const scoutJogo = mysqlTable("scoutJogo", {
   duelosGanhos: int("duelosGanhos").default(0),
   jogosAereos: int("jogosAereos").default(0),
   duelosAereosPerdidos: int("duelosAereosPerdidos").default(0),
+  faltasCometidas: int("faltasCometidas").default(0),
   // Disciplina
   cartoesAmarelos: int("cartoesAmarelos").default(0),
   cartoesVermelhos: int("cartoesVermelhos").default(0),
