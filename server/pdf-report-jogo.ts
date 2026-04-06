@@ -33,177 +33,324 @@ export function registerPdfJogoRoutes(app: Express) {
         atletasData.forEach(a => { atletasMap[a.id] = { nome: a.nome, posicao: a.posicao || "" }; });
       }
 
-      // Gerar PDF com PDFKit
+      // Gerar PDF com PDFKit — orientação retrato A4
       const PDFDocument = (await import("pdfkit")).default;
-      const doc = new PDFDocument({ margin: 40, size: "A4", layout: "landscape" });
+      const doc = new PDFDocument({ margin: 36, size: "A4", layout: "portrait" });
 
       res.setHeader("Content-Type", "application/pdf");
       res.setHeader("Content-Disposition", `attachment; filename="Scout_${jogo.mandante}_x_${jogo.visitante}.pdf"`);
       doc.pipe(res);
 
-      const AZUL = "#1a3a5c";
-      const VERMELHO = "#c0392b";
+      const AZUL_ESCURO = "#1a237e";
+      const AZUL_MEDIO = "#283593";
+      const AZUL_CLARO = "#3949ab";
+      const VERDE = "#2e7d32";
+      const VERMELHO = "#c62828";
+      const AMARELO_CARD = "#f57f17";
       const CINZA = "#666666";
       const CINZA_CLARO = "#f5f5f5";
       const BRANCO = "#ffffff";
+      const ROXO = "#6d28d9";
+      const LARANJA = "#b45309";
 
-      // ===== CABEÇALHO =====
-      doc.rect(0, 0, doc.page.width, 120).fill(AZUL);
+      const PW = doc.page.width;   // 595
+      const MARGIN = 36;
+      const CONTENT_W = PW - MARGIN * 2;
 
-      // Placar central
-      const placarText = `${jogo.mandante}  ${jogo.placarMandante ?? "—"} x ${jogo.placarVisitante ?? "—"}  ${jogo.visitante}`;
-      doc.fontSize(18).fillColor(BRANCO).font("Helvetica-Bold")
-        .text(placarText, 40, 30, { align: "center", width: doc.page.width - 80 });
+      // ===== HELPERS =====
+      const soma = (field: string) => scouts.reduce((acc: number, s: any) => acc + (Number(s[field]) || 0), 0);
 
-      // Competição e data
+      // ===== CABEÇALHO DO JOGO =====
+      const headerH = 110;
+      doc.rect(0, 0, PW, headerH).fill(AZUL_ESCURO);
+
+      // Times e placar
+      const mandante = jogo.mandante || "";
+      const visitante = jogo.visitante || "";
+      const placar = `${jogo.placarMandante ?? "—"}  ×  ${jogo.placarVisitante ?? "—"}`;
+
+      doc.fontSize(13).fillColor(BRANCO).font("Helvetica-Bold")
+        .text(mandante, MARGIN, 18, { width: CONTENT_W * 0.38, align: "right" });
+      doc.fontSize(20).fillColor(BRANCO).font("Helvetica-Bold")
+        .text(placar, MARGIN + CONTENT_W * 0.38 + 4, 14, { width: CONTENT_W * 0.24, align: "center" });
+      doc.fontSize(13).fillColor(BRANCO).font("Helvetica-Bold")
+        .text(visitante, MARGIN + CONTENT_W * 0.62 + 8, 18, { width: CONTENT_W * 0.38, align: "left" });
+
+      // Linha de info
       const dataFormatada = jogo.data
         ? new Date(jogo.data).toLocaleDateString("pt-BR", { timeZone: "UTC", day: "2-digit", month: "2-digit", year: "numeric" })
         : "";
-      doc.fontSize(11).fillColor(`${BRANCO}CC`).font("Helvetica")
-        .text(`${jogo.competicao || ""} ${dataFormatada ? "• " + dataFormatada : ""} ${jogo.horario ? "• " + jogo.horario : ""}`, 40, 60, { align: "center", width: doc.page.width - 80 });
+      const infoPartes = [
+        jogo.competicao,
+        dataFormatada,
+        jogo.horario,
+        jogo.local ? `Local: ${jogo.local}` : null,
+      ].filter(Boolean).join("   •   ");
+      doc.fontSize(9).fillColor("#ffffffBB").font("Helvetica")
+        .text(infoPartes, MARGIN, 46, { width: CONTENT_W, align: "center" });
 
-      if (jogo.local) {
-        doc.fontSize(10).fillColor(`${BRANCO}99`)
-          .text(`Local: ${jogo.local}`, 40, 80, { align: "center", width: doc.page.width - 80 });
+      // Escalação resumida
+      const titulares = scouts.filter((s: any) => s.titular).length;
+      const reservas = scouts.filter((s: any) => !s.titular).length;
+      const minTotais = soma("minutosJogados");
+      const escalacaoTexto = `${scouts.length} avaliados   •   ${titulares} titulares   •   ${reservas} reservas   •   ${minTotais} min totais`;
+      doc.fontSize(8).fillColor("#ffffff80").font("Helvetica")
+        .text(escalacaoTexto, MARGIN, 64, { width: CONTENT_W, align: "center" });
+
+      let y = headerH + 10;
+
+      // ===== BLOCO TOTAIS DO TIME =====
+      if (scouts.length > 0) {
+        // Título
+        doc.fontSize(10).fillColor(AZUL_ESCURO).font("Helvetica-Bold")
+          .text("TOTAIS DO TIME", MARGIN, y);
+        y += 14;
+        doc.moveTo(MARGIN, y).lineTo(PW - MARGIN, y).strokeColor(AZUL_CLARO).lineWidth(0.5).stroke();
+        y += 6;
+
+        const drawTotaisGrid = (
+          titulo: string,
+          cor: string,
+          campos: [string, string][],
+          startY: number
+        ): number => {
+          const blockW = CONTENT_W;
+          const cellW = blockW / campos.length;
+          const blockH = 42;
+
+          // Fundo
+          doc.rect(MARGIN, startY, blockW, blockH).fill("#f0f4ff");
+          // Título do bloco
+          doc.fontSize(7).fillColor(cor).font("Helvetica-Bold")
+            .text(titulo, MARGIN + 4, startY + 4);
+
+          // Total geral
+          const totalGeral = campos.reduce((acc, [, field]) => acc + soma(field), 0);
+          doc.fontSize(7).fillColor(cor).font("Helvetica")
+            .text(`Total: ${totalGeral}`, MARGIN + blockW - 60, startY + 4, { width: 56, align: "right" });
+
+          // Células
+          campos.forEach(([label, field], i) => {
+            const cx = MARGIN + i * cellW;
+            const val = soma(field);
+            // Borda vertical
+            if (i > 0) {
+              doc.moveTo(cx, startY + 14).lineTo(cx, startY + blockH - 2).strokeColor("#cccccc").lineWidth(0.3).stroke();
+            }
+            doc.fontSize(14).fillColor(val > 0 ? cor : "#cccccc").font("Helvetica-Bold")
+              .text(String(val), cx + 2, startY + 16, { width: cellW - 4, align: "center" });
+            doc.fontSize(6.5).fillColor(CINZA).font("Helvetica")
+              .text(label, cx + 2, startY + 32, { width: cellW - 4, align: "center" });
+          });
+
+          return startY + blockH + 4;
+        };
+
+        y = drawTotaisGrid("OFENSIVO", AZUL_CLARO, [
+          ["Gols", "gols"],
+          ["Assist.", "assistencias"],
+          ["Finaliz.", "finalizacoes"],
+          ["Cruzam.", "cruzamentos"],
+          ["Passes", "passes"],
+          ["P.Certos", "passesCompletos"],
+          ["F.Sofrid.", "faltasSofridas"],
+          ["Dribles", "dribles"],
+        ], y);
+
+        y = drawTotaisGrid("DEFENSIVO", VERDE, [
+          ["Desarmes", "desarmes"],
+          ["Intercept.", "interceptacoes"],
+          ["Duelos", "duelos"],
+          ["D.Ganhos", "duelosGanhos"],
+          ["J.Aéreo", "jogosAereos"],
+          ["Aér.Perd.", "duelosAereosPerdidos"],
+          ["F.Comet.", "faltasCometidas"],
+          ["B.Recup.", "bolasRecuperadas"],
+        ], y);
+
+        // Disciplina do time (linha única)
+        const amarelos = soma("cartoesAmarelos");
+        const vermelhos = soma("cartoesVermelhos");
+        doc.rect(MARGIN, y, CONTENT_W, 22).fill("#fffbeb");
+        doc.fontSize(7).fillColor(LARANJA).font("Helvetica-Bold").text("DISCIPLINA", MARGIN + 4, y + 7);
+        doc.fontSize(9).fillColor(amarelos > 0 ? AMARELO_CARD : CINZA).font("Helvetica-Bold")
+          .text(`Amarelos: ${amarelos}`, MARGIN + 90, y + 7);
+        doc.fontSize(9).fillColor(vermelhos > 0 ? VERMELHO : CINZA).font("Helvetica-Bold")
+          .text(`Vermelhos: ${vermelhos}`, MARGIN + 220, y + 7);
+        y += 28;
       }
 
-      let y = 130;
+      // ===== CARDS INDIVIDUAIS =====
+      y += 4;
+      doc.fontSize(10).fillColor(AZUL_ESCURO).font("Helvetica-Bold")
+        .text(`ATLETAS AVALIADOS (${scouts.length})`, MARGIN, y);
+      y += 14;
+      doc.moveTo(MARGIN, y).lineTo(PW - MARGIN, y).strokeColor(AZUL_CLARO).lineWidth(0.5).stroke();
+      y += 8;
 
-      y += 6;
+      // Ordenar: titulares primeiro
+      const scoutsOrdenados = [...scouts].sort((a: any, b: any) => {
+        if (a.titular && !b.titular) return -1;
+        if (!a.titular && b.titular) return 1;
+        const nA = atletasMap[a.atletaId]?.nome || "";
+        const nB = atletasMap[b.atletaId]?.nome || "";
+        return nA.localeCompare(nB);
+      });
 
-      // ===== TABELA DE SCOUTS =====
-      if (scouts.length === 0) {
-        doc.fontSize(12).fillColor(CINZA).text("Nenhum scout registrado para este jogo.", 40, y, { align: "center" });
-      } else {
-        doc.fontSize(12).fillColor(AZUL).font("Helvetica-Bold").text("Scout dos Atletas", 40, y);
-        y += 18;
-        doc.moveTo(40, y).lineTo(doc.page.width - 40, y).strokeColor(AZUL).lineWidth(1).stroke();
-        y += 8;
+      const CARD_H_BASE = 110; // altura mínima do card
 
-        // Ordenar: titulares primeiro
-        const scoutsOrdenados = [...scouts].sort((a, b) => {
-          if (a.titular && !b.titular) return -1;
-          if (!a.titular && b.titular) return 1;
-          const nA = atletasMap[a.atletaId]?.nome || "";
-          const nB = atletasMap[b.atletaId]?.nome || "";
-          return nA.localeCompare(nB);
-        });
+      scoutsOrdenados.forEach((scout: any) => {
+        const atleta = atletasMap[scout.atletaId];
+        const nome = atleta?.nome || `Atleta ${scout.atletaId}`;
+        const posicao = atleta?.posicao || "";
+        const temNotas = scout.notaTecnica || scout.notaFisica || scout.notaTatica;
+        const temObs = !!scout.observacoes;
 
-        const colNome = 130;
-        const colPos = 55;
-        const colMin = 32;
-        const colNum = 27;
-        const cols = [colNome, colPos, colMin, colNum, colNum, colNum, colNum, colNum, colNum, colNum, colNum, colNum, colNum, colNum, colNum, colNum, colNum, colNum, colNum];
-        const headers = ["Atleta", "Posição", "Min", "G", "A", "Fin", "Cru", "Pas", "P.C", "F.S", "Dri", "Des", "Int", "Aer", "A.P", "F.C", "B.R", "CA", "CV"];
-        const fields = ["", "", "minutosJogados", "gols", "assistencias", "finalizacoes", "cruzamentos", "passes", "passesCompletos", "faltasSofridas", "dribles", "desarmes", "interceptacoes", "jogosAereos", "duelosAereosPerdidos", "faltasCometidas", "bolasRecuperadas", "cartoesAmarelos", "cartoesVermelhos"];
-
-        const rowH = 18;
-        const tableW = doc.page.width - 80;
-
-        // Header da tabela
-        doc.rect(40, y, tableW, rowH).fill(AZUL);
-        let xCol = 40;
-        headers.forEach((h, i) => {
-          doc.fontSize(7).fillColor(BRANCO).font("Helvetica-Bold")
-            .text(h, xCol + 2, y + 5, { width: cols[i] - 4, align: i === 0 ? "left" : "center" });
-          xCol += cols[i];
-        });
-        y += rowH;
-
-        scoutsOrdenados.forEach((scout: any, idx) => {
-          if (y > doc.page.height - 80) {
-            doc.addPage();
-            y = 40;
-          }
-          const bg = idx % 2 === 0 ? CINZA_CLARO : BRANCO;
-          doc.rect(40, y, tableW, rowH).fill(bg);
-
-          xCol = 40;
-          const atleta = atletasMap[scout.atletaId];
-          const nome = atleta?.nome || `Atleta ${scout.atletaId}`;
-          const posicao = atleta?.posicao || "";
-          const titular = scout.titular ? "★ " : "";
-
-          // Nome
-          doc.fontSize(7.5).fillColor("#222222").font("Helvetica-Bold")
-            .text(titular + nome, xCol + 2, y + 5, { width: cols[0] - 4, ellipsis: true });
-          xCol += cols[0];
-
-          // Posição
-          doc.fontSize(7).fillColor(CINZA).font("Helvetica")
-            .text(posicao, xCol + 2, y + 5, { width: cols[1] - 4, align: "center" });
-          xCol += cols[1];
-
-          // Campos numéricos
-          fields.slice(2).forEach((field, fi) => {
-            const val = scout[field] ?? 0;
-            const cor = (field === "cartoesAmarelos" && val > 0) ? "#e67e22"
-              : (field === "cartoesVermelhos" && val > 0) ? VERMELHO
-              : (field === "gols" && val > 0) ? "#27ae60"
-              : "#333333";
-            doc.fontSize(7.5).fillColor(cor).font(val > 0 ? "Helvetica-Bold" : "Helvetica")
-              .text(val > 0 ? String(val) : "—", xCol + 2, y + 5, { width: cols[fi + 2] - 4, align: "center" });
-            xCol += cols[fi + 2];
-          });
-
-          y += rowH;
-        });
-
-        // Notas dos atletas
-        const scoutsComNotas = scoutsOrdenados.filter((s: any) =>
-          s.notaTecnica || s.notaFisica || s.notaTatica || s.notaAtitudinal || s.notaPotencial || s.observacoes
-        );
-
-        if (scoutsComNotas.length > 0) {
-          y += 16;
-          if (y > doc.page.height - 80) { doc.addPage(); y = 40; }
-          doc.fontSize(12).fillColor(AZUL).font("Helvetica-Bold").text("Avaliações Individuais", 40, y);
-          y += 18;
-          doc.moveTo(40, y).lineTo(doc.page.width - 40, y).strokeColor(AZUL).lineWidth(1).stroke();
-          y += 8;
-
-          scoutsComNotas.forEach((scout: any) => {
-            if (y > doc.page.height - 100) { doc.addPage(); y = 40; }
-            const atleta = atletasMap[scout.atletaId];
-            const nome = atleta?.nome || `Atleta ${scout.atletaId}`;
-
-            doc.fontSize(9).fillColor(AZUL).font("Helvetica-Bold").text(nome, 40, y);
-            y += 14;
-
-            const notas = [
-              ["Técnica", scout.notaTecnica],
-              ["Física", scout.notaFisica],
-              ["Tática", scout.notaTatica],
-              ["Atitudinal", scout.notaAtitudinal],
-              ["Potencial", scout.notaPotencial],
-            ].filter(([, v]) => v);
-
-            if (notas.length > 0) {
-              const notaW = (doc.page.width - 80) / notas.length;
-              notas.forEach(([label, valor], i) => {
-                const x = 40 + i * notaW;
-                doc.rect(x, y, notaW - 4, 28).fill(CINZA_CLARO);
-                doc.fontSize(7).fillColor(CINZA).font("Helvetica").text(String(label), x + 2, y + 3, { width: notaW - 8, align: "center" });
-                doc.fontSize(13).fillColor(AZUL).font("Helvetica-Bold").text(String(valor), x + 2, y + 12, { width: notaW - 8, align: "center" });
-              });
-              y += 34;
-            }
-
-            if (scout.observacoes) {
-              doc.fontSize(8).fillColor(CINZA).font("Helvetica-Oblique")
-                .text(`"${scout.observacoes}"`, 40, y, { width: doc.page.width - 80 });
-              y += doc.heightOfString(scout.observacoes, { width: doc.page.width - 80 }) + 8;
-            }
-
-            y += 6;
-          });
+        // Estimar altura do card
+        let cardH = CARD_H_BASE;
+        if (temNotas) cardH += 30;
+        if (temObs) {
+          const obsH = doc.heightOfString(`"${scout.observacoes}"`, { width: CONTENT_W - 16 });
+          cardH += obsH + 12;
         }
-      }
+
+        if (y + cardH > doc.page.height - 50) {
+          doc.addPage();
+          y = 36;
+        }
+
+        // Fundo do card
+        doc.rect(MARGIN, y, CONTENT_W, cardH).fill(CINZA_CLARO).stroke();
+
+        // Faixa de cabeçalho do card
+        const faixaCor = scout.titular ? AZUL_ESCURO : AZUL_MEDIO;
+        doc.rect(MARGIN, y, CONTENT_W, 20).fill(faixaCor);
+
+        // Badge titular/reserva
+        const badge = scout.titular ? "★ TITULAR" : "RESERVA";
+        doc.fontSize(7).fillColor(BRANCO).font("Helvetica-Bold")
+          .text(badge, MARGIN + 4, y + 6, { width: 55 });
+
+        // Nome
+        doc.fontSize(10).fillColor(BRANCO).font("Helvetica-Bold")
+          .text(nome, MARGIN + 62, y + 5, { width: CONTENT_W - 160, ellipsis: true });
+
+        // Posição e minutos
+        doc.fontSize(8).fillColor("#ffffffCC").font("Helvetica")
+          .text(posicao, MARGIN + CONTENT_W - 110, y + 6, { width: 60, align: "right" });
+        doc.fontSize(8).fillColor(BRANCO).font("Helvetica-Bold")
+          .text(`${scout.minutosJogados || 0}'`, MARGIN + CONTENT_W - 46, y + 6, { width: 40, align: "right" });
+
+        let cy = y + 24;
+
+        // Chips de destaque (gols, assistências, cartões)
+        const destaques: string[] = [];
+        if ((scout.gols || 0) > 0) destaques.push(`⚽ ${scout.gols} gol${scout.gols > 1 ? "s" : ""}`);
+        if ((scout.assistencias || 0) > 0) destaques.push(`★ ${scout.assistencias} assist.`);
+        if ((scout.cartoesAmarelos || 0) > 0) destaques.push(`CA: ${scout.cartoesAmarelos}`);
+        if ((scout.cartoesVermelhos || 0) > 0) destaques.push(`CV: ${scout.cartoesVermelhos}`);
+        if (destaques.length > 0) {
+          doc.fontSize(8).fillColor(AZUL_ESCURO).font("Helvetica-Bold")
+            .text(destaques.join("   "), MARGIN + 8, cy, { width: CONTENT_W - 16 });
+          cy += 13;
+        }
+
+        // Linha Ofensivo
+        const camposOfe: [string, string][] = [
+          ["Gols", "gols"], ["Assist.", "assistencias"], ["Finaliz.", "finalizacoes"],
+          ["Cruzam.", "cruzamentos"], ["Passes", "passes"], ["P.Certos", "passesCompletos"],
+          ["F.Sofrid.", "faltasSofridas"], ["Dribles", "dribles"],
+        ];
+        const totalOfe = camposOfe.reduce((acc, [, f]) => acc + (Number(scout[f]) || 0), 0);
+        const cellWOfe = CONTENT_W / camposOfe.length;
+
+        doc.fontSize(6.5).fillColor(AZUL_CLARO).font("Helvetica-Bold")
+          .text("OFENSIVO", MARGIN + 4, cy);
+        doc.fontSize(6.5).fillColor(AZUL_CLARO).font("Helvetica")
+          .text(`Total: ${totalOfe}`, MARGIN + CONTENT_W - 50, cy, { width: 46, align: "right" });
+        cy += 9;
+
+        camposOfe.forEach(([label, field], i) => {
+          const cx = MARGIN + i * cellWOfe;
+          const val = Number(scout[field]) || 0;
+          if (i > 0) {
+            doc.moveTo(cx, cy).lineTo(cx, cy + 20).strokeColor("#cccccc").lineWidth(0.3).stroke();
+          }
+          doc.fontSize(11).fillColor(val > 0 ? AZUL_CLARO : "#cccccc").font(val > 0 ? "Helvetica-Bold" : "Helvetica")
+            .text(String(val), cx + 2, cy + 1, { width: cellWOfe - 4, align: "center" });
+          doc.fontSize(6).fillColor(CINZA).font("Helvetica")
+            .text(label, cx + 2, cy + 13, { width: cellWOfe - 4, align: "center" });
+        });
+        cy += 22;
+
+        // Linha Defensivo
+        const camposDef: [string, string][] = [
+          ["Desarmes", "desarmes"], ["Intercept.", "interceptacoes"], ["Duelos", "duelos"],
+          ["D.Ganhos", "duelosGanhos"], ["J.Aéreo", "jogosAereos"], ["Aér.Perd.", "duelosAereosPerdidos"],
+          ["F.Comet.", "faltasCometidas"], ["B.Recup.", "bolasRecuperadas"],
+        ];
+        const totalDef = camposDef.reduce((acc, [, f]) => acc + (Number(scout[f]) || 0), 0);
+        const cellWDef = CONTENT_W / camposDef.length;
+
+        doc.fontSize(6.5).fillColor(VERDE).font("Helvetica-Bold")
+          .text("DEFENSIVO", MARGIN + 4, cy);
+        doc.fontSize(6.5).fillColor(VERDE).font("Helvetica")
+          .text(`Total: ${totalDef}`, MARGIN + CONTENT_W - 50, cy, { width: 46, align: "right" });
+        cy += 9;
+
+        camposDef.forEach(([label, field], i) => {
+          const cx = MARGIN + i * cellWDef;
+          const val = Number(scout[field]) || 0;
+          if (i > 0) {
+            doc.moveTo(cx, cy).lineTo(cx, cy + 20).strokeColor("#cccccc").lineWidth(0.3).stroke();
+          }
+          doc.fontSize(11).fillColor(val > 0 ? VERDE : "#cccccc").font(val > 0 ? "Helvetica-Bold" : "Helvetica")
+            .text(String(val), cx + 2, cy + 1, { width: cellWDef - 4, align: "center" });
+          doc.fontSize(6).fillColor(CINZA).font("Helvetica")
+            .text(label, cx + 2, cy + 13, { width: cellWDef - 4, align: "center" });
+        });
+        cy += 22;
+
+        // Notas
+        if (temNotas) {
+          const notasCampos = [
+            ["Técnica", scout.notaTecnica],
+            ["Física", scout.notaFisica],
+            ["Tática", scout.notaTatica],
+          ].filter(([, v]) => v);
+
+          doc.fontSize(6.5).fillColor(ROXO).font("Helvetica-Bold").text("AVALIAÇÃO", MARGIN + 4, cy);
+          cy += 9;
+          const notaW = CONTENT_W / notasCampos.length;
+          notasCampos.forEach(([label, valor], i) => {
+            const cx = MARGIN + i * notaW;
+            doc.rect(cx + 2, cy, notaW - 4, 20).fill("#f5f3ff");
+            doc.fontSize(6).fillColor(CINZA).font("Helvetica")
+              .text(String(label), cx + 2, cy + 2, { width: notaW - 4, align: "center" });
+            doc.fontSize(13).fillColor(ROXO).font("Helvetica-Bold")
+              .text(String(valor), cx + 2, cy + 8, { width: notaW - 4, align: "center" });
+          });
+          cy += 26;
+        }
+
+        // Observações
+        if (temObs) {
+          doc.rect(MARGIN + 2, cy, CONTENT_W - 4, 4).fill("#f59e0b");
+          cy += 6;
+          doc.fontSize(7).fillColor(LARANJA).font("Helvetica-Bold").text("OBSERVAÇÕES", MARGIN + 8, cy);
+          cy += 10;
+          doc.fontSize(8).fillColor("#333333").font("Helvetica-Oblique")
+            .text(`"${scout.observacoes}"`, MARGIN + 8, cy, { width: CONTENT_W - 16 });
+          cy += doc.heightOfString(`"${scout.observacoes}"`, { width: CONTENT_W - 16 }) + 4;
+        }
+
+        y += cardH + 6;
+      });
 
       // Rodapé
-      const footerY = doc.page.height - 30;
-      doc.fontSize(8).fillColor(CINZA).font("Helvetica")
-        .text(`Relatório gerado em ${new Date().toLocaleDateString("pt-BR")} — Marcílio Dias Scout App`, 40, footerY, { align: "center", width: doc.page.width - 80 });
+      const footerY = doc.page.height - 24;
+      doc.fontSize(7.5).fillColor(CINZA).font("Helvetica")
+        .text(`Relatório gerado em ${new Date().toLocaleDateString("pt-BR")} — Marcílio Dias Scout App`, MARGIN, footerY, { align: "center", width: CONTENT_W });
 
       doc.end();
     } catch (error: any) {
