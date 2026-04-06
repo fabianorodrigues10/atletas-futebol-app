@@ -732,29 +732,31 @@ export default function MarcilioScreen() {
     setGerandoPdfJogo(true);
     try {
       const base = getApiBaseUrl();
-      const resp = await fetch(`${base}/api/jogos/${jogo.id}/relatorio`, { method: "POST" });
-      if (!resp.ok) throw new Error("Erro ao gerar relat\u00f3rio");
-      const blob = await resp.blob();
       if (Platform.OS === "web") {
+        const resp = await fetch(`${base}/api/jogos/${jogo.id}/relatorio`, { method: "POST" });
+        if (!resp.ok) throw new Error("Erro ao gerar relatório");
+        const blob = await resp.blob();
         const url = URL.createObjectURL(blob);
         window.open(url, "_blank");
         setTimeout(() => URL.revokeObjectURL(url), 10000);
       } else {
+        // No Expo Go: baixar diretamente para o cache com downloadAsync
         const FileSystem = await import("expo-file-system/legacy");
         const Sharing = await import("expo-sharing");
-        const reader = new FileReader();
-        reader.readAsDataURL(blob);
-        reader.onloadend = async () => {
-          const base64 = (reader.result as string).split(",")[1];
-          const dir = FileSystem.cacheDirectory || FileSystem.documentDirectory || "";
-          const path = dir + `Scout_${jogo.mandante}_x_${jogo.visitante}.pdf`;
-          await FileSystem.writeAsStringAsync(path, base64, { encoding: FileSystem.EncodingType.Base64 });
-          if (await Sharing.isAvailableAsync()) {
-            await Sharing.shareAsync(path, { mimeType: "application/pdf" });
-          } else {
-            Alert.alert("Sucesso", `PDF salvo em:\n${path}`);
-          }
-        };
+        const dir = FileSystem.cacheDirectory || FileSystem.documentDirectory || "";
+        const nomeArquivo = `Scout_${jogo.mandante}_x_${jogo.visitante}.pdf`.replace(/\s+/g, "_");
+        const path = dir + nomeArquivo;
+        const result = await FileSystem.downloadAsync(
+          `${base}/api/jogos/${jogo.id}/relatorio`,
+          path,
+          { headers: { "Content-Type": "application/json" }, method: "POST" } as any
+        );
+        if (result.status !== 200) throw new Error("Erro ao gerar relatório");
+        if (await Sharing.isAvailableAsync()) {
+          await Sharing.shareAsync(result.uri, { mimeType: "application/pdf", UTI: "com.adobe.pdf" });
+        } else {
+          Alert.alert("Sucesso", `PDF salvo em:\n${result.uri}`);
+        }
       }
     } catch (e: any) { Alert.alert("Erro", e.message); }
     finally { setGerandoPdfJogo(false); }
@@ -1900,7 +1902,6 @@ export default function MarcilioScreen() {
               <TouchableOpacity
                 style={{ backgroundColor: CORES.azulEscuro, borderRadius: 12, paddingVertical: 14, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 8 }}
                 onPress={() => {
-                  setModalStatsJogoVisivel(false);
                   gerarRelatorioJogo(jogoStatsVisualizado);
                 }}
                 disabled={gerandoPdfJogo}
