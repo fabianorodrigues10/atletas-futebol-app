@@ -448,3 +448,9 @@
 - [x] Schema do banco atualizado (scoutJogo + estatisticasTemporada)
 - [x] Colunas adicionadas via SQL direto no banco TiDB
 - [x] Servidor atualizado para incluir novos campos no recálculo de estatísticas
+
+## Feature: Melhorias no scout de jogos (layout, totais e relatório)
+- [ ] Adicionar campo "Dribles" no ofensivo (preencher espaço vazio)
+- [ ] Adicionar campo "Bolas Recuperadas" no defensivo (preencher espaço vazio)
+- [ ] Adicionar totais por seção (sumário ofensivo e defensivo) no card do atleta
+- [ ] Incluir cruzamentos, faltas sofridas e faltas cometidas no relatório PDF do jogo

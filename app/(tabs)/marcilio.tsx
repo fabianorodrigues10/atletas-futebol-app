@@ -102,6 +102,7 @@ type ScoutAtleta = {
   passesCompletos: number;
   cruzamentos: number;
   faltasSofridas: number;
+  dribles: number;
   desarmes: number;
   interceptacoes: number;
   duelos: number;
@@ -109,6 +110,7 @@ type ScoutAtleta = {
   jogosAereos: number;
   duelosAereosPerdidos: number;
   faltasCometidas: number;
+  bolasRecuperadas: number;
   cartoesAmarelos: number;
   cartoesVermelhos: number;
   notaTecnica: string;
@@ -137,9 +139,11 @@ type EstatisticasTemporada = {
   passesCompletos: number;
   cruzamentos: number;
   faltasSofridas: number;
+  dribles: number;
   jogosAereos: number;
   duelosAereosPerdidos: number;
   faltasCometidas: number;
+  bolasRecuperadas: number;
   cartoesAmarelos: number;
   cartoesVermelhos: number;
   notaTecnica: string | null;
@@ -154,8 +158,8 @@ const STATS_VAZIA: EstatisticasTemporada = {
   minutosJogados: 0, jogos: 0, jogosTitular: 0,
   gols: 0, assistencias: 0, finalizacoes: 0,
   desarmes: 0, interceptacoes: 0, duelos: 0, duelosGanhos: 0,
-  passes: 0, passesCompletos: 0, cruzamentos: 0, faltasSofridas: 0,
-  jogosAereos: 0, duelosAereosPerdidos: 0, faltasCometidas: 0,
+  passes: 0, passesCompletos: 0, cruzamentos: 0, faltasSofridas: 0, dribles: 0,
+  jogosAereos: 0, duelosAereosPerdidos: 0, faltasCometidas: 0, bolasRecuperadas: 0,
   cartoesAmarelos: 0, cartoesVermelhos: 0,
   notaTecnica: null, notaFisica: null, notaTatica: null, notaAtitudinal: null, notaPotencial: null,
   observacoes: null,
@@ -573,6 +577,7 @@ export default function MarcilioScreen() {
             passesCompletos: s.passesCompletos || 0,
             cruzamentos: s.cruzamentos || 0,
             faltasSofridas: s.faltasSofridas || 0,
+            dribles: s.dribles || 0,
             desarmes: s.desarmes || 0,
             interceptacoes: s.interceptacoes || 0,
             duelos: s.duelos || 0,
@@ -580,6 +585,7 @@ export default function MarcilioScreen() {
             jogosAereos: s.jogosAereos || 0,
             duelosAereosPerdidos: s.duelosAereosPerdidos || 0,
             faltasCometidas: s.faltasCometidas || 0,
+            bolasRecuperadas: s.bolasRecuperadas || 0,
             cartoesAmarelos: s.cartoesAmarelos || 0,
             cartoesVermelhos: s.cartoesVermelhos || 0,
             notaTecnica: s.notaTecnica != null ? String(s.notaTecnica) : "",
@@ -651,9 +657,9 @@ export default function MarcilioScreen() {
         [atletaId]: {
           atletaId, titular: false, minutosJogados: 0,
           gols: 0, assistencias: 0, finalizacoes: 0,
-          passes: 0, passesCompletos: 0, cruzamentos: 0, faltasSofridas: 0,
+          passes: 0, passesCompletos: 0, cruzamentos: 0, faltasSofridas: 0, dribles: 0,
           desarmes: 0, interceptacoes: 0, duelos: 0, duelosGanhos: 0,
-          jogosAereos: 0, duelosAereosPerdidos: 0, faltasCometidas: 0,
+          jogosAereos: 0, duelosAereosPerdidos: 0, faltasCometidas: 0, bolasRecuperadas: 0,
           cartoesAmarelos: 0, cartoesVermelhos: 0,
           notaTecnica: "", notaFisica: "", notaTatica: "",
           notaAtitudinal: "", notaPotencial: "", observacoes: "",
@@ -1500,7 +1506,12 @@ export default function MarcilioScreen() {
                     </View>
 
                     {/* Ofensivo - linha 1 (4 campos) */}
-                    <Text style={{ fontSize: 9, color: CORES.azulClaro, fontWeight: "700", textTransform: "uppercase", marginBottom: 4 }}>Ofensivo</Text>
+                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                      <Text style={{ fontSize: 9, color: CORES.azulClaro, fontWeight: "700", textTransform: "uppercase" }}>Ofensivo</Text>
+                      <Text style={{ fontSize: 9, color: CORES.azulClaro, fontWeight: "600" }}>
+                        Total: {((scout as any).gols || 0) + ((scout as any).assistencias || 0) + ((scout as any).finalizacoes || 0) + ((scout as any).cruzamentos || 0) + ((scout as any).passes || 0) + ((scout as any).passesCompletos || 0) + ((scout as any).faltasSofridas || 0) + ((scout as any).dribles || 0)}
+                      </Text>
+                    </View>
                     <View style={{ flexDirection: "row", gap: 4, marginBottom: 4 }}>
                       {campoCompacto("Gols", "gols")}
                       {campoCompacto("Assist.", "assistencias")}
@@ -1512,11 +1523,16 @@ export default function MarcilioScreen() {
                       {campoCompacto("Passes", "passes")}
                       {campoCompacto("P.Certos", "passesCompletos")}
                       {campoCompacto("F.Sofrid.", "faltasSofridas")}
-                      <View style={{ flex: 1 }} />
+                      {campoCompacto("Dribles", "dribles")}
                     </View>
 
                     {/* Defensivo - linha 1 (4 campos) */}
-                    <Text style={{ fontSize: 9, color: CORES.verde, fontWeight: "700", textTransform: "uppercase", marginBottom: 4 }}>Defensivo</Text>
+                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                      <Text style={{ fontSize: 9, color: CORES.verde, fontWeight: "700", textTransform: "uppercase" }}>Defensivo</Text>
+                      <Text style={{ fontSize: 9, color: CORES.verde, fontWeight: "600" }}>
+                        Total: {((scout as any).desarmes || 0) + ((scout as any).interceptacoes || 0) + ((scout as any).duelos || 0) + ((scout as any).duelosGanhos || 0) + ((scout as any).jogosAereos || 0) + ((scout as any).duelosAereosPerdidos || 0) + ((scout as any).faltasCometidas || 0) + ((scout as any).bolasRecuperadas || 0)}
+                      </Text>
+                    </View>
                     <View style={{ flexDirection: "row", gap: 4, marginBottom: 4 }}>
                       {campoCompacto("Desarmes", "desarmes")}
                       {campoCompacto("Intercept.", "interceptacoes")}
@@ -1528,7 +1544,7 @@ export default function MarcilioScreen() {
                       {campoCompacto("J.Aéreo", "jogosAereos")}
                       {campoCompacto("D.Aér.Perd", "duelosAereosPerdidos")}
                       {campoCompacto("F.Comet.", "faltasCometidas")}
-                      <View style={{ flex: 1 }} />
+                      {campoCompacto("B.Recup.", "bolasRecuperadas")}
                     </View>
 
                     {/* Linha 3: Disciplina + Notas */}

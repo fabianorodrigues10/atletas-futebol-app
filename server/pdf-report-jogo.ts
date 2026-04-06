@@ -35,7 +35,7 @@ export function registerPdfJogoRoutes(app: Express) {
 
       // Gerar PDF com PDFKit
       const PDFDocument = (await import("pdfkit")).default;
-      const doc = new PDFDocument({ margin: 40, size: "A4" });
+      const doc = new PDFDocument({ margin: 40, size: "A4", layout: "landscape" });
 
       res.setHeader("Content-Type", "application/pdf");
       res.setHeader("Content-Disposition", `attachment; filename="Scout_${jogo.mandante}_x_${jogo.visitante}.pdf"`);
@@ -91,11 +91,11 @@ export function registerPdfJogoRoutes(app: Express) {
 
         const colNome = 130;
         const colPos = 55;
-        const colMin = 35;
-        const colNum = 28;
-        const cols = [colNome, colPos, colMin, colNum, colNum, colNum, colNum, colNum, colNum, colNum, colNum, colNum, colNum, colNum];
-        const headers = ["Atleta", "Posição", "Min", "G", "A", "Fin", "Pas", "P.C", "Des", "Int", "Aér", "A.P", "CA", "CV"];
-        const fields = ["", "", "minutosJogados", "gols", "assistencias", "finalizacoes", "passes", "passesCompletos", "desarmes", "interceptacoes", "jogosAereos", "duelosAereosPerdidos", "cartoesAmarelos", "cartoesVermelhos"];
+        const colMin = 32;
+        const colNum = 27;
+        const cols = [colNome, colPos, colMin, colNum, colNum, colNum, colNum, colNum, colNum, colNum, colNum, colNum, colNum, colNum, colNum, colNum, colNum, colNum, colNum];
+        const headers = ["Atleta", "Posição", "Min", "G", "A", "Fin", "Cru", "Pas", "P.C", "F.S", "Dri", "Des", "Int", "Aer", "A.P", "F.C", "B.R", "CA", "CV"];
+        const fields = ["", "", "minutosJogados", "gols", "assistencias", "finalizacoes", "cruzamentos", "passes", "passesCompletos", "faltasSofridas", "dribles", "desarmes", "interceptacoes", "jogosAereos", "duelosAereosPerdidos", "faltasCometidas", "bolasRecuperadas", "cartoesAmarelos", "cartoesVermelhos"];
 
         const rowH = 18;
         const tableW = doc.page.width - 80;
