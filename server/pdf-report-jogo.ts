@@ -89,14 +89,6 @@ export function registerPdfJogoRoutes(app: Express) {
       doc.fontSize(9).fillColor("#ffffffBB").font("Helvetica")
         .text(infoPartes, MARGIN, 46, { width: CONTENT_W, align: "center" });
 
-      // Escalação resumida
-      const titulares = scouts.filter((s: any) => s.titular).length;
-      const reservas = scouts.filter((s: any) => !s.titular).length;
-      const minTotais = soma("minutosJogados");
-      const escalacaoTexto = `${scouts.length} avaliados   •   ${titulares} titulares   •   ${reservas} reservas   •   ${minTotais} min totais`;
-      doc.fontSize(8).fillColor("#ffffff80").font("Helvetica")
-        .text(escalacaoTexto, MARGIN, 64, { width: CONTENT_W, align: "center" });
-
       let y = headerH + 10;
 
       // ===== BLOCO TOTAIS DO TIME =====

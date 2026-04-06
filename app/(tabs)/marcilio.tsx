@@ -1666,28 +1666,6 @@ export default function MarcilioScreen() {
                 const totalDefTime = soma("desarmes") + soma("interceptacoes") + soma("duelos") + soma("duelosGanhos") + soma("jogosAereos") + soma("duelosAereosPerdidos") + soma("faltasCometidas") + soma("bolasRecuperadas");
                 return (
                   <View style={{ marginTop: 12 }}>
-                    {/* Linha de escalação */}
-                    <View style={{ flexDirection: "row", justifyContent: "center", gap: 24, marginBottom: 10 }}>
-                      <View style={{ alignItems: "center" }}>
-                        <Text style={{ color: CORES.branco, fontSize: 20, fontWeight: "900" }}>{scoutsStatsJogo.length}</Text>
-                        <Text style={{ color: `${CORES.branco}70`, fontSize: 10 }}>Avaliados</Text>
-                      </View>
-                      <View style={{ width: 1, backgroundColor: `${CORES.branco}30` }} />
-                      <View style={{ alignItems: "center" }}>
-                        <Text style={{ color: CORES.branco, fontSize: 20, fontWeight: "900" }}>{scoutsStatsJogo.filter((s: any) => s.titular).length}</Text>
-                        <Text style={{ color: `${CORES.branco}70`, fontSize: 10 }}>Titulares</Text>
-                      </View>
-                      <View style={{ alignItems: "center" }}>
-                        <Text style={{ color: CORES.branco, fontSize: 20, fontWeight: "900" }}>{scoutsStatsJogo.filter((s: any) => !s.titular).length}</Text>
-                        <Text style={{ color: `${CORES.branco}70`, fontSize: 10 }}>Reservas</Text>
-                      </View>
-                      <View style={{ width: 1, backgroundColor: `${CORES.branco}30` }} />
-                      <View style={{ alignItems: "center" }}>
-                        <Text style={{ color: CORES.branco, fontSize: 20, fontWeight: "900" }}>{scoutsStatsJogo.reduce((acc: number, s: any) => acc + (s.minutosJogados || 0), 0)}</Text>
-                        <Text style={{ color: `${CORES.branco}70`, fontSize: 10 }}>Min. totais</Text>
-                      </View>
-                    </View>
-
                     {/* Bloco Ofensivo */}
                     <View style={{ backgroundColor: `${CORES.branco}12`, borderRadius: 10, padding: 10, marginBottom: 6 }}>
                       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
