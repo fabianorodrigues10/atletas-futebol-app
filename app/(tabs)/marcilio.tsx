@@ -1200,26 +1200,15 @@ export default function MarcilioScreen() {
                 <Text style={[styles.btnEditarTexto, { color: CORES.branco }]}>🗑</Text>
               </TouchableOpacity>
             </View>
-            {/* Botão Stats por Jogo */}
+            {/* Botão Prévia + Download */}
             <TouchableOpacity
-              style={[styles.btnRelatorio, { margin: 10, marginTop: 0, marginBottom: 4, flexDirection: "row", alignItems: "center", justifyContent: "center", padding: 10, backgroundColor: CORES.azulMedio }]}
+              style={[styles.btnRelatorio, { margin: 10, marginTop: 0, flexDirection: "row", alignItems: "center", justifyContent: "center", padding: 12 }]}
               onPress={async () => {
                 await carregarStatsDoJogo(jogo);
                 setModalStatsJogoVisivel(true);
               }}
             >
-              <Text style={styles.btnRelatorioTexto}>📊 Estatísticas do Jogo</Text>
-            </TouchableOpacity>
-            {/* Botão Relatório */}
-            <TouchableOpacity
-              style={[styles.btnRelatorio, { margin: 10, marginTop: 0, flexDirection: "row", alignItems: "center", justifyContent: "center", padding: 10 }]}
-              onPress={() => gerarRelatorioJogo(jogo)}
-              disabled={gerandoPdfJogo}
-            >
-              {gerandoPdfJogo
-                ? <ActivityIndicator size="small" color={CORES.branco} />
-                : <Text style={styles.btnRelatorioTexto}>📄 Gerar Relatório do Jogo</Text>
-              }
+              <Text style={styles.btnRelatorioTexto}>📄 Ver Prévia e Baixar Relatório</Text>
             </TouchableOpacity>
           </View>
         ))
@@ -1635,35 +1624,70 @@ export default function MarcilioScreen() {
         </View>
       </Modal>
 
-      {/* Modal Estatísticas por Jogo */}
+      {/* Modal Prévia do Relatório de Jogo */}
       <Modal visible={modalStatsJogoVisivel} animationType="slide" presentationStyle="pageSheet">
-        <View style={{ flex: 1, backgroundColor: CORES.branco }}>
-          <View style={styles.modalHeader}>
+        <View style={{ flex: 1, backgroundColor: "#f0f2f5" }}>
+
+          {/* Header */}
+          <View style={[styles.modalHeader, { paddingBottom: 10 }]}>
             <TouchableOpacity style={styles.btnFechar} onPress={() => setModalStatsJogoVisivel(false)}>
               <Text style={{ color: CORES.branco, fontSize: 16 }}>✕</Text>
             </TouchableOpacity>
-            <Text style={styles.modalTitulo} numberOfLines={1}>
-              {jogoStatsVisualizado ? `${jogoStatsVisualizado.mandante} x ${jogoStatsVisualizado.visitante}` : "Estatísticas"}
-            </Text>
+            <Text style={styles.modalTitulo} numberOfLines={1}>📄 Prévia do Relatório</Text>
             <View style={{ width: 60 }} />
           </View>
 
           {/* Cabeçalho do jogo */}
           {jogoStatsVisualizado && (
-            <View style={{ backgroundColor: CORES.azulEscuro, padding: 12, alignItems: "center" }}>
-              <Text style={{ color: `${CORES.branco}80`, fontSize: 11 }}>
-                {jogoStatsVisualizado.competicao || ""}{jogoStatsVisualizado.data ? ` • ${new Date(jogoStatsVisualizado.data).toLocaleDateString("pt-BR", { timeZone: "UTC", day: "2-digit", month: "2-digit", year: "numeric" })}` : ""}
-              </Text>
-              <Text style={{ color: CORES.branco, fontSize: 18, fontWeight: "900", marginTop: 2 }}>
-                {jogoStatsVisualizado.placarMandante ?? "—"} x {jogoStatsVisualizado.placarVisitante ?? "—"}
-              </Text>
+            <View style={{ backgroundColor: CORES.azulEscuro, paddingHorizontal: 16, paddingVertical: 14 }}>
+              {/* Times e placar */}
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 6 }}>
+                <Text style={{ color: CORES.branco, fontSize: 15, fontWeight: "800", flex: 1, textAlign: "right" }} numberOfLines={1}>{jogoStatsVisualizado.mandante}</Text>
+                <View style={{ backgroundColor: `${CORES.branco}20`, borderRadius: 8, paddingHorizontal: 14, paddingVertical: 6 }}>
+                  <Text style={{ color: CORES.branco, fontSize: 22, fontWeight: "900", letterSpacing: 2 }}>
+                    {jogoStatsVisualizado.placarMandante ?? "—"} × {jogoStatsVisualizado.placarVisitante ?? "—"}
+                  </Text>
+                </View>
+                <Text style={{ color: CORES.branco, fontSize: 15, fontWeight: "800", flex: 1, textAlign: "left" }} numberOfLines={1}>{jogoStatsVisualizado.visitante}</Text>
+              </View>
+              {/* Informações */}
+              <View style={{ flexDirection: "row", justifyContent: "center", gap: 16, flexWrap: "wrap" }}>
+                {jogoStatsVisualizado.competicao ? <Text style={{ color: `${CORES.branco}BB`, fontSize: 11 }}>🏆 {jogoStatsVisualizado.competicao}</Text> : null}
+                {jogoStatsVisualizado.data ? <Text style={{ color: `${CORES.branco}BB`, fontSize: 11 }}>📅 {new Date(jogoStatsVisualizado.data).toLocaleDateString("pt-BR", { timeZone: "UTC", day: "2-digit", month: "2-digit", year: "numeric" })}</Text> : null}
+                {jogoStatsVisualizado.local ? <Text style={{ color: `${CORES.branco}BB`, fontSize: 11 }}>📍 {jogoStatsVisualizado.local}</Text> : null}
+              </View>
+              {/* Resumo: total de avaliados */}
+              {!carregandoStatsJogo && scoutsStatsJogo.length > 0 && (
+                <View style={{ marginTop: 10, flexDirection: "row", justifyContent: "center", gap: 20 }}>
+                  <View style={{ alignItems: "center" }}>
+                    <Text style={{ color: CORES.branco, fontSize: 18, fontWeight: "900" }}>{scoutsStatsJogo.filter(s => s.titular).length}</Text>
+                    <Text style={{ color: `${CORES.branco}80`, fontSize: 10 }}>Titulares</Text>
+                  </View>
+                  <View style={{ alignItems: "center" }}>
+                    <Text style={{ color: CORES.branco, fontSize: 18, fontWeight: "900" }}>{scoutsStatsJogo.filter(s => !s.titular).length}</Text>
+                    <Text style={{ color: `${CORES.branco}80`, fontSize: 10 }}>Reservas</Text>
+                  </View>
+                  <View style={{ alignItems: "center" }}>
+                    <Text style={{ color: CORES.branco, fontSize: 18, fontWeight: "900" }}>{scoutsStatsJogo.reduce((acc, s) => acc + (s.gols || 0), 0)}</Text>
+                    <Text style={{ color: `${CORES.branco}80`, fontSize: 10 }}>Gols</Text>
+                  </View>
+                  <View style={{ alignItems: "center" }}>
+                    <Text style={{ color: CORES.branco, fontSize: 18, fontWeight: "900" }}>{scoutsStatsJogo.reduce((acc, s) => acc + (s.assistencias || 0), 0)}</Text>
+                    <Text style={{ color: `${CORES.branco}80`, fontSize: 10 }}>Assist.</Text>
+                  </View>
+                  <View style={{ alignItems: "center" }}>
+                    <Text style={{ color: scoutsStatsJogo.reduce((acc, s) => acc + (s.cartoesAmarelos || 0), 0) > 0 ? "#fbbf24" : `${CORES.branco}80`, fontSize: 18, fontWeight: "900" }}>{scoutsStatsJogo.reduce((acc, s) => acc + (s.cartoesAmarelos || 0), 0)}</Text>
+                    <Text style={{ color: `${CORES.branco}80`, fontSize: 10 }}>Amarelos</Text>
+                  </View>
+                </View>
+              )}
             </View>
           )}
 
           {carregandoStatsJogo ? (
             <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
               <ActivityIndicator size="large" color={CORES.azulClaro} />
-              <Text style={{ color: CORES.cinzaTexto, marginTop: 12 }}>Carregando estatísticas...</Text>
+              <Text style={{ color: CORES.cinzaTexto, marginTop: 12 }}>Carregando dados...</Text>
             </View>
           ) : scoutsStatsJogo.length === 0 ? (
             <View style={styles.estadoVazio}>
@@ -1672,99 +1696,166 @@ export default function MarcilioScreen() {
               <Text style={styles.estadoVazioTexto}>Nenhum scout registrado para este jogo.</Text>
             </View>
           ) : (
-            <ScrollView contentContainerStyle={{ padding: 16 }}>
+            <ScrollView contentContainerStyle={{ padding: 12, paddingBottom: 100 }}>
+              {/* Título da seção */}
+              <Text style={{ fontSize: 11, color: CORES.cinzaTexto, fontWeight: "700", textTransform: "uppercase", marginBottom: 8, letterSpacing: 0.5 }}>
+                {scoutsStatsJogo.length} atleta{scoutsStatsJogo.length !== 1 ? "s" : ""} avaliado{scoutsStatsJogo.length !== 1 ? "s" : ""}
+              </Text>
+
               {scoutsStatsJogo.map((s: any) => {
                 const totalOfe = (s.gols || 0) + (s.assistencias || 0) + (s.finalizacoes || 0) + (s.cruzamentos || 0) + (s.passes || 0) + (s.passesCompletos || 0) + (s.faltasSofridas || 0) + (s.dribles || 0);
                 const totalDef = (s.desarmes || 0) + (s.interceptacoes || 0) + (s.duelos || 0) + (s.duelosGanhos || 0) + (s.jogosAereos || 0) + (s.duelosAereosPerdidos || 0) + (s.faltasCometidas || 0) + (s.bolasRecuperadas || 0);
+                const temNotas = s.notaTecnica || s.notaFisica || s.notaTatica;
                 return (
-                  <View key={s.atletaId} style={{ backgroundColor: CORES.branco, borderRadius: 10, borderWidth: 1, borderColor: CORES.cinzaMedio, marginBottom: 10, padding: 10 }}>
-                    {/* Cabeçalho do atleta */}
-                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                  <View key={s.atletaId} style={{
+                    backgroundColor: CORES.branco,
+                    borderRadius: 12,
+                    marginBottom: 10,
+                    overflow: "hidden",
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.08,
+                    shadowRadius: 3,
+                    elevation: 2,
+                  }}>
+                    {/* Faixa de cabeçalho do card */}
+                    <View style={{ backgroundColor: s.titular ? CORES.azulEscuro : CORES.azulMedio, paddingHorizontal: 12, paddingVertical: 8, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
                       <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                        {s.titular && (
-                          <View style={{ backgroundColor: CORES.azulEscuro, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
-                            <Text style={{ color: CORES.branco, fontSize: 9, fontWeight: "700" }}>TIT</Text>
+                        {s.titular ? (
+                          <View style={{ backgroundColor: `${CORES.branco}30`, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
+                            <Text style={{ color: CORES.branco, fontSize: 9, fontWeight: "700" }}>★ TITULAR</Text>
+                          </View>
+                        ) : (
+                          <View style={{ backgroundColor: `${CORES.branco}20`, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
+                            <Text style={{ color: `${CORES.branco}CC`, fontSize: 9, fontWeight: "600" }}>RESERVA</Text>
                           </View>
                         )}
-                        <Text style={{ fontSize: 14, fontWeight: "700", color: CORES.preto }}>{s.nomeAtleta}</Text>
+                        <Text style={{ color: CORES.branco, fontSize: 14, fontWeight: "800" }}>{s.nomeAtleta}</Text>
                       </View>
                       <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                        <Text style={{ fontSize: 11, color: CORES.azulClaro, fontWeight: "600" }}>{s.posicaoAtleta}</Text>
-                        <View style={{ backgroundColor: CORES.cinzaClaro, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 }}>
-                          <Text style={{ fontSize: 11, fontWeight: "700", color: CORES.preto }}>{s.minutosJogados || 0}min</Text>
+                        {s.posicaoAtleta ? <Text style={{ color: `${CORES.branco}CC`, fontSize: 11, fontWeight: "600" }}>{s.posicaoAtleta}</Text> : null}
+                        <View style={{ backgroundColor: `${CORES.branco}20`, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 }}>
+                          <Text style={{ color: CORES.branco, fontSize: 12, fontWeight: "700" }}>{s.minutosJogados || 0}’</Text>
                         </View>
                       </View>
                     </View>
 
-                    {/* Ofensivo */}
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
-                      <Text style={{ fontSize: 9, color: CORES.azulClaro, fontWeight: "700", textTransform: "uppercase" }}>Ofensivo</Text>
-                      <Text style={{ fontSize: 9, color: CORES.azulClaro, fontWeight: "600" }}>Total: {totalOfe}</Text>
-                    </View>
-                    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
-                      {[
-                        ["Gols", s.gols], ["Assist.", s.assistencias], ["Finaliz.", s.finalizacoes],
-                        ["Cruzam.", s.cruzamentos], ["Passes", s.passes], ["P.Certos", s.passesCompletos],
-                        ["F.Sofrid.", s.faltasSofridas], ["Dribles", s.dribles],
-                      ].map(([label, val]: any) => (
-                        <View key={label} style={{ alignItems: "center", minWidth: 52 }}>
-                          <Text style={{ fontSize: 9, color: CORES.cinzaTexto }}>{label}</Text>
-                          <Text style={{ fontSize: 15, fontWeight: "700", color: val > 0 ? CORES.azulClaro : CORES.cinzaMedio }}>{val || 0}</Text>
+                    <View style={{ padding: 10 }}>
+                      {/* Linha de destaques rápidos */}
+                      {(s.gols > 0 || s.assistencias > 0 || s.cartoesAmarelos > 0 || s.cartoesVermelhos > 0) && (
+                        <View style={{ flexDirection: "row", gap: 6, marginBottom: 8, flexWrap: "wrap" }}>
+                          {s.gols > 0 && <View style={{ backgroundColor: "#dcfce7", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 }}><Text style={{ color: "#166534", fontSize: 12, fontWeight: "700" }}>⚽ {s.gols} gol{s.gols > 1 ? "s" : ""}</Text></View>}
+                          {s.assistencias > 0 && <View style={{ backgroundColor: "#dbeafe", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 }}><Text style={{ color: "#1e40af", fontSize: 12, fontWeight: "700" }}>🌟 {s.assistencias} assist.</Text></View>}
+                          {s.cartoesAmarelos > 0 && <View style={{ backgroundColor: "#fef9c3", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 }}><Text style={{ color: "#854d0e", fontSize: 12, fontWeight: "700" }}>🟨 {s.cartoesAmarelos}</Text></View>}
+                          {s.cartoesVermelhos > 0 && <View style={{ backgroundColor: "#fee2e2", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 }}><Text style={{ color: "#991b1b", fontSize: 12, fontWeight: "700" }}>🟥 {s.cartoesVermelhos}</Text></View>}
                         </View>
-                      ))}
-                    </View>
+                      )}
 
-                    {/* Defensivo */}
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
-                      <Text style={{ fontSize: 9, color: CORES.verde, fontWeight: "700", textTransform: "uppercase" }}>Defensivo</Text>
-                      <Text style={{ fontSize: 9, color: CORES.verde, fontWeight: "600" }}>Total: {totalDef}</Text>
-                    </View>
-                    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
-                      {[
-                        ["Desarmes", s.desarmes], ["Intercept.", s.interceptacoes], ["Duelos", s.duelos],
-                        ["D.Ganhos", s.duelosGanhos], ["J.Aéreo", s.jogosAereos], ["Aér.Perd.", s.duelosAereosPerdidos],
-                        ["F.Comet.", s.faltasCometidas], ["B.Recup.", s.bolasRecuperadas],
-                      ].map(([label, val]: any) => (
-                        <View key={label} style={{ alignItems: "center", minWidth: 52 }}>
-                          <Text style={{ fontSize: 9, color: CORES.cinzaTexto }}>{label}</Text>
-                          <Text style={{ fontSize: 15, fontWeight: "700", color: val > 0 ? CORES.verde : CORES.cinzaMedio }}>{val || 0}</Text>
+                      {/* Ofensivo */}
+                      <View style={{ marginBottom: 8 }}>
+                        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                          <Text style={{ fontSize: 9, color: CORES.azulClaro, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 }}>Ofensivo</Text>
+                          <Text style={{ fontSize: 9, color: CORES.azulClaro, fontWeight: "600", backgroundColor: "#e8eaf6", paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4 }}>Total: {totalOfe}</Text>
                         </View>
-                      ))}
-                    </View>
-
-                    {/* Disciplina + Notas */}
-                    <View style={{ flexDirection: "row", gap: 12 }}>
-                      <View style={{ flex: 1 }}>
-                        <Text style={{ fontSize: 9, color: "#b45309", fontWeight: "700", textTransform: "uppercase", marginBottom: 4 }}>Disciplina</Text>
-                        <View style={{ flexDirection: "row", gap: 8 }}>
-                          <View style={{ alignItems: "center" }}>
-                            <Text style={{ fontSize: 9, color: CORES.cinzaTexto }}>Amarelos</Text>
-                            <Text style={{ fontSize: 15, fontWeight: "700", color: s.cartoesAmarelos > 0 ? "#e67e22" : CORES.cinzaMedio }}>{s.cartoesAmarelos || 0}</Text>
-                          </View>
-                          <View style={{ alignItems: "center" }}>
-                            <Text style={{ fontSize: 9, color: CORES.cinzaTexto }}>Vermelhos</Text>
-                            <Text style={{ fontSize: 15, fontWeight: "700", color: s.cartoesVermelhos > 0 ? CORES.vermelho : CORES.cinzaMedio }}>{s.cartoesVermelhos || 0}</Text>
-                          </View>
+                        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4 }}>
+                          {[
+                            ["Gols", s.gols, "#166534", "#dcfce7"],
+                            ["Assist.", s.assistencias, "#1e40af", "#dbeafe"],
+                            ["Finaliz.", s.finalizacoes, CORES.azulClaro, "#e8eaf6"],
+                            ["Cruzam.", s.cruzamentos, CORES.azulClaro, "#e8eaf6"],
+                            ["Passes", s.passes, CORES.azulClaro, "#e8eaf6"],
+                            ["P.Certos", s.passesCompletos, CORES.azulClaro, "#e8eaf6"],
+                            ["F.Sofrid.", s.faltasSofridas, CORES.azulClaro, "#e8eaf6"],
+                            ["Dribles", s.dribles, CORES.azulClaro, "#e8eaf6"],
+                          ].map(([label, val, cor, bg]: any) => (
+                            <View key={label} style={{ alignItems: "center", backgroundColor: val > 0 ? bg : "#f9f9f9", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4, minWidth: 54 }}>
+                              <Text style={{ fontSize: 8, color: val > 0 ? cor : CORES.cinzaTexto }}>{label}</Text>
+                              <Text style={{ fontSize: 16, fontWeight: "700", color: val > 0 ? cor : CORES.cinzaMedio }}>{val || 0}</Text>
+                            </View>
+                          ))}
                         </View>
                       </View>
-                      {(s.notaTecnica || s.notaFisica || s.notaTatica) && (
-                        <View style={{ flex: 3 }}>
-                          <Text style={{ fontSize: 9, color: "#7c3aed", fontWeight: "700", textTransform: "uppercase", marginBottom: 4 }}>Notas</Text>
+
+                      {/* Defensivo */}
+                      <View style={{ marginBottom: 8 }}>
+                        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                          <Text style={{ fontSize: 9, color: CORES.verde, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 }}>Defensivo</Text>
+                          <Text style={{ fontSize: 9, color: CORES.verde, fontWeight: "600", backgroundColor: "#e8f5e9", paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4 }}>Total: {totalDef}</Text>
+                        </View>
+                        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4 }}>
+                          {[
+                            ["Desarmes", s.desarmes], ["Intercept.", s.interceptacoes], ["Duelos", s.duelos],
+                            ["D.Ganhos", s.duelosGanhos], ["J.Aéreo", s.jogosAereos], ["Aér.Perd.", s.duelosAereosPerdidos],
+                            ["F.Comet.", s.faltasCometidas], ["B.Recup.", s.bolasRecuperadas],
+                          ].map(([label, val]: any) => (
+                            <View key={label} style={{ alignItems: "center", backgroundColor: val > 0 ? "#e8f5e9" : "#f9f9f9", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4, minWidth: 54 }}>
+                              <Text style={{ fontSize: 8, color: val > 0 ? CORES.verde : CORES.cinzaTexto }}>{label}</Text>
+                              <Text style={{ fontSize: 16, fontWeight: "700", color: val > 0 ? CORES.verde : CORES.cinzaMedio }}>{val || 0}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+
+                      {/* Notas */}
+                      {temNotas && (
+                        <View style={{ backgroundColor: "#f5f3ff", borderRadius: 8, padding: 8, marginBottom: 6 }}>
+                          <Text style={{ fontSize: 9, color: "#7c3aed", fontWeight: "700", textTransform: "uppercase", marginBottom: 6 }}>Avaliação</Text>
                           <View style={{ flexDirection: "row", gap: 8 }}>
-                            {s.notaTecnica && <View style={{ alignItems: "center" }}><Text style={{ fontSize: 9, color: CORES.cinzaTexto }}>Téc.</Text><Text style={{ fontSize: 15, fontWeight: "700", color: "#7c3aed" }}>{s.notaTecnica}</Text></View>}
-                            {s.notaFisica && <View style={{ alignItems: "center" }}><Text style={{ fontSize: 9, color: CORES.cinzaTexto }}>Fís.</Text><Text style={{ fontSize: 15, fontWeight: "700", color: "#7c3aed" }}>{s.notaFisica}</Text></View>}
-                            {s.notaTatica && <View style={{ alignItems: "center" }}><Text style={{ fontSize: 9, color: CORES.cinzaTexto }}>Tát.</Text><Text style={{ fontSize: 15, fontWeight: "700", color: "#7c3aed" }}>{s.notaTatica}</Text></View>}
+                            {s.notaTecnica && (
+                              <View style={{ flex: 1, alignItems: "center", backgroundColor: CORES.branco, borderRadius: 6, padding: 6 }}>
+                                <Text style={{ fontSize: 9, color: CORES.cinzaTexto }}>Técnica</Text>
+                                <Text style={{ fontSize: 20, fontWeight: "900", color: "#7c3aed" }}>{s.notaTecnica}</Text>
+                              </View>
+                            )}
+                            {s.notaFisica && (
+                              <View style={{ flex: 1, alignItems: "center", backgroundColor: CORES.branco, borderRadius: 6, padding: 6 }}>
+                                <Text style={{ fontSize: 9, color: CORES.cinzaTexto }}>Física</Text>
+                                <Text style={{ fontSize: 20, fontWeight: "900", color: "#7c3aed" }}>{s.notaFisica}</Text>
+                              </View>
+                            )}
+                            {s.notaTatica && (
+                              <View style={{ flex: 1, alignItems: "center", backgroundColor: CORES.branco, borderRadius: 6, padding: 6 }}>
+                                <Text style={{ fontSize: 9, color: CORES.cinzaTexto }}>Tática</Text>
+                                <Text style={{ fontSize: 20, fontWeight: "900", color: "#7c3aed" }}>{s.notaTatica}</Text>
+                              </View>
+                            )}
                           </View>
                         </View>
                       )}
+
+                      {/* Observações */}
+                      {s.observacoes ? (
+                        <View style={{ backgroundColor: "#fffbeb", borderRadius: 8, padding: 8, borderLeftWidth: 3, borderLeftColor: "#f59e0b" }}>
+                          <Text style={{ fontSize: 9, color: "#92400e", fontWeight: "700", marginBottom: 3 }}>OBSERVAÇÕES</Text>
+                          <Text style={{ fontSize: 12, color: CORES.preto, fontStyle: "italic", lineHeight: 17 }}>{s.observacoes}</Text>
+                        </View>
+                      ) : null}
                     </View>
-                    {s.observacoes ? (
-                      <Text style={{ fontSize: 11, color: CORES.cinzaTexto, fontStyle: "italic", marginTop: 8 }}>"{s.observacoes}"</Text>
-                    ) : null}
                   </View>
                 );
               })}
             </ScrollView>
+          )}
+
+          {/* Botão fixo de download */}
+          {!carregandoStatsJogo && scoutsStatsJogo.length > 0 && jogoStatsVisualizado && (
+            <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, backgroundColor: CORES.branco, padding: 12, borderTopWidth: 1, borderTopColor: CORES.cinzaMedio, shadowColor: "#000", shadowOffset: { width: 0, height: -2 }, shadowOpacity: 0.08, shadowRadius: 4, elevation: 8 }}>
+              <TouchableOpacity
+                style={{ backgroundColor: CORES.azulEscuro, borderRadius: 12, paddingVertical: 14, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 8 }}
+                onPress={() => {
+                  setModalStatsJogoVisivel(false);
+                  gerarRelatorioJogo(jogoStatsVisualizado);
+                }}
+                disabled={gerandoPdfJogo}
+              >
+                {gerandoPdfJogo
+                  ? <ActivityIndicator size="small" color={CORES.branco} />
+                  : <>
+                    <Text style={{ color: CORES.branco, fontSize: 15, fontWeight: "800" }}>⬇️ Baixar Relatório PDF</Text>
+                  </>
+                }
+              </TouchableOpacity>
+            </View>
           )}
         </View>
       </Modal>
