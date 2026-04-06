@@ -545,6 +545,12 @@ export default function MarcilioScreen() {
   const [carregandoScout, setCarregandoScout] = useState(false);
   const [mensagemSucesso, setMensagemSucesso] = useState<string | null>(null);
 
+  // ===== ESTADO DO FILTRO POR JOGO =====
+  const [modalStatsJogoVisivel, setModalStatsJogoVisivel] = useState(false);
+  const [jogoStatsVisualizado, setJogoStatsVisualizado] = useState<any | null>(null);
+  const [scoutsStatsJogo, setScoutsStatsJogo] = useState<any[]>([]);
+  const [carregandoStatsJogo, setCarregandoStatsJogo] = useState(false);
+
   const carregarJogos = useCallback(async () => {
     setCarregandoJogos(true);
     try {
@@ -602,6 +608,29 @@ export default function MarcilioScreen() {
     } catch (e) { console.error("Erro ao carregar scouts:", e); }
     finally { setCarregandoScout(false); }
   }, []);
+
+  const carregarStatsDoJogo = useCallback(async (jogo: any) => {
+    setCarregandoStatsJogo(true);
+    setJogoStatsVisualizado(jogo);
+    try {
+      const base = getApiBaseUrl();
+      const resp = await fetch(`${base}/api/jogos/${jogo.id}/scouts`);
+      if (resp.ok) {
+        const data: any[] = await resp.json();
+        // Enriquecer com nome e posição do atleta
+        const enriched = data.map(s => {
+          const atleta = elenco.find(a => a.id === s.atletaId);
+          return { ...s, nomeAtleta: atleta?.nome || `Atleta ${s.atletaId}`, posicaoAtleta: atleta?.posicao || "" };
+        }).sort((a, b) => {
+          if (a.titular && !b.titular) return -1;
+          if (!a.titular && b.titular) return 1;
+          return a.nomeAtleta.localeCompare(b.nomeAtleta);
+        });
+        setScoutsStatsJogo(enriched);
+      }
+    } catch (e) { console.error("Erro ao carregar stats do jogo:", e); }
+    finally { setCarregandoStatsJogo(false); }
+  }, [elenco]);
 
   useEffect(() => {
     if (abaAtiva === "jogos" && jogos.length === 0) carregarJogos();
@@ -967,15 +996,27 @@ export default function MarcilioScreen() {
       );
     }
 
-    const campos: { label: string; chave: keyof EstatisticasTemporada }[] = [
+    const campos: { label: string; chave: keyof EstatisticasTemporada; secao?: string }[] = [
       { label: "Jogos", chave: "jogos" },
       { label: "Minutos", chave: "minutosJogados" },
-      { label: "Gols", chave: "gols" },
-      { label: "Assistências", chave: "assistencias" },
-      { label: "Finalizações", chave: "finalizacoes" },
-      { label: "Desarmes", chave: "desarmes" },
-      { label: "Interceptações", chave: "interceptacoes" },
-      { label: "Amarelos", chave: "cartoesAmarelos" },
+      { label: "Gols", chave: "gols", secao: "Ofensivo" },
+      { label: "Assistências", chave: "assistencias", secao: "Ofensivo" },
+      { label: "Finalizações", chave: "finalizacoes", secao: "Ofensivo" },
+      { label: "Cruzamentos", chave: "cruzamentos", secao: "Ofensivo" },
+      { label: "Passes", chave: "passes", secao: "Ofensivo" },
+      { label: "Passes Certos", chave: "passesCompletos", secao: "Ofensivo" },
+      { label: "Faltas Sofridas", chave: "faltasSofridas", secao: "Ofensivo" },
+      { label: "Dribles", chave: "dribles", secao: "Ofensivo" },
+      { label: "Desarmes", chave: "desarmes", secao: "Defensivo" },
+      { label: "Intercepções", chave: "interceptacoes", secao: "Defensivo" },
+      { label: "Duelos", chave: "duelos", secao: "Defensivo" },
+      { label: "Duelos Ganhos", chave: "duelosGanhos", secao: "Defensivo" },
+      { label: "Jogos Aéreos", chave: "jogosAereos", secao: "Defensivo" },
+      { label: "Aéreos Perdidos", chave: "duelosAereosPerdidos", secao: "Defensivo" },
+      { label: "Faltas Cometidas", chave: "faltasCometidas", secao: "Defensivo" },
+      { label: "Bolas Recuperadas", chave: "bolasRecuperadas", secao: "Defensivo" },
+      { label: "Amarelos", chave: "cartoesAmarelos", secao: "Disciplina" },
+      { label: "Vermelhos", chave: "cartoesVermelhos", secao: "Disciplina" },
     ];
 
     return (
@@ -989,23 +1030,33 @@ export default function MarcilioScreen() {
                 <Text key={a.id} style={[styles.tabelaCelula, styles.tabelaAtletaCol]} numberOfLines={2}>{a.nome}</Text>
               ))}
             </View>
-            {/* Linhas */}
+            {/* Linhas com separadores de seção */}
             {campos.map((campo, idx) => {
               const valores = atletasSelecionados.map(a => Number(a.estatisticas?.[campo.chave] || 0));
               const maximo = Math.max(...valores);
+              const secaoAnterior = idx > 0 ? campos[idx - 1].secao : undefined;
+              const mostraSeparador = campo.secao && campo.secao !== secaoAnterior;
+              const corSecao = campo.secao === "Ofensivo" ? CORES.azulClaro : campo.secao === "Defensivo" ? CORES.verde : campo.secao === "Disciplina" ? "#b45309" : undefined;
               return (
-                <View key={campo.chave} style={[styles.tabelaRow, idx % 2 === 0 && { backgroundColor: CORES.cinzaClaro }]}>
-                  <Text style={[styles.tabelaCelula, styles.tabelaLabelCol, { color: CORES.cinzaTexto }]}>{campo.label}</Text>
-                  {atletasSelecionados.map(a => {
-                    const val = Number(a.estatisticas?.[campo.chave] || 0);
-                    const destaque = val === maximo && maximo > 0;
-                    return (
-                      <Text key={a.id} style={[styles.tabelaCelula, styles.tabelaAtletaCol, destaque && { color: CORES.verde, fontWeight: "bold" }]}>
-                        {val}
-                      </Text>
-                    );
-                  })}
-                </View>
+                <React.Fragment key={campo.chave}>
+                  {mostraSeparador && (
+                    <View style={{ backgroundColor: corSecao, paddingHorizontal: 8, paddingVertical: 3 }}>
+                      <Text style={{ color: CORES.branco, fontSize: 9, fontWeight: "700", textTransform: "uppercase" }}>{campo.secao}</Text>
+                    </View>
+                  )}
+                  <View style={[styles.tabelaRow, idx % 2 === 0 && { backgroundColor: CORES.cinzaClaro }]}>
+                    <Text style={[styles.tabelaCelula, styles.tabelaLabelCol, { color: CORES.cinzaTexto }]}>{campo.label}</Text>
+                    {atletasSelecionados.map(a => {
+                      const val = Number(a.estatisticas?.[campo.chave] || 0);
+                      const destaque = val === maximo && maximo > 0;
+                      return (
+                        <Text key={a.id} style={[styles.tabelaCelula, styles.tabelaAtletaCol, destaque && { color: CORES.verde, fontWeight: "bold" }]}>
+                          {val}
+                        </Text>
+                      );
+                    })}
+                  </View>
+                </React.Fragment>
               );
             })}
             {/* Notas */}
@@ -1149,6 +1200,16 @@ export default function MarcilioScreen() {
                 <Text style={[styles.btnEditarTexto, { color: CORES.branco }]}>🗑</Text>
               </TouchableOpacity>
             </View>
+            {/* Botão Stats por Jogo */}
+            <TouchableOpacity
+              style={[styles.btnRelatorio, { margin: 10, marginTop: 0, marginBottom: 4, flexDirection: "row", alignItems: "center", justifyContent: "center", padding: 10, backgroundColor: CORES.azulMedio }]}
+              onPress={async () => {
+                await carregarStatsDoJogo(jogo);
+                setModalStatsJogoVisivel(true);
+              }}
+            >
+              <Text style={styles.btnRelatorioTexto}>📊 Estatísticas do Jogo</Text>
+            </TouchableOpacity>
             {/* Botão Relatório */}
             <TouchableOpacity
               style={[styles.btnRelatorio, { margin: 10, marginTop: 0, flexDirection: "row", alignItems: "center", justifyContent: "center", padding: 10 }]}
@@ -1570,6 +1631,140 @@ export default function MarcilioScreen() {
               })
             )}
           </ScrollView>
+          )}
+        </View>
+      </Modal>
+
+      {/* Modal Estatísticas por Jogo */}
+      <Modal visible={modalStatsJogoVisivel} animationType="slide" presentationStyle="pageSheet">
+        <View style={{ flex: 1, backgroundColor: CORES.branco }}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity style={styles.btnFechar} onPress={() => setModalStatsJogoVisivel(false)}>
+              <Text style={{ color: CORES.branco, fontSize: 16 }}>✕</Text>
+            </TouchableOpacity>
+            <Text style={styles.modalTitulo} numberOfLines={1}>
+              {jogoStatsVisualizado ? `${jogoStatsVisualizado.mandante} x ${jogoStatsVisualizado.visitante}` : "Estatísticas"}
+            </Text>
+            <View style={{ width: 60 }} />
+          </View>
+
+          {/* Cabeçalho do jogo */}
+          {jogoStatsVisualizado && (
+            <View style={{ backgroundColor: CORES.azulEscuro, padding: 12, alignItems: "center" }}>
+              <Text style={{ color: `${CORES.branco}80`, fontSize: 11 }}>
+                {jogoStatsVisualizado.competicao || ""}{jogoStatsVisualizado.data ? ` • ${new Date(jogoStatsVisualizado.data).toLocaleDateString("pt-BR", { timeZone: "UTC", day: "2-digit", month: "2-digit", year: "numeric" })}` : ""}
+              </Text>
+              <Text style={{ color: CORES.branco, fontSize: 18, fontWeight: "900", marginTop: 2 }}>
+                {jogoStatsVisualizado.placarMandante ?? "—"} x {jogoStatsVisualizado.placarVisitante ?? "—"}
+              </Text>
+            </View>
+          )}
+
+          {carregandoStatsJogo ? (
+            <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+              <ActivityIndicator size="large" color={CORES.azulClaro} />
+              <Text style={{ color: CORES.cinzaTexto, marginTop: 12 }}>Carregando estatísticas...</Text>
+            </View>
+          ) : scoutsStatsJogo.length === 0 ? (
+            <View style={styles.estadoVazio}>
+              <Text style={styles.estadoVazioIcone}>📋</Text>
+              <Text style={styles.estadoVazioTitulo}>Sem dados</Text>
+              <Text style={styles.estadoVazioTexto}>Nenhum scout registrado para este jogo.</Text>
+            </View>
+          ) : (
+            <ScrollView contentContainerStyle={{ padding: 16 }}>
+              {scoutsStatsJogo.map((s: any) => {
+                const totalOfe = (s.gols || 0) + (s.assistencias || 0) + (s.finalizacoes || 0) + (s.cruzamentos || 0) + (s.passes || 0) + (s.passesCompletos || 0) + (s.faltasSofridas || 0) + (s.dribles || 0);
+                const totalDef = (s.desarmes || 0) + (s.interceptacoes || 0) + (s.duelos || 0) + (s.duelosGanhos || 0) + (s.jogosAereos || 0) + (s.duelosAereosPerdidos || 0) + (s.faltasCometidas || 0) + (s.bolasRecuperadas || 0);
+                return (
+                  <View key={s.atletaId} style={{ backgroundColor: CORES.branco, borderRadius: 10, borderWidth: 1, borderColor: CORES.cinzaMedio, marginBottom: 10, padding: 10 }}>
+                    {/* Cabeçalho do atleta */}
+                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                        {s.titular && (
+                          <View style={{ backgroundColor: CORES.azulEscuro, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
+                            <Text style={{ color: CORES.branco, fontSize: 9, fontWeight: "700" }}>TIT</Text>
+                          </View>
+                        )}
+                        <Text style={{ fontSize: 14, fontWeight: "700", color: CORES.preto }}>{s.nomeAtleta}</Text>
+                      </View>
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                        <Text style={{ fontSize: 11, color: CORES.azulClaro, fontWeight: "600" }}>{s.posicaoAtleta}</Text>
+                        <View style={{ backgroundColor: CORES.cinzaClaro, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 }}>
+                          <Text style={{ fontSize: 11, fontWeight: "700", color: CORES.preto }}>{s.minutosJogados || 0}min</Text>
+                        </View>
+                      </View>
+                    </View>
+
+                    {/* Ofensivo */}
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
+                      <Text style={{ fontSize: 9, color: CORES.azulClaro, fontWeight: "700", textTransform: "uppercase" }}>Ofensivo</Text>
+                      <Text style={{ fontSize: 9, color: CORES.azulClaro, fontWeight: "600" }}>Total: {totalOfe}</Text>
+                    </View>
+                    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
+                      {[
+                        ["Gols", s.gols], ["Assist.", s.assistencias], ["Finaliz.", s.finalizacoes],
+                        ["Cruzam.", s.cruzamentos], ["Passes", s.passes], ["P.Certos", s.passesCompletos],
+                        ["F.Sofrid.", s.faltasSofridas], ["Dribles", s.dribles],
+                      ].map(([label, val]: any) => (
+                        <View key={label} style={{ alignItems: "center", minWidth: 52 }}>
+                          <Text style={{ fontSize: 9, color: CORES.cinzaTexto }}>{label}</Text>
+                          <Text style={{ fontSize: 15, fontWeight: "700", color: val > 0 ? CORES.azulClaro : CORES.cinzaMedio }}>{val || 0}</Text>
+                        </View>
+                      ))}
+                    </View>
+
+                    {/* Defensivo */}
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
+                      <Text style={{ fontSize: 9, color: CORES.verde, fontWeight: "700", textTransform: "uppercase" }}>Defensivo</Text>
+                      <Text style={{ fontSize: 9, color: CORES.verde, fontWeight: "600" }}>Total: {totalDef}</Text>
+                    </View>
+                    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
+                      {[
+                        ["Desarmes", s.desarmes], ["Intercept.", s.interceptacoes], ["Duelos", s.duelos],
+                        ["D.Ganhos", s.duelosGanhos], ["J.Aéreo", s.jogosAereos], ["Aér.Perd.", s.duelosAereosPerdidos],
+                        ["F.Comet.", s.faltasCometidas], ["B.Recup.", s.bolasRecuperadas],
+                      ].map(([label, val]: any) => (
+                        <View key={label} style={{ alignItems: "center", minWidth: 52 }}>
+                          <Text style={{ fontSize: 9, color: CORES.cinzaTexto }}>{label}</Text>
+                          <Text style={{ fontSize: 15, fontWeight: "700", color: val > 0 ? CORES.verde : CORES.cinzaMedio }}>{val || 0}</Text>
+                        </View>
+                      ))}
+                    </View>
+
+                    {/* Disciplina + Notas */}
+                    <View style={{ flexDirection: "row", gap: 12 }}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 9, color: "#b45309", fontWeight: "700", textTransform: "uppercase", marginBottom: 4 }}>Disciplina</Text>
+                        <View style={{ flexDirection: "row", gap: 8 }}>
+                          <View style={{ alignItems: "center" }}>
+                            <Text style={{ fontSize: 9, color: CORES.cinzaTexto }}>Amarelos</Text>
+                            <Text style={{ fontSize: 15, fontWeight: "700", color: s.cartoesAmarelos > 0 ? "#e67e22" : CORES.cinzaMedio }}>{s.cartoesAmarelos || 0}</Text>
+                          </View>
+                          <View style={{ alignItems: "center" }}>
+                            <Text style={{ fontSize: 9, color: CORES.cinzaTexto }}>Vermelhos</Text>
+                            <Text style={{ fontSize: 15, fontWeight: "700", color: s.cartoesVermelhos > 0 ? CORES.vermelho : CORES.cinzaMedio }}>{s.cartoesVermelhos || 0}</Text>
+                          </View>
+                        </View>
+                      </View>
+                      {(s.notaTecnica || s.notaFisica || s.notaTatica) && (
+                        <View style={{ flex: 3 }}>
+                          <Text style={{ fontSize: 9, color: "#7c3aed", fontWeight: "700", textTransform: "uppercase", marginBottom: 4 }}>Notas</Text>
+                          <View style={{ flexDirection: "row", gap: 8 }}>
+                            {s.notaTecnica && <View style={{ alignItems: "center" }}><Text style={{ fontSize: 9, color: CORES.cinzaTexto }}>Téc.</Text><Text style={{ fontSize: 15, fontWeight: "700", color: "#7c3aed" }}>{s.notaTecnica}</Text></View>}
+                            {s.notaFisica && <View style={{ alignItems: "center" }}><Text style={{ fontSize: 9, color: CORES.cinzaTexto }}>Fís.</Text><Text style={{ fontSize: 15, fontWeight: "700", color: "#7c3aed" }}>{s.notaFisica}</Text></View>}
+                            {s.notaTatica && <View style={{ alignItems: "center" }}><Text style={{ fontSize: 9, color: CORES.cinzaTexto }}>Tát.</Text><Text style={{ fontSize: 15, fontWeight: "700", color: "#7c3aed" }}>{s.notaTatica}</Text></View>}
+                          </View>
+                        </View>
+                      )}
+                    </View>
+                    {s.observacoes ? (
+                      <Text style={{ fontSize: 11, color: CORES.cinzaTexto, fontStyle: "italic", marginTop: 8 }}>"{s.observacoes}"</Text>
+                    ) : null}
+                  </View>
+                );
+              })}
+            </ScrollView>
           )}
         </View>
       </Modal>
