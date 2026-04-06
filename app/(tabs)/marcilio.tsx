@@ -1656,31 +1656,105 @@ export default function MarcilioScreen() {
                 {jogoStatsVisualizado.data ? <Text style={{ color: `${CORES.branco}BB`, fontSize: 11 }}>📅 {new Date(jogoStatsVisualizado.data).toLocaleDateString("pt-BR", { timeZone: "UTC", day: "2-digit", month: "2-digit", year: "numeric" })}</Text> : null}
                 {jogoStatsVisualizado.local ? <Text style={{ color: `${CORES.branco}BB`, fontSize: 11 }}>📍 {jogoStatsVisualizado.local}</Text> : null}
               </View>
-              {/* Resumo: total de avaliados */}
-              {!carregandoStatsJogo && scoutsStatsJogo.length > 0 && (
-                <View style={{ marginTop: 10, flexDirection: "row", justifyContent: "center", gap: 20 }}>
-                  <View style={{ alignItems: "center" }}>
-                    <Text style={{ color: CORES.branco, fontSize: 18, fontWeight: "900" }}>{scoutsStatsJogo.filter(s => s.titular).length}</Text>
-                    <Text style={{ color: `${CORES.branco}80`, fontSize: 10 }}>Titulares</Text>
+              {/* Totais coletivos do time */}
+              {!carregandoStatsJogo && scoutsStatsJogo.length > 0 && (() => {
+                const soma = (campo: string) => scoutsStatsJogo.reduce((acc: number, s: any) => acc + (s[campo] || 0), 0);
+                const totalOfeTime = soma("gols") + soma("assistencias") + soma("finalizacoes") + soma("cruzamentos") + soma("passes") + soma("passesCompletos") + soma("faltasSofridas") + soma("dribles");
+                const totalDefTime = soma("desarmes") + soma("interceptacoes") + soma("duelos") + soma("duelosGanhos") + soma("jogosAereos") + soma("duelosAereosPerdidos") + soma("faltasCometidas") + soma("bolasRecuperadas");
+                return (
+                  <View style={{ marginTop: 12 }}>
+                    {/* Linha de escalação */}
+                    <View style={{ flexDirection: "row", justifyContent: "center", gap: 24, marginBottom: 10 }}>
+                      <View style={{ alignItems: "center" }}>
+                        <Text style={{ color: CORES.branco, fontSize: 20, fontWeight: "900" }}>{scoutsStatsJogo.length}</Text>
+                        <Text style={{ color: `${CORES.branco}70`, fontSize: 10 }}>Avaliados</Text>
+                      </View>
+                      <View style={{ width: 1, backgroundColor: `${CORES.branco}30` }} />
+                      <View style={{ alignItems: "center" }}>
+                        <Text style={{ color: CORES.branco, fontSize: 20, fontWeight: "900" }}>{scoutsStatsJogo.filter((s: any) => s.titular).length}</Text>
+                        <Text style={{ color: `${CORES.branco}70`, fontSize: 10 }}>Titulares</Text>
+                      </View>
+                      <View style={{ alignItems: "center" }}>
+                        <Text style={{ color: CORES.branco, fontSize: 20, fontWeight: "900" }}>{scoutsStatsJogo.filter((s: any) => !s.titular).length}</Text>
+                        <Text style={{ color: `${CORES.branco}70`, fontSize: 10 }}>Reservas</Text>
+                      </View>
+                      <View style={{ width: 1, backgroundColor: `${CORES.branco}30` }} />
+                      <View style={{ alignItems: "center" }}>
+                        <Text style={{ color: CORES.branco, fontSize: 20, fontWeight: "900" }}>{scoutsStatsJogo.reduce((acc: number, s: any) => acc + (s.minutosJogados || 0), 0)}</Text>
+                        <Text style={{ color: `${CORES.branco}70`, fontSize: 10 }}>Min. totais</Text>
+                      </View>
+                    </View>
+
+                    {/* Bloco Ofensivo */}
+                    <View style={{ backgroundColor: `${CORES.branco}12`, borderRadius: 10, padding: 10, marginBottom: 6 }}>
+                      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                        <Text style={{ color: `${CORES.branco}CC`, fontSize: 10, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 }}>Ofensivo do Time</Text>
+                        <View style={{ backgroundColor: `${CORES.branco}20`, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
+                          <Text style={{ color: CORES.branco, fontSize: 9, fontWeight: "700" }}>Total: {totalOfeTime}</Text>
+                        </View>
+                      </View>
+                      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 0 }}>
+                        {[
+                          ["Gols", soma("gols")],
+                          ["Assist.", soma("assistencias")],
+                          ["Finaliz.", soma("finalizacoes")],
+                          ["Cruzam.", soma("cruzamentos")],
+                          ["Passes", soma("passes")],
+                          ["P.Certos", soma("passesCompletos")],
+                          ["F.Sofrid.", soma("faltasSofridas")],
+                          ["Dribles", soma("dribles")],
+                        ].map(([label, val]: any, i: number) => (
+                          <View key={label} style={{ width: "25%", alignItems: "center", paddingVertical: 4, borderRightWidth: i % 4 !== 3 ? 1 : 0, borderRightColor: `${CORES.branco}20`, borderBottomWidth: i < 4 ? 1 : 0, borderBottomColor: `${CORES.branco}20` }}>
+                            <Text style={{ color: CORES.branco, fontSize: 17, fontWeight: "900" }}>{val}</Text>
+                            <Text style={{ color: `${CORES.branco}70`, fontSize: 9 }}>{label}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    </View>
+
+                    {/* Bloco Defensivo */}
+                    <View style={{ backgroundColor: `${CORES.branco}12`, borderRadius: 10, padding: 10, marginBottom: 6 }}>
+                      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                        <Text style={{ color: `${CORES.branco}CC`, fontSize: 10, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 }}>Defensivo do Time</Text>
+                        <View style={{ backgroundColor: `${CORES.branco}20`, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
+                          <Text style={{ color: CORES.branco, fontSize: 9, fontWeight: "700" }}>Total: {totalDefTime}</Text>
+                        </View>
+                      </View>
+                      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 0 }}>
+                        {[
+                          ["Desarmes", soma("desarmes")],
+                          ["Intercept.", soma("interceptacoes")],
+                          ["Duelos", soma("duelos")],
+                          ["D.Ganhos", soma("duelosGanhos")],
+                          ["J.Aéreo", soma("jogosAereos")],
+                          ["Aér.Perd.", soma("duelosAereosPerdidos")],
+                          ["F.Comet.", soma("faltasCometidas")],
+                          ["B.Recup.", soma("bolasRecuperadas")],
+                        ].map(([label, val]: any, i: number) => (
+                          <View key={label} style={{ width: "25%", alignItems: "center", paddingVertical: 4, borderRightWidth: i % 4 !== 3 ? 1 : 0, borderRightColor: `${CORES.branco}20`, borderBottomWidth: i < 4 ? 1 : 0, borderBottomColor: `${CORES.branco}20` }}>
+                            <Text style={{ color: CORES.branco, fontSize: 17, fontWeight: "900" }}>{val}</Text>
+                            <Text style={{ color: `${CORES.branco}70`, fontSize: 9 }}>{label}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    </View>
+
+                    {/* Disciplina do time */}
+                    <View style={{ flexDirection: "row", gap: 8 }}>
+                      <View style={{ flex: 1, backgroundColor: `${CORES.branco}12`, borderRadius: 10, padding: 10, flexDirection: "row", justifyContent: "space-around" }}>
+                        <View style={{ alignItems: "center" }}>
+                          <Text style={{ color: soma("cartoesAmarelos") > 0 ? "#fbbf24" : `${CORES.branco}80`, fontSize: 20, fontWeight: "900" }}>{soma("cartoesAmarelos")}</Text>
+                          <Text style={{ color: `${CORES.branco}70`, fontSize: 9 }}>🟨 Amarelos</Text>
+                        </View>
+                        <View style={{ alignItems: "center" }}>
+                          <Text style={{ color: soma("cartoesVermelhos") > 0 ? "#fca5a5" : `${CORES.branco}80`, fontSize: 20, fontWeight: "900" }}>{soma("cartoesVermelhos")}</Text>
+                          <Text style={{ color: `${CORES.branco}70`, fontSize: 9 }}>🟥 Vermelhos</Text>
+                        </View>
+                      </View>
+                    </View>
                   </View>
-                  <View style={{ alignItems: "center" }}>
-                    <Text style={{ color: CORES.branco, fontSize: 18, fontWeight: "900" }}>{scoutsStatsJogo.filter(s => !s.titular).length}</Text>
-                    <Text style={{ color: `${CORES.branco}80`, fontSize: 10 }}>Reservas</Text>
-                  </View>
-                  <View style={{ alignItems: "center" }}>
-                    <Text style={{ color: CORES.branco, fontSize: 18, fontWeight: "900" }}>{scoutsStatsJogo.reduce((acc, s) => acc + (s.gols || 0), 0)}</Text>
-                    <Text style={{ color: `${CORES.branco}80`, fontSize: 10 }}>Gols</Text>
-                  </View>
-                  <View style={{ alignItems: "center" }}>
-                    <Text style={{ color: CORES.branco, fontSize: 18, fontWeight: "900" }}>{scoutsStatsJogo.reduce((acc, s) => acc + (s.assistencias || 0), 0)}</Text>
-                    <Text style={{ color: `${CORES.branco}80`, fontSize: 10 }}>Assist.</Text>
-                  </View>
-                  <View style={{ alignItems: "center" }}>
-                    <Text style={{ color: scoutsStatsJogo.reduce((acc, s) => acc + (s.cartoesAmarelos || 0), 0) > 0 ? "#fbbf24" : `${CORES.branco}80`, fontSize: 18, fontWeight: "900" }}>{scoutsStatsJogo.reduce((acc, s) => acc + (s.cartoesAmarelos || 0), 0)}</Text>
-                    <Text style={{ color: `${CORES.branco}80`, fontSize: 10 }}>Amarelos</Text>
-                  </View>
-                </View>
-              )}
+                );
+              })()}
             </View>
           )}
 
