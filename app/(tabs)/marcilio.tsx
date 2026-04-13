@@ -740,29 +740,26 @@ export default function MarcilioScreen() {
         window.open(url, "_blank");
         setTimeout(() => URL.revokeObjectURL(url), 10000);
       } else {
-        // No Expo Go: fetch POST → arrayBuffer → base64 → FileSystem → Sharing
+        // No Expo Go: fetch POST -> ArrayBuffer -> base64 -> FileSystem -> Sharing
         const resp = await fetch(`${base}/api/jogos/${jogo.id}/relatorio`, { method: "POST" });
         if (!resp.ok) throw new Error("Erro ao gerar relatório");
-        const arrayBuffer = await resp.arrayBuffer();
-        // Converter ArrayBuffer para string base64 sem FileReader
+        const blob = await resp.blob();
+        const arrayBuffer = await blob.arrayBuffer();
         const uint8 = new Uint8Array(arrayBuffer);
         let binary = "";
-        const chunkSize = 8192;
-        for (let i = 0; i < uint8.length; i += chunkSize) {
-          binary += String.fromCharCode(...uint8.subarray(i, i + chunkSize));
+        for (let i = 0; i < uint8.length; i++) {
+          binary += String.fromCharCode(uint8[i]);
         }
         const base64 = btoa(binary);
         const FileSystem = await import("expo-file-system/legacy");
         const Sharing = await import("expo-sharing");
-        // Usar documentDirectory primeiro (melhor permissão no iOS), depois cache
-        const dir = FileSystem.documentDirectory || FileSystem.cacheDirectory || "";
         const nomeArquivo = `Scout_${jogo.mandante}_x_${jogo.visitante}.pdf`.replace(/\s+/g, "_");
-        const path = dir + nomeArquivo;
+        const path = (FileSystem.cacheDirectory || "") + nomeArquivo;
         await FileSystem.writeAsStringAsync(path, base64, { encoding: FileSystem.EncodingType.Base64 });
         if (await Sharing.isAvailableAsync()) {
           await Sharing.shareAsync(path, { mimeType: "application/pdf", UTI: "com.adobe.pdf" });
         } else {
-          Alert.alert("Sucesso", `PDF salvo em:\n${path}`);
+          Alert.alert("Sucesso", `PDF salvo em: ${path}`);
         }
       }
     } catch (e: any) { Alert.alert("Erro", e.message); }
