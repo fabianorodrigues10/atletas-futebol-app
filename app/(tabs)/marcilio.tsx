@@ -740,26 +740,18 @@ export default function MarcilioScreen() {
         window.open(url, "_blank");
         setTimeout(() => URL.revokeObjectURL(url), 10000);
       } else {
-        // No Expo Go: fetch POST -> Blob -> FileReader -> base64 -> FileSystem -> Sharing
+        // No Expo Go: fetch POST -> arrayBuffer -> base64 manual -> FileSystem -> Sharing
         const resp = await fetch(`${base}/api/jogos/${jogo.id}/relatorio`, { method: "POST" });
         if (!resp.ok) throw new Error("Erro ao gerar relatório");
-        const blob = await resp.blob();
-        // Usar FileReader com Promise
-        const base64 = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            const result = reader.result as string;
-            const base64String = result.split(",")[1] || result;
-            resolve(base64String);
-          };
-          reader.onerror = () => reject(new Error("Erro ao ler arquivo"));
-          reader.readAsDataURL(blob);
-        });
+        const arrayBuffer = await resp.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
+        const binaryString = String.fromCharCode(...uint8Array);
+        const base64 = btoa(binaryString);
         const FileSystem = await import("expo-file-system/legacy");
         const Sharing = await import("expo-sharing");
         const nomeArquivo = `Scout_${jogo.mandante}_x_${jogo.visitante}.pdf`.replace(/\s+/g, "_");
         const path = (FileSystem.cacheDirectory || "") + nomeArquivo;
-        await FileSystem.writeAsStringAsync(path, base64, { encoding: FileSystem.EncodingType.Base64 });
+        await FileSystem.writeAsStringAsync(path, base64, { encoding: "base64" });
         if (await Sharing.isAvailableAsync()) {
           await Sharing.shareAsync(path, { mimeType: "application/pdf", UTI: "com.adobe.pdf" });
         } else {
