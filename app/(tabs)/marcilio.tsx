@@ -754,7 +754,8 @@ export default function MarcilioScreen() {
         const base64 = btoa(binary);
         const FileSystem = await import("expo-file-system/legacy");
         const Sharing = await import("expo-sharing");
-        const dir = FileSystem.cacheDirectory || FileSystem.documentDirectory || "";
+        // Usar documentDirectory primeiro (melhor permissão no iOS), depois cache
+        const dir = FileSystem.documentDirectory || FileSystem.cacheDirectory || "";
         const nomeArquivo = `Scout_${jogo.mandante}_x_${jogo.visitante}.pdf`.replace(/\s+/g, "_");
         const path = dir + nomeArquivo;
         await FileSystem.writeAsStringAsync(path, base64, { encoding: FileSystem.EncodingType.Base64 });
