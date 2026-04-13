@@ -740,17 +740,21 @@ export default function MarcilioScreen() {
         window.open(url, "_blank");
         setTimeout(() => URL.revokeObjectURL(url), 10000);
       } else {
-        // No Expo Go: fetch POST -> ArrayBuffer -> base64 -> FileSystem -> Sharing
+        // No Expo Go: fetch POST -> Blob -> FileReader -> base64 -> FileSystem -> Sharing
         const resp = await fetch(`${base}/api/jogos/${jogo.id}/relatorio`, { method: "POST" });
         if (!resp.ok) throw new Error("Erro ao gerar relatório");
         const blob = await resp.blob();
-        const arrayBuffer = await blob.arrayBuffer();
-        const uint8 = new Uint8Array(arrayBuffer);
-        let binary = "";
-        for (let i = 0; i < uint8.length; i++) {
-          binary += String.fromCharCode(uint8[i]);
-        }
-        const base64 = btoa(binary);
+        // Usar FileReader com Promise
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const result = reader.result as string;
+            const base64String = result.split(",")[1] || result;
+            resolve(base64String);
+          };
+          reader.onerror = () => reject(new Error("Erro ao ler arquivo"));
+          reader.readAsDataURL(blob);
+        });
         const FileSystem = await import("expo-file-system/legacy");
         const Sharing = await import("expo-sharing");
         const nomeArquivo = `Scout_${jogo.mandante}_x_${jogo.visitante}.pdf`.replace(/\s+/g, "_");
