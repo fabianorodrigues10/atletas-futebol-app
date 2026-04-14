@@ -5,7 +5,7 @@ import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
-import { Platform } from "react-native";
+import { Platform, ActivityIndicator, View } from "react-native";
 import "@/lib/_core/nativewind-pressable";
 import { ThemeProvider } from "@/lib/theme-provider";
 import {
@@ -18,6 +18,7 @@ import type { EdgeInsets, Metrics, Rect } from "react-native-safe-area-context";
 
 import { trpc, createTRPCClient } from "@/lib/trpc";
 import { initManusRuntime, subscribeSafeAreaInsets } from "@/lib/_core/manus-runtime";
+import { useRouter } from "expo-router";
 
 const DEFAULT_WEB_INSETS: EdgeInsets = { top: 0, right: 0, bottom: 0, left: 0 };
 const DEFAULT_WEB_FRAME: Rect = { x: 0, y: 0, width: 0, height: 0 };
@@ -25,6 +26,34 @@ const DEFAULT_WEB_FRAME: Rect = { x: 0, y: 0, width: 0, height: 0 };
 export const unstable_settings = {
   anchor: "(tabs)",
 };
+
+function useAuthProtection() {
+  const router = require("expo-router").useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Verificar se está no web (domínio)
+    const isWeb = Platform.OS === "web";
+    if (!isWeb) {
+      // No Expo Go, não precisa de autenticação
+      setIsAuthenticated(true);
+      setIsLoading(false);
+      return;
+    }
+
+    // No web, verificar se tem token salvo
+    const token = typeof window !== "undefined" ? localStorage.getItem("authToken") : null;
+    if (token) {
+      setIsAuthenticated(true);
+    } else {
+      setIsAuthenticated(false);
+    }
+    setIsLoading(false);
+  }, []);
+
+  return { isAuthenticated, isLoading };
+}
 
 export default function RootLayout() {
   const initialInsets = initialWindowMetrics?.insets ?? DEFAULT_WEB_INSETS;
@@ -78,6 +107,26 @@ export default function RootLayout() {
     };
   }, [initialInsets, initialFrame]);
 
+  const { isAuthenticated, isLoading } = useAuthProtection();
+
+  if (isLoading) {
+    return (
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <ThemeProvider>
+          <SafeAreaProvider initialMetrics={providerInitialMetrics}>
+            <SafeAreaFrameContext.Provider value={frame}>
+              <SafeAreaInsetsContext.Provider value={insets}>
+                <Stack screenOptions={{ headerShown: false }}>
+                  <Stack.Screen name="(tabs)" />
+                </Stack>
+              </SafeAreaInsetsContext.Provider>
+            </SafeAreaFrameContext.Provider>
+          </SafeAreaProvider>
+        </ThemeProvider>
+      </GestureHandlerRootView>
+    );
+  }
+
   const content = (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
@@ -86,8 +135,14 @@ export default function RootLayout() {
           {/* If a screen needs the native header, explicitly enable it and set a human title via Stack.Screen options. */}
           {/* in order for ios apps tab switching to work properly, use presentation: "fullScreenModal" for login page, whenever you decide to use presentation: "modal*/}
           <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="oauth/callback" />
+            {isAuthenticated ? (
+              <>
+                <Stack.Screen name="(tabs)" />
+                <Stack.Screen name="oauth/callback" />
+              </>
+            ) : (
+              <Stack.Screen name="login" />
+            )}
           </Stack>
           <StatusBar style="auto" />
         </QueryClientProvider>
@@ -95,25 +150,17 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 
-  const shouldOverrideSafeArea = Platform.OS === "web";
-
-  if (shouldOverrideSafeArea) {
-    return (
-      <ThemeProvider>
-        <SafeAreaProvider initialMetrics={providerInitialMetrics}>
-          <SafeAreaFrameContext.Provider value={frame}>
-            <SafeAreaInsetsContext.Provider value={insets}>
-              {content}
-            </SafeAreaInsetsContext.Provider>
-          </SafeAreaFrameContext.Provider>
-        </SafeAreaProvider>
-      </ThemeProvider>
-    );
-  }
+  const shouldOverrideSafeArea = Platform.OS === "web" || !isAuthenticated;
 
   return (
     <ThemeProvider>
-      <SafeAreaProvider initialMetrics={providerInitialMetrics}>{content}</SafeAreaProvider>
+      <SafeAreaProvider initialMetrics={providerInitialMetrics}>
+        <SafeAreaFrameContext.Provider value={frame}>
+          <SafeAreaInsetsContext.Provider value={insets}>
+            {content}
+          </SafeAreaInsetsContext.Provider>
+        </SafeAreaFrameContext.Provider>
+      </SafeAreaProvider>
     </ThemeProvider>
   );
 }

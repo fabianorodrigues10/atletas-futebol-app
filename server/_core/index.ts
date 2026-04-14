@@ -4,6 +4,7 @@ import { createServer } from "http";
 import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
+import { registerAuthRoutes } from "../auth-routes";
 import { registerPdfRoutes } from "../pdf-report";
 import { registerPdfExecutivoRoutes } from "../pdf-report-executivo";
 import { registerExcelRoutes } from "../excel-report";
@@ -82,6 +83,7 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
   registerOAuthRoutes(app);
+  registerAuthRoutes(app);
   registerPdfRoutes(app);
   registerPdfExecutivoRoutes(app);
   registerExcelRoutes(app);

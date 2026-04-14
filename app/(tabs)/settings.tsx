@@ -118,6 +118,34 @@ export default function SettingsScreen() {
             </TouchableOpacity>
           </View>
           
+          {/* Seção de Admin */}
+          {user && user.role === "admin" && (
+            <View className="mb-6">
+              <Text className="text-lg font-semibold text-foreground mb-3">
+                Administração
+              </Text>
+              
+              <TouchableOpacity
+                onPress={() => router.push("/admin" as any)}
+                className="bg-primary/10 rounded-xl p-4 border border-primary/30 flex-row justify-between items-center mb-4"
+              >
+                <View className="flex-1">
+                  <Text className="text-base font-medium text-primary">
+                    Gerenciar Usuários
+                  </Text>
+                  <Text className="text-sm text-muted mt-1">
+                    Listar, promover e deletar usuários
+                  </Text>
+                </View>
+                <IconSymbol
+                  name="chevron.right"
+                  size={20}
+                  color="#0a7ea4"
+                />
+              </TouchableOpacity>
+            </View>
+          )}
+          
           {/* Seção de Conta */}
           <View className="mb-6">
             <Text className="text-lg font-semibold text-foreground mb-3">

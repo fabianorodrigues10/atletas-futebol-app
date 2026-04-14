@@ -23,6 +23,7 @@ import { CompletudStatsModal } from "@/components/completude-stats-modal";
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useFocusEffect } from "expo-router";
 import { getApiBaseUrl } from "@/constants/oauth";
+import { useAuth } from "@/hooks/use-auth";
 
 // Calcula a idade atual a partir da data de nascimento (ISO string)
 function calcularIdadeAtual(dataNascimento: string | null | undefined): number | null {
@@ -53,6 +54,8 @@ const FAIXAS_IDADE = [
 export default function HomeScreen() {
   const router = useRouter();
   const colors = useColors();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -240,6 +243,10 @@ export default function HomeScreen() {
   const [showStatsModal, setShowStatsModal] = useState(false);
 
   const handleAddAtleta = () => {
+    if (!isAdmin) {
+      Alert.alert("Acesso negado", "Você não tem permissão para adicionar atletas");
+      return;
+    }
     router.push("/atleta/novo" as any);
   };
 
@@ -409,13 +416,15 @@ export default function HomeScreen() {
           <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
             <TouchableOpacity
               onPress={handleAddAtleta}
+              disabled={!isAdmin}
               style={{
                 width: 40,
                 height: 40,
                 borderRadius: 20,
-                backgroundColor: colors.primary,
+                backgroundColor: isAdmin ? colors.primary : colors.muted,
                 justifyContent: 'center',
                 alignItems: 'center',
+                opacity: isAdmin ? 1 : 0.5,
               }}
             >
               <IconSymbol name="plus" size={20} color="white" />

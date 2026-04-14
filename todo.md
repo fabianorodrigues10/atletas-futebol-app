@@ -466,3 +466,17 @@
 - [x] Configurar apontamento para o servidor Manus (8081-izfp315i6h5jurfkav5vc-fd79edd6.us2.manus.computer)
 - [ ] Aguardar propagação do DNS (15 minutos a 48 horas)
 - [ ] Validar acesso via marciliodias.app.br
+
+## Feature: Sistema de Autenticação com Dois Níveis de Acesso
+- [x] Criar tabela `users` no banco de dados (id, username, password, role, createdAt)
+- [x] Implementar hash de senha com bcrypt
+- [x] Criar rotas de autenticação no servidor (POST /auth/signup, POST /auth/login, POST /auth/logout)
+- [x] Implementar middleware de autenticação nas rotas
+- [x] Criar página de login para o domínio
+- [x] Proteger rotas: apenas admin pode editar/deletar
+- [x] Mostrar alerta "Você não tem permissão" para usuários comuns
+- [x] Criar painel de admin para gerenciar usuários (listar, bloquear, deletar)
+- [x] Salvar sessão do usuário no navegador (localStorage/cookies)
+- [ ] Testar autenticação com admin (admin / Marcilio1919!)
+- [ ] Testar cadastro de usuário comum
+- [ ] Testar permissões (visualizar vs editar)
