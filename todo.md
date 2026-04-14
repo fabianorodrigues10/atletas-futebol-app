@@ -450,7 +450,19 @@
 - [x] Servidor atualizado para incluir novos campos no recálculo de estatísticas
 
 ## Feature: Melhorias no scout de jogos (layout, totais e relatório)
-- [ ] Adicionar campo "Dribles" no ofensivo (preencher espaço vazio)
-- [ ] Adicionar campo "Bolas Recuperadas" no defensivo (preencher espaço vazio)
-- [ ] Adicionar totais por seção (sumário ofensivo e defensivo) no card do atleta
-- [ ] Incluir cruzamentos, faltas sofridas e faltas cometidas no relatório PDF do jogo
+- [x] Adicionar campo "Dribles" no ofensivo (preencher espaço vazio)
+- [x] Adicionar campo "Bolas Recuperadas" no defensivo (preencher espaço vazio)
+- [x] Adicionar totais por seção (sumário ofensivo e defensivo) no card do atleta
+- [x] Incluir cruzamentos, faltas sofridas e faltas cometidas no relatório PDF do jogo
+
+## Feature: Download de PDF no Expo Go (iOS)
+- [x] Corrigir FileReader.readAsDataURL() que não funciona no Expo Go
+- [x] Implementar fetch → arrayBuffer → conversão base64 manual com btoa()
+- [x] Remover FileSystem.EncodingType.Base64 e usar string literal "base64"
+- [x] Testar download no Expo Go com sucesso
+
+## Feature: Configuração do domínio marciliodias.app.br
+- [x] Registrar domínio no Registro.br
+- [x] Configurar apontamento para o servidor Manus (8081-izfp315i6h5jurfkav5vc-fd79edd6.us2.manus.computer)
+- [ ] Aguardar propagação do DNS (15 minutos a 48 horas)
+- [ ] Validar acesso via marciliodias.app.br
