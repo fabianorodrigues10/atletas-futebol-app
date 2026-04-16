@@ -1,21 +1,21 @@
-FROM node:22-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
-# Copiar package.json e pnpm-lock.yaml
+# Copiar package.json
 COPY package.json pnpm-lock.yaml ./
 
-# Instalar pnpm e dependências
-RUN npm install -g pnpm && pnpm install --frozen-lockfile
+# Instalar dependências
+RUN npm install -g pnpm && pnpm install
 
 # Copiar código
 COPY . .
 
-# Build web
-RUN pnpm build:web
+# Build
+RUN pnpm run build
 
-# Expor porta
-EXPOSE 3000
+# Expor portas
+EXPOSE 3000 8081
 
-# Iniciar servidor
-CMD ["node", "server-simple.js"]
+# Iniciar app
+CMD ["pnpm", "start"]

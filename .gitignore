@@ -68,3 +68,4 @@ Thumbs.db
 node_modules/.cache
 .cache
 dist/.cache
+.vercel

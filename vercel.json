@@ -1,5 +1,6 @@
 {
-  "buildCommand": "pnpm build:web",
-  "outputDirectory": "dist/web",
-  "framework": "vite"
+  "buildCommand": "pnpm run build",
+  "devCommand": "pnpm dev",
+  "installCommand": "pnpm install",
+  "framework": "express"
 }
