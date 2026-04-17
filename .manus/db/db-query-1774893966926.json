@@ -1,0 +1,20 @@
+{
+  "query": "\nSELECT g.id, g.nome, COUNT(ag.atletaId) as qtd_atletas\nFROM grupos g\nLEFT JOIN atletasEmGrupos ag ON ag.grupoId = g.id\nWHERE g.nome = 'Goleiro'\nGROUP BY g.id, g.nome;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute \nSELECT g.id, g.nome, COUNT(ag.atletaId) as qtd_atletas\nFROM grupos g\nLEFT JOIN atletasEmGrupos ag ON ag.grupoId = g.id\nWHERE g.nome = 'Goleiro'\nGROUP BY g.id, g.nome;\n",
+  "rows": [
+    {
+      "id": "2",
+      "nome": "Goleiro",
+      "qtd_atletas": "9"
+    },
+    {
+      "id": "60001",
+      "nome": "Goleiro",
+      "qtd_atletas": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnome\tqtd_atletas\n2\tGoleiro\t9\n60001\tGoleiro\t0\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

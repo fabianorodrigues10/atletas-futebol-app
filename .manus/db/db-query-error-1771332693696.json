@@ -1,0 +1,8 @@
+{
+  "query": "SELECT COUNT(*) as total FROM athletes;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT COUNT(*) as total FROM athletes;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1146 (42S02) at line 1: Table '7xtarzvuuqnaxdd5eu29wi.athletes' doesn't exist"
+  ]
+}

@@ -1,0 +1,12 @@
+[
+  {"id": 1, "nome": "Abner", "posicao": "Extremo", "segunda_posicao": null, "clube": "Porto Velho/RO", "data_nascimento": "1993-12-15", "idade": 30, "altura": "1.75", "pe": "Direito", "ogol_id": 1},
+  {"id": 2, "nome": "Abraão", "posicao": "Lateral", "segunda_posicao": null, "clube": "Sousa/PB", "data_nascimento": "1999-08-22", "idade": 24, "altura": "1.80", "pe": "Esquerdo", "ogol_id": 2},
+  {"id": 3, "nome": "Adailson", "posicao": "Extremo", "segunda_posicao": null, "clube": "Guarany/RS", "data_nascimento": "1994-05-10", "idade": 29, "altura": "1.72", "pe": "Direito", "ogol_id": 3},
+  {"id": 4, "nome": "Adailton Bravo", "posicao": "Centroavante", "segunda_posicao": null, "clube": "Juazeirense/BA", "data_nascimento": "1993-11-03", "idade": 30, "altura": "1.85", "pe": "Direito", "ogol_id": 4},
+  {"id": 5, "nome": "Adão", "posicao": "Meia", "segunda_posicao": null, "clube": "São José/RS", "data_nascimento": "1998-03-17", "idade": 25, "altura": "1.78", "pe": "Direito", "ogol_id": 5},
+  {"id": 6, "nome": "Adão Oliveira", "posicao": "Lateral", "segunda_posicao": null, "clube": "Ypiranga/AP", "data_nascimento": "1997-07-28", "idade": 26, "altura": "1.82", "pe": "Esquerdo", "ogol_id": 6},
+  {"id": 7, "nome": "Adeilson", "posicao": "Meia", "segunda_posicao": null, "clube": "Ferroviário/CE", "data_nascimento": "1996-02-14", "idade": 27, "altura": "1.75", "pe": "Direito", "ogol_id": 7},
+  {"id": 8, "nome": "Adelmo", "posicao": "Zagueiro", "segunda_posicao": null, "clube": "Ceará/CE", "data_nascimento": "1995-09-05", "idade": 28, "altura": "1.88", "pe": "Direito", "ogol_id": 8},
+  {"id": 9, "nome": "Adeílson", "posicao": "Extremo", "segunda_posicao": null, "clube": "Fortaleza/CE", "data_nascimento": "1994-12-19", "idade": 29, "altura": "1.73", "pe": "Esquerdo", "ogol_id": 9},
+  {"id": 10, "nome": "Adelson", "posicao": "Lateral", "segunda_posicao": null, "clube": "Bahia/BA", "data_nascimento": "1998-06-11", "idade": 25, "altura": "1.81", "pe": "Direito", "ogol_id": 10}
+]

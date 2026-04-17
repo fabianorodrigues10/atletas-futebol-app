@@ -1,0 +1,35 @@
+{
+  "query": "SELECT nome, link, escala FROM atletas WHERE link LIKE 'https://www.ogol%' LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT nome, link, escala FROM atletas WHERE link LIKE 'https://www.ogol%' LIMIT 5;",
+  "rows": [
+    {
+      "nome": "Quadrado",
+      "link": "https://www.ogol.com.br/jogador/quadrado/609444?epoca_id=154",
+      "escala": "1"
+    },
+    {
+      "nome": "Joelson",
+      "link": "https://www.ogol.com.br/jogador/joelson/650281?epoca_id=154",
+      "escala": "1"
+    },
+    {
+      "nome": "Gustavo Lila",
+      "link": "https://www.ogol.com.br/jogador/gustavo-lila/776284?epoca_id=154",
+      "escala": "1"
+    },
+    {
+      "nome": "Wanderson",
+      "link": "https://www.ogol.com.br/jogador/wanderson/790518?epoca_id=154",
+      "escala": "1"
+    },
+    {
+      "nome": "Gabriel Furtado",
+      "link": "https://www.ogol.com.br/jogador/gabriel-furtado/817436?epoca_id=154",
+      "escala": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "nome\tlink\tescala\nQuadrado\thttps://www.ogol.com.br/jogador/quadrado/609444?epoca_id=154\t1\nJoelson\thttps://www.ogol.com.br/jogador/joelson/650281?epoca_id=154\t1\nGustavo Lila\thttps://www.ogol.com.br/jogador/gustavo-lila/776284?epoca_id=154\t1\nWanderson\thttps://www.ogol.com.br/jogador/wanderson/790518?epoca_id=154\t1\nGabriel Furtado\thttps://www.ogol.com.br/jogador/gabriel-furtado/817436?epoca_id=154\t1\n",
+  "stderr": "",
+  "execution_time_ms": 374
+}

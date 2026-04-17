@@ -1,0 +1,60 @@
+{
+  "query": "SELECT id, nome, naturalidade FROM atletas LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT id, nome, naturalidade FROM atletas LIMIT 10;",
+  "rows": [
+    {
+      "id": "90006",
+      "nome": "Ronaldy",
+      "naturalidade": "NULL"
+    },
+    {
+      "id": "90007",
+      "nome": "Zé Leandro",
+      "naturalidade": "NULL"
+    },
+    {
+      "id": "90008",
+      "nome": "Éverson Bispo",
+      "naturalidade": "NULL"
+    },
+    {
+      "id": "90009",
+      "nome": "Paulinho",
+      "naturalidade": "NULL"
+    },
+    {
+      "id": "90010",
+      "nome": "Vitinho",
+      "naturalidade": "NULL"
+    },
+    {
+      "id": "90011",
+      "nome": "Marinho",
+      "naturalidade": "NULL"
+    },
+    {
+      "id": "90012",
+      "nome": "Hélber ítalo",
+      "naturalidade": "NULL"
+    },
+    {
+      "id": "90013",
+      "nome": "Pablo Pardal",
+      "naturalidade": "NULL"
+    },
+    {
+      "id": "90014",
+      "nome": "Giba",
+      "naturalidade": "NULL"
+    },
+    {
+      "id": "90015",
+      "nome": "Vinícius Bala",
+      "naturalidade": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnome\tnaturalidade\n90006\tRonaldy\tNULL\n90007\tZé Leandro\tNULL\n90008\tÉverson Bispo\tNULL\n90009\tPaulinho\tNULL\n90010\tVitinho\tNULL\n90011\tMarinho\tNULL\n90012\tHélber ítalo\tNULL\n90013\tPablo Pardal\tNULL\n90014\tGiba\tNULL\n90015\tVinícius Bala\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 420
+}

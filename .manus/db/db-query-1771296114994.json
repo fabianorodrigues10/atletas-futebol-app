@@ -1,0 +1,31 @@
+{
+  "query": "SELECT nome, posicao, link, escala, valencia FROM atletas WHERE link LIKE 'https://www.ogol%' LIMIT 3;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT nome, posicao, link, escala, valencia FROM atletas WHERE link LIKE 'https://www.ogol%' LIMIT 3;",
+  "rows": [
+    {
+      "nome": "Quadrado",
+      "posicao": "Extremo",
+      "link": "https://www.ogol.com.br/jogador/quadrado/609444?epoca_id=154",
+      "escala": "1",
+      "valencia": "NULL"
+    },
+    {
+      "nome": "Joelson",
+      "posicao": "Centroavante",
+      "link": "https://www.ogol.com.br/jogador/joelson/650281?epoca_id=154",
+      "escala": "1",
+      "valencia": "NULL"
+    },
+    {
+      "nome": "Gustavo Lila",
+      "posicao": "Volante",
+      "link": "https://www.ogol.com.br/jogador/gustavo-lila/776284?epoca_id=154",
+      "escala": "1",
+      "valencia": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "nome\tposicao\tlink\tescala\tvalencia\nQuadrado\tExtremo\thttps://www.ogol.com.br/jogador/quadrado/609444?epoca_id=154\t1\tNULL\nJoelson\tCentroavante\thttps://www.ogol.com.br/jogador/joelson/650281?epoca_id=154\t1\tNULL\nGustavo Lila\tVolante\thttps://www.ogol.com.br/jogador/gustavo-lila/776284?epoca_id=154\t1\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 441
+}

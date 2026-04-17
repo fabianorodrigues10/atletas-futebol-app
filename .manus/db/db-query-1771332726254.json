@@ -1,0 +1,31 @@
+{
+  "query": "SELECT COUNT(*) as total FROM atletas; SELECT id, nome, posicao, clube, dataNascimento, idade, altura, link FROM atletas LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT COUNT(*) as total FROM atletas; SELECT id, nome, posicao, clube, dataNascimento, idade, altura, link FROM atletas LIMIT 5;",
+  "rows": [
+    {
+      "total": "25"
+    },
+    {
+      "total": "id\tnome\tposicao\tclube\tdataNascimento\tidade\taltura\tlink"
+    },
+    {
+      "total": "60001\tRonaldy\tExtremo\tAtlético/PI\t1997-03-28\t28\t1.76\thttps://www.ogol.com.br/jogador/ronaldy/515291"
+    },
+    {
+      "total": "60002\tZé Leandro\tZagueiro\tSanta Catarina/SC\tNULL\tNULL\t1.90\thttps://www.ogol.com.br/jogador/ze-leandro/557286"
+    },
+    {
+      "total": "60003\tÉverson Bispo\tZagueiro\tManauara/AM\tNULL\tNULL\t1.90\thttps://www.ogol.com.br/jogador/everson-bispo/460893?epoca_id=154"
+    },
+    {
+      "total": "60004\tPaulinho\tZagueiro\tManauara/AM\tNULL\tNULL\t1.84\thttps://www.ogol.com.br/jogador/paulinho/707154?epoca_id=155"
+    },
+    {
+      "total": "60005\tVitinho\tLateral\tManauara/AM\tNULL\tNULL\t1.80\thttps://www.ogol.com.br/jogador/vitinho/559216?epoca_id=155"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\n25\nid\tnome\tposicao\tclube\tdataNascimento\tidade\taltura\tlink\n60001\tRonaldy\tExtremo\tAtlético/PI\t1997-03-28\t28\t1.76\thttps://www.ogol.com.br/jogador/ronaldy/515291\n60002\tZé Leandro\tZagueiro\tSanta Catarina/SC\tNULL\tNULL\t1.90\thttps://www.ogol.com.br/jogador/ze-leandro/557286\n60003\tÉverson Bispo\tZagueiro\tManauara/AM\tNULL\tNULL\t1.90\thttps://www.ogol.com.br/jogador/everson-bispo/460893?epoca_id=154\n60004\tPaulinho\tZagueiro\tManauara/AM\tNULL\tNULL\t1.84\thttps://www.ogol.com.br/jogador/paulinho/707154?epoca_id=155\n60005\tVitinho\tLateral\tManauara/AM\tNULL\tNULL\t1.80\thttps://www.ogol.com.br/jogador/vitinho/559216?epoca_id=155\n",
+  "stderr": "",
+  "execution_time_ms": 392
+}

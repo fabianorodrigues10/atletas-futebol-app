@@ -1,0 +1,15 @@
+{
+  "query": "SELECT id, nome, altura FROM atletas WHERE altura IS NOT NULL AND altura > 0 LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT id, nome, altura FROM atletas WHERE altura IS NOT NULL AND altura > 0 LIMIT 1;",
+  "rows": [
+    {
+      "id": "30181",
+      "nome": "Serjão",
+      "altura": "200.00"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnome\taltura\n30181\tSerjão\t200.00\n",
+  "stderr": "",
+  "execution_time_ms": 466
+}

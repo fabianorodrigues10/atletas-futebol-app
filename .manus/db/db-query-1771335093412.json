@@ -1,0 +1,127 @@
+{
+  "query": "SELECT DISTINCT posicao FROM atletas WHERE posicao IS NOT NULL AND posicao != '' ORDER BY posicao; SELECT DISTINCT clube FROM atletas WHERE clube IS NOT NULL AND clube != '' ORDER BY clube LIMIT 30;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT DISTINCT posicao FROM atletas WHERE posicao IS NOT NULL AND posicao != '' ORDER BY posicao; SELECT DISTINCT clube FROM atletas WHERE clube IS NOT NULL AND clube != '' ORDER BY clube LIMIT 30;",
+  "rows": [
+    {
+      "posicao": "2º Atacante"
+    },
+    {
+      "posicao": "Centroavante"
+    },
+    {
+      "posicao": "Extremo"
+    },
+    {
+      "posicao": "Goleiro"
+    },
+    {
+      "posicao": "Lateral"
+    },
+    {
+      "posicao": "Meia"
+    },
+    {
+      "posicao": "Volante"
+    },
+    {
+      "posicao": "Zagueiro"
+    },
+    {
+      "posicao": "clube"
+    },
+    {
+      "posicao": "ABC/RN"
+    },
+    {
+      "posicao": "ABECAT/GO"
+    },
+    {
+      "posicao": "ASA/AL"
+    },
+    {
+      "posicao": "Acadêmico/POR"
+    },
+    {
+      "posicao": "Afif/ARA"
+    },
+    {
+      "posicao": "Al Jolan/IRQ"
+    },
+    {
+      "posicao": "Al Sahel/ARA"
+    },
+    {
+      "posicao": "Al-Ahli/BAH"
+    },
+    {
+      "posicao": "Al-Arabi/ARA"
+    },
+    {
+      "posicao": "Al-Lewaa"
+    },
+    {
+      "posicao": "Al-Nojoom/ARA"
+    },
+    {
+      "posicao": "Al-Sulaibikhat/KUW"
+    },
+    {
+      "posicao": "Altos/PI"
+    },
+    {
+      "posicao": "Amanat/IRQ"
+    },
+    {
+      "posicao": "Amazonas/AM"
+    },
+    {
+      "posicao": "Amazônia/PA"
+    },
+    {
+      "posicao": "América/MG"
+    },
+    {
+      "posicao": "América/RN"
+    },
+    {
+      "posicao": "América/SE"
+    },
+    {
+      "posicao": "Anapolina/GO"
+    },
+    {
+      "posicao": "Andraus/PR"
+    },
+    {
+      "posicao": "Ansan Greeners/COR"
+    },
+    {
+      "posicao": "Anápolis/GO"
+    },
+    {
+      "posicao": "Aparecidense/GO"
+    },
+    {
+      "posicao": "Araguaína/TO"
+    },
+    {
+      "posicao": "Arar/ARA"
+    },
+    {
+      "posicao": "Athletic/MG"
+    },
+    {
+      "posicao": "Athletico/PR"
+    },
+    {
+      "posicao": "Atletico/PI"
+    },
+    {
+      "posicao": "Atlético/BA"
+    }
+  ],
+  "messages": [],
+  "stdout": "posicao\n2º Atacante\nCentroavante\nExtremo\nGoleiro\nLateral\nMeia\nVolante\nZagueiro\nclube\nABC/RN\nABECAT/GO\nASA/AL\nAcadêmico/POR\nAfif/ARA\nAl Jolan/IRQ\nAl Sahel/ARA\nAl-Ahli/BAH\nAl-Arabi/ARA\nAl-Lewaa\nAl-Nojoom/ARA\nAl-Sulaibikhat/KUW\nAltos/PI\nAmanat/IRQ\nAmazonas/AM\nAmazônia/PA\nAmérica/MG\nAmérica/RN\nAmérica/SE\nAnapolina/GO\nAndraus/PR\nAnsan Greeners/COR\nAnápolis/GO\nAparecidense/GO\nAraguaína/TO\nArar/ARA\nAthletic/MG\nAthletico/PR\nAtletico/PI\nAtlético/BA\n",
+  "stderr": "",
+  "execution_time_ms": 456
+}

@@ -1,0 +1,18 @@
+{
+  "query": "SELECT COUNT(*) as total, COUNT(dataNascimento) as com_data, COUNT(idade) as com_idade, COUNT(altura) as com_altura, COUNT(link) as com_link, COUNT(pe) as com_pe FROM atletas WHERE userId = 1",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT COUNT(*) as total, COUNT(dataNascimento) as com_data, COUNT(idade) as com_idade, COUNT(altura) as com_altura, COUNT(link) as com_link, COUNT(pe) as com_pe FROM atletas WHERE userId = 1",
+  "rows": [
+    {
+      "total": "1503",
+      "com_data": "841",
+      "com_idade": "831",
+      "com_altura": "1395",
+      "com_link": "1503",
+      "com_pe": "1501"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\tcom_data\tcom_idade\tcom_altura\tcom_link\tcom_pe\n1503\t841\t831\t1395\t1503\t1501\n",
+  "stderr": "",
+  "execution_time_ms": 358
+}

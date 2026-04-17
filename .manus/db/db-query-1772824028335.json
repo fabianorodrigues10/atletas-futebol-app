@@ -1,0 +1,17 @@
+{
+  "query": "SELECT id, atletaId, tipo, nome, url FROM midias WHERE atletaId = 1650013 ORDER BY id DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT id, atletaId, tipo, nome, url FROM midias WHERE atletaId = 1650013 ORDER BY id DESC;",
+  "rows": [
+    {
+      "id": "1320001",
+      "atletaId": "1650013",
+      "tipo": "foto",
+      "nome": "Juliano.jpg",
+      "url": "https://d2xsxph8kpxj0f.cloudfront.net/310519663350073320/7XTarzVUuQNAxDd5Eu29wi/atletas/1/1650013/1772820752061-kvuqwt-Juliano.jpg"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tatletaId\ttipo\tnome\turl\n1320001\t1650013\tfoto\tJuliano.jpg\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663350073320/7XTarzVUuQNAxDd5Eu29wi/atletas/1/1650013/1772820752061-kvuqwt-Juliano.jpg\n",
+  "stderr": "",
+  "execution_time_ms": 459
+}

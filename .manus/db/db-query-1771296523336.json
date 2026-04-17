@@ -1,0 +1,50 @@
+{
+  "query": "SELECT nome, altura FROM atletas WHERE altura IS NOT NULL LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT nome, altura FROM atletas WHERE altura IS NOT NULL LIMIT 10;",
+  "rows": [
+    {
+      "nome": "Serjão",
+      "altura": "200.00"
+    },
+    {
+      "nome": "Jakão",
+      "altura": "200.00"
+    },
+    {
+      "nome": "Cristiano",
+      "altura": "188.00"
+    },
+    {
+      "nome": "Luiz Daniel",
+      "altura": "188.00"
+    },
+    {
+      "nome": "Matheus Cavichioli",
+      "altura": "192.00"
+    },
+    {
+      "nome": "Marcelo Carné",
+      "altura": "187.00"
+    },
+    {
+      "nome": "Kozlinski",
+      "altura": "184.00"
+    },
+    {
+      "nome": "Ronaldy",
+      "altura": "176.00"
+    },
+    {
+      "nome": "Zé Leandro",
+      "altura": "190.00"
+    },
+    {
+      "nome": "Éverson Bispo",
+      "altura": "190.00"
+    }
+  ],
+  "messages": [],
+  "stdout": "nome\taltura\nSerjão\t200.00\nJakão\t200.00\nCristiano\t188.00\nLuiz Daniel\t188.00\nMatheus Cavichioli\t192.00\nMarcelo Carné\t187.00\nKozlinski\t184.00\nRonaldy\t176.00\nZé Leandro\t190.00\nÉverson Bispo\t190.00\n",
+  "stderr": "",
+  "execution_time_ms": 352
+}

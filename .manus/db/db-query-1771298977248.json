@@ -1,0 +1,60 @@
+{
+  "query": "SELECT nome, dataNascimento, idade FROM atletas LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT nome, dataNascimento, idade FROM atletas LIMIT 10;",
+  "rows": [
+    {
+      "nome": "Ronaldy",
+      "dataNascimento": "1997-03-28",
+      "idade": "28"
+    },
+    {
+      "nome": "Zé Leandro",
+      "dataNascimento": "NULL",
+      "idade": "NULL"
+    },
+    {
+      "nome": "Éverson Bispo",
+      "dataNascimento": "NULL",
+      "idade": "NULL"
+    },
+    {
+      "nome": "Paulinho",
+      "dataNascimento": "NULL",
+      "idade": "NULL"
+    },
+    {
+      "nome": "Vitinho",
+      "dataNascimento": "NULL",
+      "idade": "NULL"
+    },
+    {
+      "nome": "Ronaldy",
+      "dataNascimento": "1997-03-28",
+      "idade": "28"
+    },
+    {
+      "nome": "Zé Leandro",
+      "dataNascimento": "NULL",
+      "idade": "NULL"
+    },
+    {
+      "nome": "Éverson Bispo",
+      "dataNascimento": "NULL",
+      "idade": "NULL"
+    },
+    {
+      "nome": "Paulinho",
+      "dataNascimento": "NULL",
+      "idade": "NULL"
+    },
+    {
+      "nome": "Vitinho",
+      "dataNascimento": "NULL",
+      "idade": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "nome\tdataNascimento\tidade\nRonaldy\t1997-03-28\t28\nZé Leandro\tNULL\tNULL\nÉverson Bispo\tNULL\tNULL\nPaulinho\tNULL\tNULL\nVitinho\tNULL\tNULL\nRonaldy\t1997-03-28\t28\nZé Leandro\tNULL\tNULL\nÉverson Bispo\tNULL\tNULL\nPaulinho\tNULL\tNULL\nVitinho\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 406
+}

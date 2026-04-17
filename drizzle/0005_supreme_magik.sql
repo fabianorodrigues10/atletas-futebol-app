@@ -1,0 +1,1 @@
+ALTER TABLE `atletas` ADD `naturalidade` varchar(255);

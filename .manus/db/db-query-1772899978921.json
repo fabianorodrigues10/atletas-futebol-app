@@ -1,0 +1,17 @@
+{
+  "query": "SELECT a.id, a.nome, m.id as midia_id, m.tipo, m.url FROM atletas a LEFT JOIN midias m ON a.id = m.atletaId WHERE a.nome LIKE '%Adílson%' OR a.nome LIKE '%Ailton%' ORDER BY a.nome, m.tipo",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT a.id, a.nome, m.id as midia_id, m.tipo, m.url FROM atletas a LEFT JOIN midias m ON a.id = m.atletaId WHERE a.nome LIKE '%Adílson%' OR a.nome LIKE '%Ailton%' ORDER BY a.nome, m.tipo",
+  "rows": [
+    {
+      "id": "91430",
+      "nome": "Zé Adílson",
+      "midia_id": "1425",
+      "tipo": "foto",
+      "url": "https://www.ogol.com.br/new/51/59/865159_adilson_20240824132319.jpg"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnome\tmidia_id\ttipo\turl\n91430\tZé Adílson\t1425\tfoto\thttps://www.ogol.com.br/new/51/59/865159_adilson_20240824132319.jpg\n",
+  "stderr": "",
+  "execution_time_ms": 135
+}

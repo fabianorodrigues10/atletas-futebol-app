@@ -1,0 +1,34 @@
+{
+  "query": "SELECT id, atletaId, tipo, nome, url, s3Key FROM midias WHERE atletaId = 90886 AND tipo = 'foto' ORDER BY createdAt DESC LIMIT 3;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT id, atletaId, tipo, nome, url, s3Key FROM midias WHERE atletaId = 90886 AND tipo = 'foto' ORDER BY createdAt DESC LIMIT 3;",
+  "rows": [
+    {
+      "id": "2550014",
+      "atletaId": "90886",
+      "tipo": "foto",
+      "nome": "foto-1773597461379.jpg",
+      "url": "fotos/90886/1773597460868-foto-1773597461379.jpg",
+      "s3Key": "fotos/90886/1773597460868-foto-1773597461379.jpg"
+    },
+    {
+      "id": "2550013",
+      "atletaId": "90886",
+      "tipo": "foto",
+      "nome": "foto-1773597455979.jpg",
+      "url": "fotos/90886/1773597455692-foto-1773597455979.jpg",
+      "s3Key": "fotos/90886/1773597455692-foto-1773597455979.jpg"
+    },
+    {
+      "id": "2550012",
+      "atletaId": "90886",
+      "tipo": "foto",
+      "nome": "foto-1773596800976.jpg",
+      "url": "fotos/90886/1773596800408-foto-1773596800976.jpg",
+      "s3Key": "fotos/90886/1773596800408-foto-1773596800976.jpg"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tatletaId\ttipo\tnome\turl\ts3Key\n2550014\t90886\tfoto\tfoto-1773597461379.jpg\tfotos/90886/1773597460868-foto-1773597461379.jpg\tfotos/90886/1773597460868-foto-1773597461379.jpg\n2550013\t90886\tfoto\tfoto-1773597455979.jpg\tfotos/90886/1773597455692-foto-1773597455979.jpg\tfotos/90886/1773597455692-foto-1773597455979.jpg\n2550012\t90886\tfoto\tfoto-1773596800976.jpg\tfotos/90886/1773596800408-foto-1773596800976.jpg\tfotos/90886/1773596800408-foto-1773596800976.jpg\n",
+  "stderr": "",
+  "execution_time_ms": 165
+}

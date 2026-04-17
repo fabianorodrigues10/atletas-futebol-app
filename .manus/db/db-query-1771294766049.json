@@ -1,0 +1,45 @@
+{
+  "query": "SELECT id, nome, link, escala, valencia FROM atletas LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT id, nome, link, escala, valencia FROM atletas LIMIT 5;",
+  "rows": [
+    {
+      "id": "30109",
+      "nome": "Quadrado",
+      "link": "https://www.ogol.com.br/jogador/quadrado/609444?epoca_id=154",
+      "escala": "1",
+      "valencia": "NULL"
+    },
+    {
+      "id": "30110",
+      "nome": "Joelson",
+      "link": "https://www.ogol.com.br/jogador/joelson/650281?epoca_id=154",
+      "escala": "1",
+      "valencia": "NULL"
+    },
+    {
+      "id": "30111",
+      "nome": "Gustavo Lila",
+      "link": "https://www.ogol.com.br/jogador/gustavo-lila/776284?epoca_id=154",
+      "escala": "1",
+      "valencia": "NULL"
+    },
+    {
+      "id": "30112",
+      "nome": "Wanderson",
+      "link": "https://www.ogol.com.br/jogador/wanderson/790518?epoca_id=154",
+      "escala": "1",
+      "valencia": "NULL"
+    },
+    {
+      "id": "30113",
+      "nome": "Gabriel Furtado",
+      "link": "https://www.ogol.com.br/jogador/gabriel-furtado/817436?epoca_id=154",
+      "escala": "1",
+      "valencia": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnome\tlink\tescala\tvalencia\n30109\tQuadrado\thttps://www.ogol.com.br/jogador/quadrado/609444?epoca_id=154\t1\tNULL\n30110\tJoelson\thttps://www.ogol.com.br/jogador/joelson/650281?epoca_id=154\t1\tNULL\n30111\tGustavo Lila\thttps://www.ogol.com.br/jogador/gustavo-lila/776284?epoca_id=154\t1\tNULL\n30112\tWanderson\thttps://www.ogol.com.br/jogador/wanderson/790518?epoca_id=154\t1\tNULL\n30113\tGabriel Furtado\thttps://www.ogol.com.br/jogador/gabriel-furtado/817436?epoca_id=154\t1\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 414
+}
