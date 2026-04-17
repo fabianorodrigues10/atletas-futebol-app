@@ -1,6 +1,6 @@
 {
-  "buildCommand": "pnpm run build",
-  "devCommand": "pnpm dev",
+  "buildCommand": "pnpm vercel-build",
+  "outputDirectory": "dist/web",
   "installCommand": "pnpm install",
-  "framework": "express"
+  "framework": "other"
 }
