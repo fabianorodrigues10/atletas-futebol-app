@@ -7,12 +7,12 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// Servir arquivos estáticos
-app.use(express.static(path.join(__dirname, '../dist/web')));
+// Servir arquivos estáticos do diretório dist/web
+app.use(express.static(path.join(__dirname, '..', 'dist/web')));
 
-// Redirecionar todas as rotas para index.html (SPA)
+// Fallback para index.html (para SPA)
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../dist/web', 'index.html'));
+  res.sendFile(path.join(__dirname, '..', 'dist/web/index.html'));
 });
 
 export default app;
