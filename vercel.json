@@ -1,6 +1,6 @@
 {
-  "buildCommand": "pnpm build:web",
-  "outputDirectory": "dist/web",
+  "buildCommand": "pnpm build:web && cp -r dist/web/* public/",
+  "outputDirectory": "public",
   "installCommand": "pnpm install",
   "rewrites": [
     {
