@@ -8,14 +8,14 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Servir arquivos estáticos da pasta dist/web
+// Servir arquivos estáticos do diretório dist/web
 app.use(express.static(path.join(__dirname, 'dist/web')));
 
-// Redirecionar todas as rotas para index.html (SPA)
+// Fallback para index.html (para SPA)
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist/web', 'index.html'));
+  res.sendFile(path.join(__dirname, 'dist/web/index.html'));
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
