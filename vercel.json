@@ -1,6 +1,6 @@
 {
-  "buildCommand": "pnpm build:web && cp -r dist/web/* public/",
-  "outputDirectory": "public",
+  "buildCommand": "npm run vercel-build",
+  "outputDirectory": "dist/web",
   "installCommand": "pnpm install",
   "rewrites": [
     {
