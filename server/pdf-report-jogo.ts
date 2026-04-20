@@ -195,12 +195,10 @@ export function registerPdfJogoRoutes(app: Express) {
         const atleta = atletasMap[scout.atletaId];
         const nome = atleta?.nome || `Atleta ${scout.atletaId}`;
         const posicao = atleta?.posicao || "";
-        const temNotas = scout.notaTecnica || scout.notaFisica || scout.notaTatica;
         const temObs = !!scout.observacoes;
 
         // Estimar altura do card
         let cardH = CARD_H_BASE;
-        if (temNotas) cardH += 30;
         if (temObs) {
           const obsH = doc.heightOfString(`"${scout.observacoes}"`, { width: CONTENT_W - 16 });
           cardH += obsH + 12;
@@ -303,27 +301,7 @@ export function registerPdfJogoRoutes(app: Express) {
         });
         cy += 22;
 
-        // Notas
-        if (temNotas) {
-          const notasCampos = [
-            ["Técnica", scout.notaTecnica],
-            ["Física", scout.notaFisica],
-            ["Tática", scout.notaTatica],
-          ].filter(([, v]) => v);
-
-          doc.fontSize(6.5).fillColor(ROXO).font("Helvetica-Bold").text("AVALIAÇÃO", MARGIN + 4, cy);
-          cy += 9;
-          const notaW = CONTENT_W / notasCampos.length;
-          notasCampos.forEach(([label, valor], i) => {
-            const cx = MARGIN + i * notaW;
-            doc.rect(cx + 2, cy, notaW - 4, 20).fill("#f5f3ff");
-            doc.fontSize(6).fillColor(CINZA).font("Helvetica")
-              .text(String(label), cx + 2, cy + 2, { width: notaW - 4, align: "center" });
-            doc.fontSize(13).fillColor(ROXO).font("Helvetica-Bold")
-              .text(String(valor), cx + 2, cy + 8, { width: notaW - 4, align: "center" });
-          });
-          cy += 26;
-        }
+        // Notas removidas - dados mantidos apenas para uso interno
 
         // Observações
         if (temObs) {
