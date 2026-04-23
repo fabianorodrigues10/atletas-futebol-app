@@ -1,0 +1,30 @@
+{
+  "query": "SELECT nome, link FROM atletas WHERE link IS NOT NULL AND link != '' AND link LIKE '%ogol%' LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT nome, link FROM atletas WHERE link IS NOT NULL AND link != '' AND link LIKE '%ogol%' LIMIT 5;",
+  "rows": [
+    {
+      "nome": "Ronaldy",
+      "link": "https://www.ogol.com.br/jogador/ronaldy/515291"
+    },
+    {
+      "nome": "Zé Leandro",
+      "link": "https://www.ogol.com.br/jogador/ze-leandro/557286"
+    },
+    {
+      "nome": "Éverson Bispo",
+      "link": "https://www.ogol.com.br/jogador/everson-bispo/460893?epoca_id=154"
+    },
+    {
+      "nome": "Paulinho",
+      "link": "https://www.ogol.com.br/jogador/paulinho/707154?epoca_id=155"
+    },
+    {
+      "nome": "Vitinho",
+      "link": "https://www.ogol.com.br/jogador/vitinho/559216?epoca_id=155"
+    }
+  ],
+  "messages": [],
+  "stdout": "nome\tlink\nRonaldy\thttps://www.ogol.com.br/jogador/ronaldy/515291\nZé Leandro\thttps://www.ogol.com.br/jogador/ze-leandro/557286\nÉverson Bispo\thttps://www.ogol.com.br/jogador/everson-bispo/460893?epoca_id=154\nPaulinho\thttps://www.ogol.com.br/jogador/paulinho/707154?epoca_id=155\nVitinho\thttps://www.ogol.com.br/jogador/vitinho/559216?epoca_id=155\n",
+  "stderr": "",
+  "execution_time_ms": 407
+}

@@ -5,7 +5,7 @@ import { SymbolWeight, SymbolViewProps } from "expo-symbols";
 import { ComponentProps } from "react";
 import { OpaqueColorValue, type StyleProp, type TextStyle } from "react-native";
 
-type IconMapping = Record<SymbolViewProps["name"], ComponentProps<typeof MaterialIcons>["name"]>;
+type IconMapping = Record<string, ComponentProps<typeof MaterialIcons>["name"]>;
 type IconSymbolName = keyof typeof MAPPING;
 
 /**
@@ -18,6 +18,38 @@ const MAPPING = {
   "paperplane.fill": "send",
   "chevron.left.forwardslash.chevron.right": "code",
   "chevron.right": "chevron-right",
+  "person.fill": "person",
+  "plus": "add",
+  "magnifyingglass": "search",
+  "line.3.horizontal.decrease": "filter-list",
+  "pencil": "edit",
+  "trash": "delete",
+  "xmark": "close",
+  "xmark.circle.fill": "cancel",
+  "slider.horizontal.3": "tune",
+  "gearshape.fill": "settings",
+  "checkmark": "check",
+  "star.fill": "star",
+  "bolt.fill": "flash-on",
+  "calendar": "event",
+  "number": "tag",
+  "chart.bar.fill": "bar-chart",
+  "link": "link",
+  "ruler": "straighten",
+  "figure.walk": "directions-walk",
+  "doc.text.fill": "description",
+  "square.and.arrow.up": "share",
+  "square.and.arrow.down": "download",
+  "map.pin.circle.fill": "location-on",
+  "building.2.fill": "business",
+  "heart.fill": "favorite",
+  "target": "gps-fixed",
+  "photo.fill": "photo",
+  "person.crop.circle.badge.exclamationmark": "person-off",
+  "camera.fill": "photo-camera",
+  "shield.fill": "shield",
+  "waveform.path.ecg": "analytics",
+  "sportscourt.fill": "sports-soccer",
 } as IconMapping;
 
 /**

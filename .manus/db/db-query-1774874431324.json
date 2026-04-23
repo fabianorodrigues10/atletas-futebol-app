@@ -1,0 +1,28 @@
+{
+  "query": "SELECT id FROM atletas WHERE userId = 1 LIMIT 6;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT id FROM atletas WHERE userId = 1 LIMIT 6;",
+  "rows": [
+    {
+      "id": "90006"
+    },
+    {
+      "id": "90007"
+    },
+    {
+      "id": "90008"
+    },
+    {
+      "id": "90009"
+    },
+    {
+      "id": "90010"
+    },
+    {
+      "id": "90011"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\n90006\n90007\n90008\n90009\n90010\n90011\n",
+  "stderr": "",
+  "execution_time_ms": 206
+}

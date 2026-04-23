@@ -1,0 +1,44 @@
+const uploadarFoto = async (uri: string) => {
+  try {
+    setFotoLoading(true);
+    
+    // Para novo atleta, apenas armazenar a URI localmente
+    if (!isEdit) {
+      setFotoUri(uri);
+      Alert.alert("Sucesso", "Foto selecionada. Será salva ao cadastrar o atleta.");
+      return;
+    }
+    
+    // Converter para base64
+    const base64DataUrl = await fetch(uri).then(res => res.blob()).then(blob => {
+      return new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    });
+    
+    // Extrair base64 sem o prefixo
+    const base64Data = base64DataUrl.split(',')[1];
+    const mimeType = base64DataUrl.split(';')[0].replace('data:', '');
+    const fileName = `foto-${Date.now()}.jpg`;
+    
+    const atletaId = Number(id);
+    const result = await trpc.midias.uploadFoto.mutate({
+      atletaId,
+      fileName,
+      mimeType,
+      base64Data,
+    });
+    
+    setFotoUri(result.url);
+    Alert.alert("Sucesso", "Foto adicionada com sucesso");
+    queryClient.invalidateQueries({ queryKey: ["atletas", "getById", atletaId] });
+  } catch (error) {
+    console.error("Erro ao fazer upload:", error);
+    Alert.alert("Erro", "Erro ao fazer upload da foto");
+  } finally {
+    setFotoLoading(false);
+  }
+};

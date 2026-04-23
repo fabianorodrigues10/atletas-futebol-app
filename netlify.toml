@@ -1,0 +1,8 @@
+[build]
+  command = "rm -rf node_modules/.cache node_modules/.rn-cli-cache && pnpm build:web"
+  publish = "dist/web"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

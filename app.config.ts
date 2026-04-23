@@ -25,17 +25,18 @@ const bundleId =
 // e.g., "space.manus.my.app.t20240115103045" -> "manus20240115103045"
 const timestamp = bundleId.split(".").pop()?.replace(/^t/, "") ?? "";
 const schemeFromBundleId = `manus${timestamp}`;
-
 const env = {
   // App branding - update these values directly (do not use env vars)
-  appName: "Gerenciador de Atletas de Futebol",
+  appName: "BDMD",
   appSlug: "atletas_futebol_app",
   // S3 URL of the app logo - set this to the URL returned by generate_image when creating custom logo
   // Leave empty to use the default icon from assets/images/icon.png
-  logoUrl: "",
+  logoUrl: "https://d2xsxph8kpxj0f.cloudfront.net/310519663350073320/7XTarzVUuQNAxDd5Eu29wi/icon-RVKBqMCZWDQo45orNUev5F.webp",
   scheme: schemeFromBundleId,
   iosBundleId: bundleId,
   androidPackage: bundleId,
+  // URL pública do servidor API - injetada via extra para funcionar no Expo Go (nativo)
+  apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL ?? "",
 };
 
 const config: ExpoConfig = {
@@ -56,7 +57,7 @@ const config: ExpoConfig = {
   },
   android: {
     adaptiveIcon: {
-      backgroundColor: "#E6F4FE",
+      backgroundColor: "#1E2073",
       foregroundImage: "./assets/images/android-icon-foreground.png",
       backgroundImage: "./assets/images/android-icon-background.png",
       monochromeImage: "./assets/images/android-icon-monochrome.png",
@@ -121,6 +122,9 @@ const config: ExpoConfig = {
       },
     ],
   ],
+  extra: {
+    apiBaseUrl: env.apiBaseUrl,
+  },
   experiments: {
     typedRoutes: true,
     reactCompiler: true,

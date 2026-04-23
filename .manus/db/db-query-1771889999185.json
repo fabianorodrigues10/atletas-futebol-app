@@ -1,0 +1,16 @@
+{
+  "query": "SELECT id, nome, naturalidade, clube FROM atletas WHERE id = 90930;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT id, nome, naturalidade, clube FROM atletas WHERE id = 90930;",
+  "rows": [
+    {
+      "id": "90930",
+      "nome": "Ademílson",
+      "naturalidade": "NULL",
+      "clube": "Operário/PR"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnome\tnaturalidade\tclube\n90930\tAdemílson\tNULL\tOperário/PR\n",
+  "stderr": "",
+  "execution_time_ms": 364
+}

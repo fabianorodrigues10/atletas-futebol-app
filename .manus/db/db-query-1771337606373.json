@@ -1,0 +1,60 @@
+{
+  "query": "SELECT id, nome, link FROM atletas WHERE link IS NOT NULL AND link != '' LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT id, nome, link FROM atletas WHERE link IS NOT NULL AND link != '' LIMIT 10;",
+  "rows": [
+    {
+      "id": "90006",
+      "nome": "Ronaldy",
+      "link": "https://www.ogol.com.br/jogador/ronaldy/515291"
+    },
+    {
+      "id": "90007",
+      "nome": "Zé Leandro",
+      "link": "https://www.ogol.com.br/jogador/ze-leandro/557286"
+    },
+    {
+      "id": "90008",
+      "nome": "Éverson Bispo",
+      "link": "https://www.ogol.com.br/jogador/everson-bispo/460893?epoca_id=154"
+    },
+    {
+      "id": "90009",
+      "nome": "Paulinho",
+      "link": "https://www.ogol.com.br/jogador/paulinho/707154?epoca_id=155"
+    },
+    {
+      "id": "90010",
+      "nome": "Vitinho",
+      "link": "https://www.ogol.com.br/jogador/vitinho/559216?epoca_id=155"
+    },
+    {
+      "id": "90011",
+      "nome": "Marinho",
+      "link": "https://www.ogol.com.br/jogador/marinho/886238?epoca_id=155"
+    },
+    {
+      "id": "90012",
+      "nome": "Hélber ítalo",
+      "link": "https://www.ogol.com.br/jogador/helber-italo/668911?epoca_id=154"
+    },
+    {
+      "id": "90013",
+      "nome": "Pablo Pardal",
+      "link": "https://www.ogol.com.br/jogador/pablo-pardal/529350?epoca_id=154"
+    },
+    {
+      "id": "90014",
+      "nome": "Giba",
+      "link": "https://www.ogol.com.br/jogador/giba/475120?epoca_id=154"
+    },
+    {
+      "id": "90015",
+      "nome": "Vinícius Bala",
+      "link": "https://www.ogol.com.br/jogador/vinicius-bala/509243?epoca_id=154"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnome\tlink\n90006\tRonaldy\thttps://www.ogol.com.br/jogador/ronaldy/515291\n90007\tZé Leandro\thttps://www.ogol.com.br/jogador/ze-leandro/557286\n90008\tÉverson Bispo\thttps://www.ogol.com.br/jogador/everson-bispo/460893?epoca_id=154\n90009\tPaulinho\thttps://www.ogol.com.br/jogador/paulinho/707154?epoca_id=155\n90010\tVitinho\thttps://www.ogol.com.br/jogador/vitinho/559216?epoca_id=155\n90011\tMarinho\thttps://www.ogol.com.br/jogador/marinho/886238?epoca_id=155\n90012\tHélber ítalo\thttps://www.ogol.com.br/jogador/helber-italo/668911?epoca_id=154\n90013\tPablo Pardal\thttps://www.ogol.com.br/jogador/pablo-pardal/529350?epoca_id=154\n90014\tGiba\thttps://www.ogol.com.br/jogador/giba/475120?epoca_id=154\n90015\tVinícius Bala\thttps://www.ogol.com.br/jogador/vinicius-bala/509243?epoca_id=154\n",
+  "stderr": "",
+  "execution_time_ms": 386
+}

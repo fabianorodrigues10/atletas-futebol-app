@@ -1,0 +1,15 @@
+{
+  "query": "SELECT id, nome, naturalidade FROM atletas WHERE id = 90930 LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT id, nome, naturalidade FROM atletas WHERE id = 90930 LIMIT 1;",
+  "rows": [
+    {
+      "id": "90930",
+      "nome": "Ademílson",
+      "naturalidade": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnome\tnaturalidade\n90930\tAdemílson\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 366
+}

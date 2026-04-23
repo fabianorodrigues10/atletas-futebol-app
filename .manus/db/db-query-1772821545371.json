@@ -1,0 +1,60 @@
+{
+  "query": "SELECT atletaId, tipo, url FROM midias WHERE tipo = 'video' LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT atletaId, tipo, url FROM midias WHERE tipo = 'video' LIMIT 10;",
+  "rows": [
+    {
+      "atletaId": "1590001",
+      "tipo": "video",
+      "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    },
+    {
+      "atletaId": "1590001",
+      "tipo": "video",
+      "url": "https://www.youtube.com/watch?v=jNQXAC9IVRw"
+    },
+    {
+      "atletaId": "1590002",
+      "tipo": "video",
+      "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    },
+    {
+      "atletaId": "1590003",
+      "tipo": "video",
+      "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    },
+    {
+      "atletaId": "1590003",
+      "tipo": "video",
+      "url": "https://www.youtube.com/watch?v=jNQXAC9IVRw"
+    },
+    {
+      "atletaId": "1590004",
+      "tipo": "video",
+      "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    },
+    {
+      "atletaId": "1590008",
+      "tipo": "video",
+      "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    },
+    {
+      "atletaId": "1590008",
+      "tipo": "video",
+      "url": "https://www.youtube.com/watch?v=jNQXAC9IVRw"
+    },
+    {
+      "atletaId": "1590012",
+      "tipo": "video",
+      "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    },
+    {
+      "atletaId": "1590013",
+      "tipo": "video",
+      "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    }
+  ],
+  "messages": [],
+  "stdout": "atletaId\ttipo\turl\n1590001\tvideo\thttps://www.youtube.com/watch?v=dQw4w9WgXcQ\n1590001\tvideo\thttps://www.youtube.com/watch?v=jNQXAC9IVRw\n1590002\tvideo\thttps://www.youtube.com/watch?v=dQw4w9WgXcQ\n1590003\tvideo\thttps://www.youtube.com/watch?v=dQw4w9WgXcQ\n1590003\tvideo\thttps://www.youtube.com/watch?v=jNQXAC9IVRw\n1590004\tvideo\thttps://www.youtube.com/watch?v=dQw4w9WgXcQ\n1590008\tvideo\thttps://www.youtube.com/watch?v=dQw4w9WgXcQ\n1590008\tvideo\thttps://www.youtube.com/watch?v=jNQXAC9IVRw\n1590012\tvideo\thttps://www.youtube.com/watch?v=dQw4w9WgXcQ\n1590013\tvideo\thttps://www.youtube.com/watch?v=dQw4w9WgXcQ\n",
+  "stderr": "",
+  "execution_time_ms": 483
+}

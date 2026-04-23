@@ -1,0 +1,31 @@
+{
+  "query": "SELECT id, nome, dataNascimento, idade, altura FROM atletas WHERE dataNascimento IS NOT NULL AND idade IS NOT NULL LIMIT 3",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT id, nome, dataNascimento, idade, altura FROM atletas WHERE dataNascimento IS NOT NULL AND idade IS NOT NULL LIMIT 3",
+  "rows": [
+    {
+      "id": "90006",
+      "nome": "Ronaldy",
+      "dataNascimento": "1997-03-28",
+      "idade": "28",
+      "altura": "1.76"
+    },
+    {
+      "id": "90669",
+      "nome": "Elias Lara",
+      "dataNascimento": "1999-08-13",
+      "idade": "26",
+      "altura": "1.91"
+    },
+    {
+      "id": "90670",
+      "nome": "Pedro Henrique",
+      "dataNascimento": "2003-06-28",
+      "idade": "22",
+      "altura": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnome\tdataNascimento\tidade\taltura\n90006\tRonaldy\t1997-03-28\t28\t1.76\n90669\tElias Lara\t1999-08-13\t26\t1.91\n90670\tPedro Henrique\t2003-06-28\t22\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 349
+}

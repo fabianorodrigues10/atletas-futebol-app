@@ -1,0 +1,13 @@
+{
+  "query": "SELECT COUNT(*) as total_com_altura FROM atletas WHERE altura IS NOT NULL AND altura > 0;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT COUNT(*) as total_com_altura FROM atletas WHERE altura IS NOT NULL AND altura > 0;",
+  "rows": [
+    {
+      "total_com_altura": "32"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_com_altura\n32\n",
+  "stderr": "",
+  "execution_time_ms": 352
+}

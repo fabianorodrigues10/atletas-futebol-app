@@ -1,0 +1,19 @@
+{
+  "query": "SELECT userId, COUNT(*) as total FROM atletas GROUP BY userId; SELECT id, nome, posicao, clube FROM atletas LIMIT 3;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT userId, COUNT(*) as total FROM atletas GROUP BY userId; SELECT id, nome, posicao, clube FROM atletas LIMIT 3;",
+  "rows": [
+    {
+      "userId": "1",
+      "total": "25"
+    }
+  ],
+  "messages": [
+    "id\tnome\tposicao\tclube",
+    "60001\tRonaldy\tExtremo\tAtlético/PI",
+    "60002\tZé Leandro\tZagueiro\tSanta Catarina/SC",
+    "60003\tÉverson Bispo\tZagueiro\tManauara/AM"
+  ],
+  "stdout": "userId\ttotal\n1\t25\nid\tnome\tposicao\tclube\n60001\tRonaldy\tExtremo\tAtlético/PI\n60002\tZé Leandro\tZagueiro\tSanta Catarina/SC\n60003\tÉverson Bispo\tZagueiro\tManauara/AM\n",
+  "stderr": "",
+  "execution_time_ms": 403
+}

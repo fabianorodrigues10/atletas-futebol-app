@@ -1,0 +1,1 @@
+ALTER TABLE `atletas` MODIFY COLUMN `valencia` text;

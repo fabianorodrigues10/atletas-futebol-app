@@ -8,6 +8,83 @@
       "when": 1763372440610,
       "tag": "0000_elite_eternals",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1771258393616,
+      "tag": "0001_lively_sabretooth",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1771297426258,
+      "tag": "0002_shocking_nico_minoru",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1771433573462,
+      "tag": "0003_lovely_khan",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1771437816602,
+      "tag": "0004_friendly_baron_zemo",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1771884027680,
+      "tag": "0005_supreme_magik",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1774803597133,
+      "tag": "0006_ambiguous_wraith",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1774838083321,
+      "tag": "0007_opposite_living_tribunal",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1775055221800,
+      "tag": "0008_glamorous_gargoyle",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1775059281111,
+      "tag": "0009_faithful_dorian_gray",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1775435963102,
+      "tag": "0010_parallel_vermin",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "5",
+      "when": 1775436773868,
+      "tag": "0011_yellow_molly_hayes",
+      "breakpoints": true
     }
   ]
 }

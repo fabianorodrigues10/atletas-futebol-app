@@ -1,0 +1,42 @@
+{
+  "query": "SELECT posicao, COUNT(*) as total FROM atletas WHERE userId = 1 GROUP BY posicao ORDER BY total DESC",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT posicao, COUNT(*) as total FROM atletas WHERE userId = 1 GROUP BY posicao ORDER BY total DESC",
+  "rows": [
+    {
+      "posicao": "Extremo",
+      "total": "298"
+    },
+    {
+      "posicao": "Volante",
+      "total": "263"
+    },
+    {
+      "posicao": "Zagueiro",
+      "total": "257"
+    },
+    {
+      "posicao": "Lateral",
+      "total": "238"
+    },
+    {
+      "posicao": "Meia",
+      "total": "194"
+    },
+    {
+      "posicao": "Centroavante",
+      "total": "156"
+    },
+    {
+      "posicao": "Goleiro",
+      "total": "96"
+    },
+    {
+      "posicao": "2º Atacante",
+      "total": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "posicao\ttotal\nExtremo\t298\nVolante\t263\nZagueiro\t257\nLateral\t238\nMeia\t194\nCentroavante\t156\nGoleiro\t96\n2º Atacante\t1\n",
+  "stderr": "",
+  "execution_time_ms": 360
+}

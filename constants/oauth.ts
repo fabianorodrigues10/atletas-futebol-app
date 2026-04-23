@@ -1,5 +1,6 @@
 import * as Linking from "expo-linking";
 import * as ReactNative from "react-native";
+import Constants from "expo-constants";
 
 // Extract scheme from bundle ID (last segment timestamp, prefixed with "manus")
 // e.g., "space.manus.my.app.t20240115103045" -> "manus20240115103045"
@@ -38,11 +39,23 @@ export function getApiBaseUrl(): string {
   // On web, derive from current hostname by replacing port 8081 with 3000
   if (ReactNative.Platform.OS === "web" && typeof window !== "undefined" && window.location) {
     const { protocol, hostname } = window.location;
+    
+    // Handle local development: 127.0.0.1:8081 -> 127.0.0.1:3000
+    if (hostname.includes("127.0.0.1") || hostname.includes("localhost")) {
+      return `${protocol}//127.0.0.1:3000`;
+    }
+    
     // Pattern: 8081-sandboxid.region.domain -> 3000-sandboxid.region.domain
     const apiHostname = hostname.replace(/^8081-/, "3000-");
     if (apiHostname !== hostname) {
       return `${protocol}//${apiHostname}`;
     }
+  }
+
+  // On native (Expo Go), use the URL from app.config.ts extra (injected at build time)
+  const extraApiBaseUrl = (Constants.expoConfig?.extra as any)?.apiBaseUrl;
+  if (extraApiBaseUrl) {
+    return extraApiBaseUrl.replace(/\/$/, "");
   }
 
   // Fallback to empty (will use relative URL)

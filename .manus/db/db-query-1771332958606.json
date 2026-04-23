@@ -1,0 +1,55 @@
+{
+  "query": "SELECT id, nome, dataNascimento, idade, altura, pe, link FROM atletas WHERE dataNascimento IS NOT NULL LIMIT 5",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT id, nome, dataNascimento, idade, altura, pe, link FROM atletas WHERE dataNascimento IS NOT NULL LIMIT 5",
+  "rows": [
+    {
+      "id": "90006",
+      "nome": "Ronaldy",
+      "dataNascimento": "1997-03-28",
+      "idade": "28",
+      "altura": "1.76",
+      "pe": "direito",
+      "link": "https://www.ogol.com.br/jogador/ronaldy/515291"
+    },
+    {
+      "id": "90669",
+      "nome": "Elias Lara",
+      "dataNascimento": "1999-08-13",
+      "idade": "26",
+      "altura": "1.91",
+      "pe": "direito",
+      "link": "https://www.ogol.com.br/jogador/elias-lara/693710?epoca_id=154"
+    },
+    {
+      "id": "90670",
+      "nome": "Pedro Henrique",
+      "dataNascimento": "2003-06-28",
+      "idade": "22",
+      "altura": "NULL",
+      "pe": "direito",
+      "link": "https://www.ogol.com.br/jogador/pedro-henrique/966227?epoca_id=154"
+    },
+    {
+      "id": "90671",
+      "nome": "William Barão",
+      "dataNascimento": "1999-03-18",
+      "idade": "26",
+      "altura": "1.89",
+      "pe": "direito",
+      "link": "https://www.ogol.com.br/jogador/willian-barao/643138?epoca_id=154"
+    },
+    {
+      "id": "90672",
+      "nome": "Diego Bolt",
+      "dataNascimento": "1996-04-13",
+      "idade": "29",
+      "altura": "1.72",
+      "pe": "direito",
+      "link": "https://www.ogol.com.br/jogador/diego-bolt/583064?epoca_id=154"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnome\tdataNascimento\tidade\taltura\tpe\tlink\n90006\tRonaldy\t1997-03-28\t28\t1.76\tdireito\thttps://www.ogol.com.br/jogador/ronaldy/515291\n90669\tElias Lara\t1999-08-13\t26\t1.91\tdireito\thttps://www.ogol.com.br/jogador/elias-lara/693710?epoca_id=154\n90670\tPedro Henrique\t2003-06-28\t22\tNULL\tdireito\thttps://www.ogol.com.br/jogador/pedro-henrique/966227?epoca_id=154\n90671\tWilliam Barão\t1999-03-18\t26\t1.89\tdireito\thttps://www.ogol.com.br/jogador/willian-barao/643138?epoca_id=154\n90672\tDiego Bolt\t1996-04-13\t29\t1.72\tdireito\thttps://www.ogol.com.br/jogador/diego-bolt/583064?epoca_id=154\n",
+  "stderr": "",
+  "execution_time_ms": 378
+}

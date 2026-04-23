@@ -1,0 +1,14 @@
+{
+  "query": "SELECT COUNT(*) as total_com_idade, SUM(CASE WHEN idade IS NULL THEN 1 ELSE 0 END) as sem_idade FROM atletas;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT COUNT(*) as total_com_idade, SUM(CASE WHEN idade IS NULL THEN 1 ELSE 0 END) as sem_idade FROM atletas;",
+  "rows": [
+    {
+      "total_com_idade": "1515",
+      "sem_idade": "629"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_com_idade\tsem_idade\n1515\t629\n",
+  "stderr": "",
+  "execution_time_ms": 547
+}

@@ -1,0 +1,13 @@
+{
+  "query": "SELECT id FROM atletas WHERE altura IS NOT NULL AND altura > 0 LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT id FROM atletas WHERE altura IS NOT NULL AND altura > 0 LIMIT 1;",
+  "rows": [
+    {
+      "id": "30181"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\n30181\n",
+  "stderr": "",
+  "execution_time_ms": 349
+}

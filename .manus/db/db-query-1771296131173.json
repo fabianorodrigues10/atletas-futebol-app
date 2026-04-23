@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE atletas SET link = escala, escala = NULL WHERE escala LIKE 'https://www.ogol%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute UPDATE atletas SET link = escala, escala = NULL WHERE escala LIKE 'https://www.ogol%';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 387
+}
