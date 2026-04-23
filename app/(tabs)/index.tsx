@@ -21,7 +21,14 @@ import { Alert, Modal } from "react-native";
 import { FilterDropdown } from "@/components/filter-dropdown";
 import { CompletudStatsModal } from "@/components/completude-stats-modal";
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
-const marcilioDiasShield = require("@/assets/images/marcilio-dias-shield.png");
+// Usar require() no mobile e URL do servidor na web
+const getMarcilioDiasShield = () => {
+  if (Platform.OS === 'web') {
+    return { uri: 'http://127.0.0.1:3000/assets/images/marcilio-dias-shield.png' };
+  }
+  return require("@/assets/images/marcilio-dias-shield.png");
+};
+const marcilioDiasShield = getMarcilioDiasShield();
 import { useFocusEffect } from "expo-router";
 import { getApiBaseUrl } from "@/constants/oauth";
 import { useAuth } from "@/hooks/use-auth";
