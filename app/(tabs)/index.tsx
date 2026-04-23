@@ -14,6 +14,7 @@ import {
 import { useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { WebImage } from "@/components/web-image";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
 import { generateReport, generateExcel } from "@/lib/report";
@@ -21,14 +22,8 @@ import { Alert, Modal } from "react-native";
 import { FilterDropdown } from "@/components/filter-dropdown";
 import { CompletudStatsModal } from "@/components/completude-stats-modal";
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
-// Usar require() no mobile e URL do servidor na web
-const getMarcilioDiasShield = () => {
-  if (Platform.OS === 'web') {
-    return { uri: 'http://127.0.0.1:3000/assets/images/marcilio-dias-shield.png' };
-  }
-  return require("@/assets/images/marcilio-dias-shield.png");
-};
-const marcilioDiasShield = getMarcilioDiasShield();
+// Variável para armazenar a imagem do escudo (será inicializada no componente)
+let marcilioDiasShield: any = null;
 import { useFocusEffect } from "expo-router";
 import { getApiBaseUrl } from "@/constants/oauth";
 import { useAuth } from "@/hooks/use-auth";
@@ -126,6 +121,16 @@ export default function HomeScreen() {
   useEffect(() => {
     refetch();
   }, [refetch]);
+
+  // Inicializar a imagem do escudo
+  useEffect(() => {
+    const apiBaseUrl = getApiBaseUrl();
+    if (apiBaseUrl) {
+      marcilioDiasShield = { uri: `${apiBaseUrl}/assets/images/marcilio-dias-shield.png` };
+    } else {
+      marcilioDiasShield = require("@/assets/images/marcilio-dias-shield.png");
+    }
+  }, []);
 
 
 
