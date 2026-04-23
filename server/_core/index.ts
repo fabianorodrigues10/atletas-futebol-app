@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
 import net from "net";
+import path from "path";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { registerAuthRoutes } from "../auth-routes";
@@ -82,6 +83,14 @@ async function startServer() {
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
+  // Servir arquivos estáticos (imagens, ícones, etc)
+  app.use("/assets", express.static(path.join(__dirname, "../../assets")));
+  app.use("/public", express.static(path.join(__dirname, "../../public")));
+  app.use("/images", express.static(path.join(__dirname, "../../assets/images")));
+  app.use("/icons", express.static(path.join(__dirname, "../../assets/images")));
+  app.use("/logo", express.static(path.join(__dirname, "../../assets/images")));
+
+  // Registrar rotas de autenticação e relatórios
   registerOAuthRoutes(app);
   registerAuthRoutes(app);
   registerPdfRoutes(app);
@@ -90,8 +99,26 @@ async function startServer() {
   registerOgolRoutes(app);
   registerPdfJogoRoutes(app);
 
+  // Endpoint para servir imagens do assets
+  app.get("/img/:filename", (req, res) => {
+    const filename = req.params.filename;
+    const filepath = path.join(__dirname, "../../assets/images", filename);
+    res.sendFile(filepath);
+  });
+
   app.get("/api/health", (_req, res) => {
     res.json({ ok: true, timestamp: Date.now() });
+  });
+
+  // Endpoint para servir imagens (fallback)
+  app.get("/api/images/:filename", (req, res) => {
+    const filename = req.params.filename;
+    const filepath = path.join(__dirname, "../../assets/images", filename);
+    res.sendFile(filepath, (err) => {
+      if (err) {
+        res.status(404).json({ error: "Imagem não encontrada" });
+      }
+    });
   });
 
   // Endpoint para listar atletas
@@ -720,6 +747,7 @@ async function startServer() {
     }
   });
 
+  // Rota tRPC
   app.use(
     "/api/trpc",
     createExpressMiddleware({
