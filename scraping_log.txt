@@ -1,0 +1,16 @@
+🔄 Iniciando scraping de fotos com Playwright...
+
+📊 Total de atletas: 1399
+📦 Processando em lotes de 10...
+
+
+🔄 Lote 1/140
+❌ Erro: browserType.launch: Executable doesn't exist at /home/ubuntu/.cache/ms-playwright/chromium_headless_shell-1217/chrome-headless-shell-linux64/chrome-headless-shell
+╔════════════════════════════════════════════════════════════╗
+║ Looks like Playwright was just installed or updated.       ║
+║ Please run the following command to download new browsers: ║
+║                                                            ║
+║     npx playwright install                                 ║
+║                                                            ║
+║ <3 Playwright Team                                         ║
+╚════════════════════════════════════════════════════════════╝

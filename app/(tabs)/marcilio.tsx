@@ -18,6 +18,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { useRouter } from "expo-router";
 import { getApiBaseUrl } from "@/constants/oauth";
 import Svg, { Polygon, Circle, Line, Text as SvgText } from "react-native-svg";
+const marcilioDiasShield = require("@/assets/images/marcilio-dias-shield.png") as any;
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CORES = {
@@ -1224,7 +1225,7 @@ export default function MarcilioScreen() {
       <View style={styles.header}>
         <View style={styles.headerEsquerda}>
           <Image
-            source={require("@/assets/images/marcilio-dias-shield.png")}
+            source={marcilioDiasShield}
             style={styles.escudoImg}
             resizeMode="contain"
           />

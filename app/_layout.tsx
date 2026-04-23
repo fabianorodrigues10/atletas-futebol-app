@@ -109,24 +109,6 @@ export default function RootLayout() {
 
   const { isAuthenticated, isLoading } = useAuthProtection();
 
-  if (isLoading) {
-    return (
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <ThemeProvider>
-          <SafeAreaProvider initialMetrics={providerInitialMetrics}>
-            <SafeAreaFrameContext.Provider value={frame}>
-              <SafeAreaInsetsContext.Provider value={insets}>
-                <Stack screenOptions={{ headerShown: false }}>
-                  <Stack.Screen name="(tabs)" />
-                </Stack>
-              </SafeAreaInsetsContext.Provider>
-            </SafeAreaFrameContext.Provider>
-          </SafeAreaProvider>
-        </ThemeProvider>
-      </GestureHandlerRootView>
-    );
-  }
-
   const content = (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
@@ -134,23 +116,29 @@ export default function RootLayout() {
           {/* Default to hiding native headers so raw route segments don't appear (e.g. "(tabs)", "products/[id]"). */}
           {/* If a screen needs the native header, explicitly enable it and set a human title via Stack.Screen options. */}
           {/* in order for ios apps tab switching to work properly, use presentation: "fullScreenModal" for login page, whenever you decide to use presentation: "modal*/}
-          <Stack screenOptions={{ headerShown: false }}>
-            {isAuthenticated ? (
-              <>
-                <Stack.Screen name="(tabs)" />
-                <Stack.Screen name="oauth/callback" />
-              </>
-            ) : (
-              <Stack.Screen name="login" />
-            )}
-          </Stack>
+          {isLoading ? (
+            <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+              <ActivityIndicator size="large" />
+            </View>
+          ) : (
+            <Stack screenOptions={{ headerShown: false }}>
+              {isAuthenticated ? (
+                <>
+                  <Stack.Screen name="(tabs)" />
+                  <Stack.Screen name="oauth/callback" />
+                </>
+              ) : (
+                <Stack.Screen name="login" />
+              )}
+            </Stack>
+          )}
           <StatusBar style="auto" />
         </QueryClientProvider>
       </trpc.Provider>
     </GestureHandlerRootView>
   );
 
-  const shouldOverrideSafeArea = Platform.OS === "web" || !isAuthenticated;
+  const shouldOverrideSafeArea = Platform.OS === "web" || !isAuthenticated || isLoading;
 
   return (
     <ThemeProvider>

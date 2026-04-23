@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import {
   View,
@@ -27,6 +27,19 @@ export default function AtletaDetalhesScreen() {
     { id: Number(id) },
     { enabled: Boolean(id) }
   );
+
+  const { data: fotos = [], isLoading: fotosLoading, error: fotosError } = trpc.midias.getByAtleta.useQuery(
+    { atletaId: Number(id) },
+    { enabled: Boolean(id) }
+  );
+
+  // Debug logs
+  React.useEffect(() => {
+    console.log('DEBUG: id =', id);
+    console.log('DEBUG: fotos =', fotos);
+    console.log('DEBUG: fotosLoading =', fotosLoading);
+    console.log('DEBUG: fotosError =', fotosError);
+  }, [id, fotos, fotosLoading, fotosError]);
 
   const deleteAtleta = trpc.atletas.delete.useMutation({
     onSuccess: () => {
@@ -318,7 +331,7 @@ export default function AtletaDetalhesScreen() {
           </SectionCard>
 
           {/* Card: Fotos */}
-          <SectionCard title="Fotos" iconName="photo.fill" iconColor={colors.primary} colors={colors}
+          <SectionCard title={`Fotos ${fotos && fotos.length > 0 ? `(${fotos.length})` : "(0)"}`} iconName="photo.fill" iconColor={colors.primary} colors={colors}
             headerRight={
               <TouchableOpacity
                 onPress={handleAdicionarFoto}
@@ -332,22 +345,58 @@ export default function AtletaDetalhesScreen() {
               </TouchableOpacity>
             }
           >
-            <TouchableOpacity
-              onPress={handleAdicionarFoto}
-              style={{
-                backgroundColor: colors.primary + "18",
-                borderRadius: 10,
-                padding: 16,
-                borderWidth: 1,
-                borderColor: colors.primary + "50",
-                alignItems: "center",
-              }}
-            >
-              <IconSymbol name="photo.fill" size={32} color={colors.primary} />
-              <Text style={{ fontSize: 13, color: colors.primary, fontWeight: "500", marginTop: 8 }}>
-                Adicionar Fotos
-              </Text>
-            </TouchableOpacity>
+            {fotos && fotos.length > 0 ? (
+              <View style={{ gap: 8 }}>
+                {fotos.map((foto: any, index: number) => (
+                  <TouchableOpacity
+                    key={foto.id || index}
+                    onPress={() => foto.url && Linking.openURL(foto.url)}
+                    style={{
+                      backgroundColor: colors.surface,
+                      borderRadius: 10,
+                      overflow: "hidden",
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                    }}
+                  >
+                    {foto.url && (
+                      <Image
+                        source={{ uri: foto.url }}
+                        style={{ width: "100%", height: 200, backgroundColor: colors.background }}
+                        resizeMode="cover"
+                      />
+                    )}
+                    <View style={{ padding: 12 }}>
+                      <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>
+                        {foto.nome || `Foto ${index + 1}`}
+                      </Text>
+                      {foto.descricao && (
+                        <Text style={{ fontSize: 12, color: colors.muted, marginTop: 4 }}>
+                          {foto.descricao}
+                        </Text>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ) : (
+              <TouchableOpacity
+                onPress={handleAdicionarFoto}
+                style={{
+                  backgroundColor: colors.primary + "18",
+                  borderRadius: 10,
+                  padding: 16,
+                  borderWidth: 1,
+                  borderColor: colors.primary + "50",
+                  alignItems: "center",
+                }}
+              >
+                <IconSymbol name="photo.fill" size={32} color={colors.primary} />
+                <Text style={{ fontSize: 13, color: colors.primary, fontWeight: "500", marginTop: 8 }}>
+                  Adicionar Fotos
+                </Text>
+              </TouchableOpacity>
+            )}
           </SectionCard>
 
           {/* Card: Vídeos */}
