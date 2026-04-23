@@ -1,8 +1,0 @@
-{
-  "query": "\nSELECT g.id, g.nome, COUNT(ag.atleta_id) as qtd_atletas\nFROM grupos g\nLEFT JOIN atletas_em_grupos ag ON ag.grupo_id = g.id\nWHERE g.nome = 'Goleiro'\nGROUP BY g.id, g.nome;\n",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute \nSELECT g.id, g.nome, COUNT(ag.atleta_id) as qtd_atletas\nFROM grupos g\nLEFT JOIN atletas_em_grupos ag ON ag.grupo_id = g.id\nWHERE g.nome = 'Goleiro'\nGROUP BY g.id, g.nome;\n",
-  "returncode": 1,
-  "logs": [
-    "ERROR 1146 (42S02) at line 2: Table '7xtarzvuuqnaxdd5eu29wi.atletas_em_grupos' doesn't exist"
-  ]
-}

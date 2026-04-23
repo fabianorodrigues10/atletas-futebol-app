@@ -1,1 +1,0 @@
-ALTER TABLE `atletasEmGrupos` ADD `posicaoOrdem` int DEFAULT 0 NOT NULL;

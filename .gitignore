@@ -63,9 +63,3 @@ Thumbs.db
 
 # Webdev artifacts (checkpoint zips, migrations, etc.)
 .webdev/
-
-# Cache files
-node_modules/.cache
-.cache
-dist/.cache
-.vercel
