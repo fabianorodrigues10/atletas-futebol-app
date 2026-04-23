@@ -3,8 +3,8 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { SymbolWeight, SymbolViewProps } from "expo-symbols";
 import { ComponentProps } from "react";
-import { OpaqueColorValue, type StyleProp, type TextStyle } from "react-native";
-import { IconSimple } from "./icon-simple";
+import { OpaqueColorValue, type StyleProp, type TextStyle, Platform } from "react-native";
+import { IconSymbolWeb } from "./icon-symbol-web";
 
 type IconMapping = Record<string, ComponentProps<typeof MaterialIcons>["name"]>;
 type IconSymbolName = keyof typeof MAPPING;
@@ -70,6 +70,10 @@ export function IconSymbol({
   style?: StyleProp<TextStyle>;
   weight?: SymbolWeight;
 }) {
-  // Usar IconSimple em vez de MaterialIcons para funcionar em todas as plataformas
-  return <IconSimple name={name} size={size} color={color} style={style} />;
+  // Na web, usar SVG icons; no mobile, usar Material Icons
+  if (Platform.OS === "web") {
+    return <IconSymbolWeb name={name} size={size} color={color} style={style} />;
+  }
+  
+  return <MaterialIcons color={color} size={size} name={MAPPING[name]} style={style} />;
 }
