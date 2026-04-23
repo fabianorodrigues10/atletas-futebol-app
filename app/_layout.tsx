@@ -8,6 +8,8 @@ import "react-native-reanimated";
 import { Platform, ActivityIndicator, View } from "react-native";
 import "@/lib/_core/nativewind-pressable";
 import { ThemeProvider } from "@/lib/theme-provider";
+import * as Font from "expo-font";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import {
   SafeAreaFrameContext,
   SafeAreaInsetsContext,
@@ -26,6 +28,28 @@ const DEFAULT_WEB_FRAME: Rect = { x: 0, y: 0, width: 0, height: 0 };
 export const unstable_settings = {
   anchor: "(tabs)",
 };
+
+function useLoadFonts() {
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+
+  useEffect(() => {
+    async function loadFonts() {
+      try {
+        await Font.loadAsync({
+          ...MaterialIcons.font,
+        });
+        setFontsLoaded(true);
+      } catch (error) {
+        console.error("Erro ao carregar fontes:", error);
+        setFontsLoaded(true); // Continuar mesmo se falhar
+      }
+    }
+
+    loadFonts();
+  }, []);
+
+  return fontsLoaded;
+}
 
 function useAuthProtection() {
   const router = require("expo-router").useRouter();
@@ -108,6 +132,7 @@ export default function RootLayout() {
   }, [initialInsets, initialFrame]);
 
   const { isAuthenticated, isLoading } = useAuthProtection();
+  const fontsLoaded = useLoadFonts();
 
   const content = (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -116,7 +141,7 @@ export default function RootLayout() {
           {/* Default to hiding native headers so raw route segments don't appear (e.g. "(tabs)", "products/[id]"). */}
           {/* If a screen needs the native header, explicitly enable it and set a human title via Stack.Screen options. */}
           {/* in order for ios apps tab switching to work properly, use presentation: "fullScreenModal" for login page, whenever you decide to use presentation: "modal*/}
-          {isLoading ? (
+          {isLoading || !fontsLoaded ? (
             <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
               <ActivityIndicator size="large" />
             </View>
