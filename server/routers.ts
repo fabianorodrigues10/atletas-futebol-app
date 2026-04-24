@@ -57,7 +57,6 @@ export const appRouter = router({
           alturaMax: z.number().optional(),
           pe: z.string().optional(),
           escala: z.string().optional(),
-          valencia: z.string().optional(),
           limit: z.number().optional(),
         })
       )
@@ -80,7 +79,6 @@ export const appRouter = router({
           pe: z.enum(["direito", "esquerdo", "ambidestro"]).optional(),
           link: z.string().optional(),
           escala: z.string().max(100).optional(),
-          valencia: z.string().max(1000).optional(),
           camposCustomizados: z.string().optional(), // JSON string
         })
       )
@@ -98,7 +96,6 @@ export const appRouter = router({
           pe: input.pe || null,
           link: input.link || null,
           escala: input.escala || null,
-          valencia: input.valencia || null,
           camposCustomizados: input.camposCustomizados || null,
         });
         return { id };
@@ -120,7 +117,6 @@ export const appRouter = router({
           pe: z.enum(["direito", "esquerdo", "ambidestro"]).optional(),
           link: z.string().optional(),
           escala: z.string().max(100).optional(),
-          valencia: z.string().max(1000).optional(),
           camposCustomizados: z.string().optional(),
         })
       )

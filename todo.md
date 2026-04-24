@@ -338,6 +338,12 @@
 - [x] Adicionar campo "Duelo Aéreo Perdido" na seção Defensivo do modal de estatísticas
 - [x] Adicionar os campos no tipo, estado inicial e schema do banco (colunas jogosAereos e duelosAereosPerdidos criadas via ALTER TABLE)
 
+## Feature: Remover Campo de Valência
+- [x] Remover campo de valência da página de atletas
+- [x] Remover campo de valência do formulário de edição
+- [x] Remover campo de valência do filtro
+- [x] Atualizar schema do banco de dados
+
 ## Feature: Módulo Scout por Jogo
 - [ ] Criar tabela `jogos` no banco (jogo, competição, data, horário, local, árbitro, assistentes, renda, público, gols, placar, userId)
 - [ ] Criar tabela `scoutJogo` no banco (jogoId, atletaId, userId + todos os campos de estatísticas + notas)

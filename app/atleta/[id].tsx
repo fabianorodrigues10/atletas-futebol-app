@@ -55,7 +55,7 @@ export default function AtletaFormScreen() {
   const [pe, setPe] = useState("");
   const [link, setLink] = useState("");
   const [escala, setEscala] = useState("");
-  const [valencia, setValencia] = useState("");
+
   const [naturalidade, setNaturalidade] = useState("");
   const [videoLinks, setVideoLinks] = useState<string[]>([]);
   const [originalVideoLinks, setOriginalVideoLinks] = useState<string[]>([]);
@@ -144,7 +144,7 @@ export default function AtletaFormScreen() {
       setPe(atleta.pe || "");
       setLink(atleta.link || "");
       setEscala(atleta.escala || "");
-      setValencia(atleta.valencia || "");
+
       setNaturalidade(atleta.naturalidade || "");
       
       // Carregar todas as fotos do atleta
@@ -414,7 +414,7 @@ export default function AtletaFormScreen() {
         pe: (pe || "").toLowerCase().trim(),
         link: (link || "").toLowerCase().trim(),
         escala: (escala || "").toLowerCase().trim(),
-        valencia: (valencia || "").toLowerCase().trim(),
+
       };
       
       // Procurar por atleta com TODOS os dados idênticos
@@ -429,8 +429,7 @@ export default function AtletaFormScreen() {
           a.altura === novoAtleta.altura &&
           (a.pe || "").toLowerCase().trim() === novoAtleta.pe &&
           (a.link || "").toLowerCase().trim() === novoAtleta.link &&
-          (a.escala || "").toLowerCase().trim() === novoAtleta.escala &&
-          (a.valencia || "").toLowerCase().trim() === novoAtleta.valencia
+          (a.escala || "").toLowerCase().trim() === novoAtleta.escala
         );
       });
       
@@ -560,7 +559,7 @@ export default function AtletaFormScreen() {
         pe: pe as any || undefined,
         link: link || undefined,
         escala: escala || undefined,
-        valencia: valencia || undefined,
+
         naturalidade: naturalidade || undefined,
       };
       
@@ -1403,35 +1402,6 @@ export default function AtletaFormScreen() {
             />
           </View>
 
-          {/* Valências */}
-          <View style={{ marginBottom: 16 }}>
-            <Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground, marginBottom: 6 }}>
-              Valências
-            </Text>
-            <TextInput
-              style={{
-                backgroundColor: colors.surface,
-                borderRadius: 8,
-                paddingHorizontal: 14,
-                paddingVertical: 12,
-                color: colors.foreground,
-                borderWidth: 1,
-                borderColor: colors.border,
-                fontSize: 14,
-                minHeight: 100,
-              }}
-              placeholder="Descreva as características e valências do atleta (até 500 caracteres)..."
-              placeholderTextColor={colors.muted}
-              value={valencia}
-              onChangeText={(text) => setValencia(text.slice(0, 500))}
-              multiline
-              numberOfLines={4}
-              textAlignVertical="top"
-            />
-            <Text style={{ fontSize: 11, color: colors.muted, textAlign: "right", marginTop: 4 }}>
-              {valencia.length}/500
-            </Text>
-          </View>
           
           {/* Campo de Foto */}
           <View style={{ marginBottom: 16 }}>

@@ -85,6 +85,13 @@
       "when": 1775436773868,
       "tag": "0011_yellow_molly_hayes",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "5",
+      "when": 1777049222050,
+      "tag": "0012_mature_lifeguard",
+      "breakpoints": true
     }
   ]
 }
