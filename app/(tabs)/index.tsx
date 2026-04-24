@@ -14,7 +14,6 @@ import {
 import { useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { ImageWeb } from "@/components/image-web";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
 import { generateReport, generateExcel } from "@/lib/report";
@@ -22,8 +21,7 @@ import { Alert, Modal } from "react-native";
 import { FilterDropdown } from "@/components/filter-dropdown";
 import { CompletudStatsModal } from "@/components/completude-stats-modal";
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
-// URL do escudo do Marcílio Dias (será carregada dinamicamente)
-let marcilioDiasShield: any = null;
+const marcilioDiasShield = require("@/assets/images/marcilio-dias-shield.png") as any;
 import { useFocusEffect } from "expo-router";
 import { getApiBaseUrl } from "@/constants/oauth";
 import { useAuth } from "@/hooks/use-auth";
@@ -122,19 +120,7 @@ export default function HomeScreen() {
     refetch();
   }, [refetch]);
 
-  // Inicializar a imagem do escudo
-  useEffect(() => {
-    const apiBaseUrl = getApiBaseUrl();
-    if (apiBaseUrl) {
-      marcilioDiasShield = { uri: `${apiBaseUrl}/assets/images/marcilio-dias-shield.png` };
-    } else {
-      try {
-        marcilioDiasShield = require("@/assets/images/marcilio-dias-shield.png");
-      } catch {
-        marcilioDiasShield = null;
-      }
-    }
-  }, []);
+
 
   // Função para carregar mais atletas (não faz nada, pois todos são carregados de uma vez)
   const loadMore = useCallback(() => {
@@ -419,7 +405,7 @@ export default function HomeScreen() {
       <View className="bg-gradient-to-b from-primary/10 to-background px-4 pt-4 pb-3">
         <View className="flex-row justify-between items-center mb-4">
           <View className="flex-row items-center gap-3 flex-1">
-            <ImageWeb
+            <Image
               source={marcilioDiasShield}
               style={{ width: 56, height: 56 }}
               resizeMode="contain"
