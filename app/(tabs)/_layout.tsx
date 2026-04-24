@@ -31,36 +31,31 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Atletas",
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.fill" color={color} />,
+          title: "🏠 Atletas",
         }}
       />
       <Tabs.Screen
         name="grupos"
         options={{
-          title: "Radar",
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.fill" color={color} />,
+          title: "📡 Radar",
         }}
       />
       <Tabs.Screen
         name="stats"
         options={{
-          title: "Estatísticas",
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="chart.bar.fill" color={color} />,
+          title: "📊 Estatísticas",
         }}
       />
       <Tabs.Screen
         name="marcilio"
         options={{
-          title: "Elenco",
-          tabBarIcon: ({ color }) => <IconSymbol size={26} name="shield.fill" color={color} />,
+          title: "👥 Elenco",
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-          title: "Configurações",
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="gearshape.fill" color={color} />,
+          title: "⚙️ Configurações",
         }}
       />
     </Tabs>
