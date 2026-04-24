@@ -21,7 +21,8 @@ import { Alert, Modal } from "react-native";
 import { FilterDropdown } from "@/components/filter-dropdown";
 import { CompletudStatsModal } from "@/components/completude-stats-modal";
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
-const marcilioDiasShield = require("@/assets/images/marcilio-dias-shield.png") as any;
+// URL do escudo oficial do Marcílio Dias no CloudFront
+const MARCILIO_DIAS_SHIELD_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663350073320/bcRgjSMMkCohqWng.png";
 import { useFocusEffect } from "expo-router";
 import { getApiBaseUrl } from "@/constants/oauth";
 import { useAuth } from "@/hooks/use-auth";
@@ -406,7 +407,7 @@ export default function HomeScreen() {
         <View className="flex-row justify-between items-center mb-4">
           <View className="flex-row items-center gap-3 flex-1">
             <Image
-              source={marcilioDiasShield}
+              source={{ uri: MARCILIO_DIAS_SHIELD_URL }}
               style={{ width: 56, height: 56 }}
               resizeMode="contain"
             />
