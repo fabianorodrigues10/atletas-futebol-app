@@ -1,5 +1,5 @@
-import { Platform, Text, Image, View } from "react-native";
-import { OpaqueColorValue, type StyleProp, type TextStyle, type ImageStyle } from "react-native";
+import { Platform, Text } from "react-native";
+import { OpaqueColorValue, type StyleProp, type TextStyle } from "react-native";
 
 // Importar MaterialIcons apenas para mobile
 let MaterialIcons: any;
@@ -9,15 +9,6 @@ if (Platform.OS !== "web") {
 
 type IconMapping = Record<string, string>;
 type IconSymbolName = keyof typeof MAPPING;
-
-// URLs CloudFront dos ícones PNG para a web
-const ICON_URLS: Record<string, string> = {
-  "house.fill": "https://d2xsxph8kpxj0f.cloudfront.net/310519663350073320/7XTarzVUuQNAxDd5Eu29wi/tab-atletas-79Z3L6taaiAdxtG4xspRyK.png",
-  "radar": "https://d2xsxph8kpxj0f.cloudfront.net/310519663350073320/7XTarzVUuQNAxDd5Eu29wi/tab-radar-XVKMpmGefjknQ9vNqcU3x2.png",
-  "chart.bar.fill": "https://d2xsxph8kpxj0f.cloudfront.net/310519663350073320/7XTarzVUuQNAxDd5Eu29wi/tab-stats-AcuNEF5aB8mRS5deY2hva5.png",
-  "people.fill": "https://d2xsxph8kpxj0f.cloudfront.net/310519663350073320/7XTarzVUuQNAxDd5Eu29wi/tab-elenco-jK2DByQXqEFwkHJFUTseX3.png",
-  "gearshape.fill": "https://d2xsxph8kpxj0f.cloudfront.net/310519663350073320/7XTarzVUuQNAxDd5Eu29wi/tab-settings-hBQjoYZdp349Axxv5RMPg4.png",
-};
 
 /**
  * Mapeamento de SF Symbols para emojis Unicode
@@ -90,10 +81,8 @@ const MAPPING = {
 
 /**
  * Componente de ícone que funciona em todas as plataformas
- * - Na web: renderiza emojis Unicode (mais confiável que imagens)
+ * - Na web: renderiza emoji Unicode
  * - No mobile: usa emoji Unicode ou MaterialIcons
- * 
- * Estratégia: Emojis são mais confiáveis na web que imagens PNG
  */
 export function IconSymbol({
   name,
@@ -104,7 +93,7 @@ export function IconSymbol({
   name: IconSymbolName;
   size?: number;
   color: string | OpaqueColorValue;
-  style?: StyleProp<TextStyle | ImageStyle>;
+  style?: StyleProp<TextStyle>;
   weight?: any;
 }) {
   // Usar emoji Unicode em todas as plataformas (funciona 100%)
