@@ -8,7 +8,7 @@ interface AtletaParaPDF {
   idade?: number | null;
   altura?: string | null;
   clube?: string | null;
-
+  valencia?: string | null;
   link?: string | null;
   videos?: string[] | null;
 }
@@ -121,7 +121,7 @@ export async function gerarRelatorioPDF(
         const dados = [
           [`Posição: ${atleta.posicao || "-"}`, `Idade: ${atleta.idade || "-"}`],
           [`Altura: ${atleta.altura || "-"}`, `2ª Posição: ${atleta.segundaPosicao || "-"}`],
-          [`Clube: ${atleta.clube || "-"}`, `Link: ${atleta.link || "-"}`],
+          [`Clube: ${atleta.clube || "-"}`, `Valência: ${atleta.valencia || "-"}`],
         ];
 
         dados.forEach(([col1, col2]) => {
