@@ -1,11 +1,6 @@
 import { Platform, Text } from "react-native";
 import { OpaqueColorValue, type StyleProp, type TextStyle } from "react-native";
-
-// Importar MaterialIcons apenas para mobile
-let MaterialIcons: any;
-if (Platform.OS !== "web") {
-  MaterialIcons = require("@expo/vector-icons/MaterialIcons").default;
-}
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 type IconMapping = Record<string, string>;
 type IconSymbolName = keyof typeof MAPPING;
@@ -58,11 +53,12 @@ const MAPPING = {
   "bolt.fill": "flash-on",
   "calendar": "event",
   "number": "tag",
-  "chart.bar.fill": "bar-chart",
+  "chart.bar.fill": "insert-chart",
   "link": "link",
   "ruler": "straighten",
   "figure.walk": "directions-walk",
   "doc.text.fill": "description",
+  "doc.text": "description",
   "square.and.arrow.up": "share",
   "square.and.arrow.down": "download",
   "map.pin.circle.fill": "location-on",
@@ -75,13 +71,13 @@ const MAPPING = {
   "shield.fill": "shield",
   "waveform.path.ecg": "analytics",
   "sportscourt.fill": "sports-soccer",
-  "radar": "radar",
-  "people.fill": "people",
+  "radar": "gps-fixed",
+  "people.fill": "group",
 } as IconMapping;
 
 /**
  * Componente de ícone que funciona em todas as plataformas
- * - Na web: renderiza emoji Unicode
+ * - Na web: usa Material Icons
  * - No mobile: usa emoji Unicode ou MaterialIcons
  */
 export function IconSymbol({
@@ -96,7 +92,24 @@ export function IconSymbol({
   style?: StyleProp<TextStyle>;
   weight?: any;
 }) {
-  // Usar emoji Unicode em todas as plataformas (funciona 100%)
+  // Na web, usar Material Icons sempre
+  if (Platform.OS === "web") {
+    const iconName = MAPPING[name];
+    if (!iconName) {
+      console.warn(`Icon not found: ${name}`);
+      return null;
+    }
+    return (
+      <MaterialIcons
+        color={color}
+        size={size}
+        name={iconName}
+        style={style}
+      />
+    );
+  }
+
+  // No mobile, tentar emoji primeiro
   const emoji = EMOJI_ICONS[name];
   
   if (emoji) {
@@ -117,7 +130,7 @@ export function IconSymbol({
   }
 
   // Fallback para mobile: usar MaterialIcons se não houver emoji
-  if (Platform.OS !== "web" && MaterialIcons) {
+  if (MaterialIcons) {
     return (
       <MaterialIcons
         color={color}

@@ -85,6 +85,34 @@
       "when": 1775436773868,
       "tag": "0011_yellow_molly_hayes",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "5",
+      "when": 1777049222050,
+      "tag": "0012_mature_lifeguard",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "5",
+      "when": 1777223606208,
+      "tag": "0013_familiar_the_executioner",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "5",
+      "when": 1777223643639,
+      "tag": "0014_unusual_overlord",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "5",
+      "when": 1777224052754,
+      "tag": "0015_plain_rafael_vega",
+      "breakpoints": true
     }
   ]
 }
