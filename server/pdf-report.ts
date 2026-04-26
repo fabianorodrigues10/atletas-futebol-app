@@ -158,7 +158,7 @@ function drawCards(doc: PDFKit.PDFDocument, data: any[], startY: number) {
 
   data.forEach((a) => {
     const posColor = POS_COLORS[a.posicao || ""] || PRIMARY;
-    const cardH = a.valencia ? 95 : 80;
+    const cardH = 80;
 
     if (y + cardH > 750) {
       doc.addPage();
@@ -200,16 +200,6 @@ function drawCards(doc: PDFKit.PDFDocument, data: any[], startY: number) {
         doc.fontSize(8).fillColor([10, 126, 164] as RGB).text(videoDisplay, 50, linkY, { link: video, width: 500 });
         linkY += 13;
       });
-    }
-
-    // Valencias
-    const valY = linkY;
-    if (a.valencia) {
-      doc.fontSize(8).fillColor(GRAY).font("Helvetica-Bold").text("Valências: ", 50, valY, { continued: true });
-      doc.font("Helvetica").text(a.valencia, { width: 490 });
-    } else {
-      doc.fontSize(8).fillColor(GRAY).font("Helvetica-Bold").text("Valências: ", 50, valY, { continued: true });
-      doc.font("Helvetica-Oblique").text("Sem descrição");
     }
 
     // Separator
