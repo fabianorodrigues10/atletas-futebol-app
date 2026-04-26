@@ -1,1 +1,0 @@
-ALTER TABLE `atletas` DROP COLUMN `valencia`;

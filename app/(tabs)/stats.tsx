@@ -718,7 +718,9 @@ export default function StatsScreen() {
                       </View>
                     )}
                   </View>
-
+                  {item.valencia && (
+                    <Text className="text-muted text-xs mt-2 italic">{item.valencia}</Text>
+                  )}
                 </View>
               ))}
             </ScrollView>

@@ -157,6 +157,7 @@ async function importCSV(csvPath: string, userId: number) {
         pe,
         link,
         escala,
+        valencia,
       });
       
       imported++;

@@ -47,6 +47,7 @@ type Atleta = {
   altura: string | null;
   pe: string | null;
   escala: string | null;
+  valencia: string | null;
   naturalidade: string | null;
   fotoUrl: string | null;
   estatisticas: EstatisticasTemporada | null;

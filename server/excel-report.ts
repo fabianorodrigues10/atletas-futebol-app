@@ -56,6 +56,7 @@ export function registerExcelRoutes(app: any) {
         { header: "Altura (m)", key: "altura", width: 12 },
         { header: "Pé", key: "pe", width: 10 },
         { header: "Escala", key: "escala", width: 10 },
+        { header: "Valências", key: "valencia", width: 40 },
       ];
 
       // Estilizar header
@@ -76,6 +77,7 @@ export function registerExcelRoutes(app: any) {
           altura: atleta.altura || "—",
           pe: atleta.pe || "—",
           escala: atleta.escala || "—",
+          valencia: atleta.valencia || "—",
         });
       });
 

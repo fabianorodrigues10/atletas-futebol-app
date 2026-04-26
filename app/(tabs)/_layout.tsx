@@ -30,31 +30,31 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Atletas",
+          title: "🏠 Atletas",
         }}
       />
       <Tabs.Screen
         name="grupos"
         options={{
-          title: "Radar",
+          title: "📡 Radar",
         }}
       />
       <Tabs.Screen
         name="stats"
         options={{
-          title: "Estatísticas",
+          title: "📊 Estatísticas",
         }}
       />
       <Tabs.Screen
         name="marcilio"
         options={{
-          title: "Elenco",
+          title: "👥 Elenco",
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-          title: "Configurações",
+          title: "⚙️ Configurações",
         }}
       />
     </Tabs>
