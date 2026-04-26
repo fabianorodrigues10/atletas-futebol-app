@@ -2,7 +2,7 @@ import { Tabs } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { HapticTab } from "@/components/haptic-tab";
-import { CustomTabBar } from "@/components/custom-tab-bar";
+import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Platform } from "react-native";
 import { useColors } from "@/hooks/use-colors";
 
@@ -27,36 +27,50 @@ export default function TabLayout() {
           borderTopWidth: 0.5,
         },
       }}
-      tabBar={Platform.OS === "web" ? CustomTabBar : undefined}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: "Atletas",
+          tabBarIcon: ({ color }) => (
+            <IconSymbol name="house.fill" size={28} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="grupos"
         options={{
           title: "Radar",
+          tabBarIcon: ({ color }) => (
+            <IconSymbol name="radar" size={28} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="stats"
         options={{
           title: "Estatísticas",
+          tabBarIcon: ({ color }) => (
+            <IconSymbol name="chart.bar.fill" size={28} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="marcilio"
         options={{
           title: "Elenco",
+          tabBarIcon: ({ color }) => (
+            <IconSymbol name="people.fill" size={28} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: "Configurações",
+          tabBarIcon: ({ color }) => (
+            <IconSymbol name="gearshape.fill" size={28} color={color} />
+          ),
         }}
       />
     </Tabs>

@@ -1,8 +1,14 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from "react-native";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/use-colors";
+
+// Font stack que garante suporte a emojis na web
+const EMOJI_FONT_STACK = Platform.select({
+  web: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji","Twemoji Mozilla",system-ui,sans-serif',
+  default: undefined,
+});
 
 // Mapeamento de nomes de rota para emojis
 const ROUTE_EMOJIS: Record<string, string> = {
@@ -63,6 +69,7 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
                 styles.emoji,
                 {
                   color: isFocused ? colors.tint : colors.muted,
+                  fontFamily: EMOJI_FONT_STACK,
                 },
               ]}
             >
