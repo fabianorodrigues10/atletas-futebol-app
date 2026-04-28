@@ -83,34 +83,33 @@ export function isoToShortDate(isoDate: string): string {
 
 /**
  * Extrai o valor de um campo do HTML do Ogol.
- *
- * Abordagem: encontra a posição do label no HTML, depois busca o valor
- * mais próximo usando padrões card-data__value ou texto direto.
+ * Nova estrutura: <div class="card-data__row"><span class="card-data__label">Label</span><span class="card-data__value">Value</span></div>
  */
 function extractField(html: string, label: string): string | null {
-  // Find the label position first
-  const labelRegex = new RegExp(label, "i");
-  const labelMatch = html.match(labelRegex);
-  if (!labelMatch || labelMatch.index === undefined) return null;
-
-  // Get everything after the label
-  const afterLabel = html.substring(
-    labelMatch.index + labelMatch[0].length
+  // Escapar caracteres especiais no label para usar em regex
+  const escapedLabel = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  
+  // Pattern 1: Nova estrutura com card-data__row
+  // <div class="card-data__row"><span class="card-data__label">Label</span><span class="card-data__value">Value</span></div>
+  const newStructureRegex = new RegExp(
+    `card-data__label[^>]*>${escapedLabel}</span>\\s*<span class="card-data__value[^>]*>([^<]+)`,
+    "i"
   );
-
-  // Pattern 1: card-data__value content (most common in real Ogol HTML)
-  const valueMatch = afterLabel.match(
-    /card-data__value[s]?"[^>]*>(?:\s*(?:<[^>]+>\s*)*)?([^<]+)/i
+  const newMatch = html.match(newStructureRegex);
+  if (newMatch?.[1]?.trim()) return newMatch[1].trim();
+  
+  // Pattern 2: Estrutura antiga com card-data__value
+  const oldStructureRegex = new RegExp(
+    `${escapedLabel}[^<]*<[^>]*card-data__value[^>]*>([^<]+)`,
+    "i"
   );
-  if (valueMatch?.[1]?.trim()) return valueMatch[1].trim();
-
-  // Pattern 2: direct text after closing tag (e.g. "Sem Clube" in a div)
-  const directMatch = afterLabel.match(/<\/span>\s*<[^>]+>\s*([^<]+)/i);
-  if (directMatch?.[1]?.trim()) return directMatch[1].trim();
-
-  // Pattern 3: plain text on same line (markdown fallback)
-  const plainMatch = afterLabel.match(/^\s+([^\n<]+)/);
-  if (plainMatch?.[1]?.trim()) return plainMatch[1].trim();
+  const oldMatch = html.match(oldStructureRegex);
+  if (oldMatch?.[1]?.trim()) return oldMatch[1].trim();
+  
+  // Pattern 3: Fallback - procura por label seguido de qualquer valor
+  const fallbackRegex = new RegExp(`${escapedLabel}[^<]*<[^>]*>\\s*([^<]+)`, "i");
+  const fallbackMatch = html.match(fallbackRegex);
+  if (fallbackMatch?.[1]?.trim()) return fallbackMatch[1].trim();
 
   return null;
 }
@@ -160,10 +159,14 @@ export function parseOgolHtml(html: string): OgolPlayerData {
     result.pe = mapPe(peRaw);
   }
 
-  // Altura
-  const alturaRaw = extractField(html, "Altura");
+  // Altura - pode estar como "Altura" ou "Altura / Peso"
+  let alturaRaw = extractField(html, "Altura");
+  if (!alturaRaw) {
+    alturaRaw = extractField(html, "Altura / Peso");
+  }
   if (alturaRaw) {
-    const altMatch = alturaRaw.match(/(\d{3})\s*cm/);
+    // Tenta extrair altura em cm (ex: "171 cm / 66 kg" ou "171 cm")
+    const altMatch = alturaRaw.match(/(\d{2,3})\s*cm/);
     if (altMatch) {
       const cm = parseInt(altMatch[1], 10);
       result.altura = parseFloat((cm / 100).toFixed(2));
