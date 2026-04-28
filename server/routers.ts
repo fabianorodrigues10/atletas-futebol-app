@@ -94,7 +94,7 @@ export const appRouter = router({
           naturalidade: input.naturalidade || null,
           dataNascimento: input.dataNascimento ? new Date(input.dataNascimento) : null,
           idade: input.idade || null,
-          altura: input.altura?.toString() || null,
+          altura: input.altura || null,
           pe: input.pe || null,
           link: input.link || null,
           escala: input.escala || null,
@@ -127,11 +127,8 @@ export const appRouter = router({
       .mutation(async ({ ctx, input }) => {
         const { id, ...data } = input;
         
-        // Converte altura para string se fornecida
+        // Não converter altura para string - deixar como número
         const updateData: any = { ...data };
-        if (data.altura !== undefined) {
-          updateData.altura = data.altura.toString();
-        }
         
         // Manter dataNascimento como string (formato dd/mm/aa)
         // Não converter para Date - deixar o banco armazenar como está
