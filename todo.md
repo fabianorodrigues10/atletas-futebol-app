@@ -338,6 +338,18 @@
 - [x] Adicionar campo "Duelo Aéreo Perdido" na seção Defensivo do modal de estatísticas
 - [x] Adicionar os campos no tipo, estado inicial e schema do banco (colunas jogosAereos e duelosAereosPerdidos criadas via ALTER TABLE)
 
+## Monitoramento DNS e Publicação
+- [ ] Domínio marciliodias.app.br acessível via HTTPS (monitorando a cada 5 minutos)
+- [ ] App respondendo corretamente em produção
+
+## Autenticação de Usuário (Após Publicação)
+- [ ] Implementar página de login (usuário + senha)
+- [ ] Criar sistema de permissões (Admin vs Visualização)
+- [ ] Usuário admin pode editar todos os dados
+- [ ] Usuários comuns apenas visualizam
+- [ ] Proteger rotas com autenticação
+- [ ] Armazenar credenciais no banco de dados (com hash seguro)
+
 ## Feature: Módulo Scout por Jogo
 - [ ] Criar tabela `jogos` no banco (jogo, competição, data, horário, local, árbitro, assistentes, renda, público, gols, placar, userId)
 - [ ] Criar tabela `scoutJogo` no banco (jogoId, atletaId, userId + todos os campos de estatísticas + notas)
