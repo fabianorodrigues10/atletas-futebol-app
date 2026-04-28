@@ -389,8 +389,12 @@ export default function AtletaFormScreen() {
 
       let alturaNum: number | undefined = undefined;
       if (altura && altura.trim()) {
-        const parsed = Number(altura);
+        let parsed = Number(altura.replace(',', '.'));
         if (!isNaN(parsed) && parsed > 0) {
+          // Se o número é menor que 100, assume que está em metros e converte para centímetros
+          if (parsed < 100) {
+            parsed = Math.round(parsed * 100);
+          }
           alturaNum = parsed;
         }
       }
@@ -535,8 +539,12 @@ export default function AtletaFormScreen() {
 
       let alturaNum: number | undefined = undefined;
       if (altura && altura.trim()) {
-        const parsed = Number(altura);
+        let parsed = Number(altura.replace(',', '.'));
         if (!isNaN(parsed) && parsed > 0) {
+          // Se o número é menor que 100, assume que está em metros e converte para centímetros
+          if (parsed < 100) {
+            parsed = Math.round(parsed * 100);
+          }
           alturaNum = parsed;
         }
       }

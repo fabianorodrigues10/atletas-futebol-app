@@ -338,6 +338,13 @@
 - [x] Adicionar campo "Duelo Aéreo Perdido" na seção Defensivo do modal de estatísticas
 - [x] Adicionar os campos no tipo, estado inicial e schema do banco (colunas jogosAereos e duelosAereosPerdidos criadas via ALTER TABLE)
 
+## Formatação de Altura
+- [x] Criar função formatarAltura() para converter 165 para 1,65
+- [x] Aplicar em marcilio.tsx (ficha do atleta)
+- [x] Aplicar em stats.tsx (estatísticas de altura)
+- [x] Aplicar em atleta/detalhes/[id].tsx (detalhes do atleta)
+- [x] Aplicar em testar-foto.tsx (teste de foto)
+
 ## Monitoramento DNS e Publicação
 - [ ] Domínio marciliodias.app.br acessível via HTTPS (monitorando a cada 5 minutos)
 - [ ] App respondendo corretamente em produção
