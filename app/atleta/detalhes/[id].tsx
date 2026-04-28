@@ -15,6 +15,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
+import { formatarAltura } from "@/lib/utils";
 import { getApiBaseUrl } from "@/constants/oauth";
 
 export default function AtletaDetalhesScreen() {
@@ -288,7 +289,7 @@ export default function AtletaDetalhesScreen() {
               })()}
 
               {atleta.altura != null && (
-                <InfoRow icon="ruler" label="Altura" value={`${Number(atleta.altura).toFixed(2)} m`} colors={colors} />
+                <InfoRow icon="ruler" label="Altura" value={`${formatarAltura(atleta.altura)} m`} colors={colors} />
               )}
               {atleta.pe && (
                 <InfoRow

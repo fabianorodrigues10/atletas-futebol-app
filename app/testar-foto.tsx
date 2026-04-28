@@ -3,6 +3,7 @@ import { View, Text, ScrollView, ActivityIndicator, Pressable, Image, Alert, Tex
 import { ScreenContainer } from "@/components/screen-container";
 import { useRouter } from "expo-router";
 import { trpc } from "@/lib/trpc";
+import { formatarAltura } from "@/lib/utils";
 
 export default function TestarFotoScreen() {
   const router = useRouter();
@@ -132,7 +133,7 @@ export default function TestarFotoScreen() {
             {resultado.altura && (
               <View className="mb-2">
                 <Text className="text-xs text-muted">Altura:</Text>
-                <Text className="text-foreground">{resultado.altura}m</Text>
+                <Text className="text-foreground">{formatarAltura(resultado.altura)} m</Text>
               </View>
             )}
 

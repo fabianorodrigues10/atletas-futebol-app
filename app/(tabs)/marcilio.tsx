@@ -17,6 +17,7 @@ import {
 import { ScreenContainer } from "@/components/screen-container";
 import { useRouter } from "expo-router";
 import { getApiBaseUrl } from "@/constants/oauth";
+import { formatarAltura } from "@/lib/utils";
 import Svg, { Polygon, Circle, Line, Text as SvgText } from "react-native-svg";
 const marcilioDiasShield = require("@/assets/images/marcilio-dias-shield.png") as any;
 
@@ -465,7 +466,7 @@ function CardAtleta({
           <Text style={styles.cardPosicao}>{atleta.posicao || "—"}{atleta.segundaPosicao ? ` / ${atleta.segundaPosicao}` : ""}</Text>
           <View style={{ flexDirection: "row", gap: 8, marginTop: 2 }}>
             {idade && <Text style={styles.cardInfo}>{idade} anos</Text>}
-            {atleta.altura && <Text style={styles.cardInfo}>{parseFloat(atleta.altura).toFixed(2)}m</Text>}
+            {atleta.altura && <Text style={styles.cardInfo}>{formatarAltura(atleta.altura)} m</Text>}
           </View>
         </View>
         <TouchableOpacity
@@ -804,7 +805,7 @@ export default function MarcilioScreen() {
     const idades = elenco.map(a => calcularIdade(a.dataNascimento, a.idade)).filter(Boolean) as number[];
     const alturas = elenco.map(a => parseFloat(a.altura || "0")).filter(Boolean);
     const mediaIdade = idades.length ? (idades.reduce((a, b) => a + b, 0) / idades.length).toFixed(1) : "—";
-    const mediaAltura = alturas.length ? (alturas.reduce((a, b) => a + b, 0) / alturas.length).toFixed(2) : "—";
+    const mediaAltura = alturas.length ? formatarAltura(alturas.reduce((a, b) => a + b, 0) / alturas.length) : "—";
     const totalGols = elenco.reduce((acc, a) => acc + (a.estatisticas?.gols || 0), 0);
     const totalMinutos = elenco.reduce((acc, a) => acc + (a.estatisticas?.minutosJogados || 0), 0);
     const porPosicao: Record<string, number> = {};
