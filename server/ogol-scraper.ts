@@ -235,20 +235,27 @@ function parseOgolHtml(html: string): OgolPlayerData {
  * Scraping com Playwright como fallback para Cloudflare
  */
 async function scrapeWithPlaywright(url: string): Promise<string | null> {
+  const startTime = Date.now();
+  const MAX_DURATION = 12000; // 12s timeout maximo
+  
   try {
     const playwright = await import("playwright");
-    const browser = await playwright.chromium.launch();
+    const browser = await playwright.chromium.launch({ headless: true });
     const context = await browser.createBrowserContext();
     const page = await context.newPage();
     
     // Definir user agent para evitar bloqueios
     await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
     
-    // Navegar para a URL com timeout de 30s
-    await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
+    // Navegar para a URL com timeout de 10s (reduzido de 30s)
+    try {
+      await page.goto(url, { waitUntil: "domcontentloaded", timeout: 10000 });
+    } catch (navError) {
+      console.log("[Ogol Scraper] Navegacao falhou, continuando com HTML parcial...");
+    }
     
-    // Aguardar o carregamento do conteudo principal
-    await page.waitForSelector(".card-data__label", { timeout: 10000 }).catch(() => null);
+    // Aguardar o carregamento do conteudo principal (max 2s)
+    await page.waitForSelector(".card-data__label", { timeout: 2000 }).catch(() => null);
     
     // Extrair HTML
     const html = await page.content();
@@ -256,9 +263,18 @@ async function scrapeWithPlaywright(url: string): Promise<string | null> {
     // Fechar browser
     await browser.close();
     
+    const duration = Date.now() - startTime;
+    console.log(`[Ogol Scraper] Playwright completado em ${duration}ms`);
+    
+    // Se demorou muito, avisar
+    if (duration > 10000) {
+      console.warn(`[Ogol Scraper] Playwright demorou ${duration}ms (limite: ${MAX_DURATION}ms)`);
+    }
+    
     return html;
   } catch (error: any) {
-    console.error("[Ogol Scraper] Playwright error:", error.message);
+    const duration = Date.now() - startTime;
+    console.error(`[Ogol Scraper] Playwright error (${duration}ms): ${error.message}`);
     return null;
   }
 }
@@ -288,6 +304,10 @@ export function registerOgolRoutes(app: any) {
       
       // Tentar fetch normal primeiro
       try {
+        // Usar AbortController para timeout real (fetch nativo nao suporta timeout)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout
+        
         const response = await fetch(url, {
           headers: {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -298,8 +318,10 @@ export function registerOgolRoutes(app: any) {
             "Cache-Control": "no-cache",
             "Pragma": "no-cache",
           },
-          timeout: 10000,
+          signal: controller.signal,
         });
+        
+        clearTimeout(timeoutId);
 
         if (response.ok) {
           const buffer = await response.arrayBuffer();
