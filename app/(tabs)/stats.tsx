@@ -4,7 +4,6 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
-import { formatarAltura } from "@/lib/utils";
 import { BarChart, PieChart } from "react-native-chart-kit";
 import { useMemo, useState } from "react";
 
@@ -108,12 +107,12 @@ export default function StatsScreen() {
       posicoes, idades, escalas, clubes,
       idadeMedia: idadesArray.length ? Math.round(idadesArray.reduce((a, b) => a + b, 0) / idadesArray.length * 10) / 10 : 0,
       idadeMediana: mediana(idadesArray),
-      alturaMedia: alturasArray.length ? formatarAltura(alturasArray.reduce((a, b) => a + b, 0) / alturasArray.length) : "0",
-      alturaMediana: formatarAltura(mediana(alturasArray)),
+      alturaMedia: alturasArray.length ? (alturasArray.reduce((a, b) => a + b, 0) / alturasArray.length).toFixed(2) : "0",
+      alturaMediana: mediana(alturasArray).toFixed(2),
       idadeMin: idadesArray.length ? Math.min(...idadesArray) : 0,
       idadeMax: idadesArray.length ? Math.max(...idadesArray) : 0,
-      alturaMin: alturasArray.length ? formatarAltura(Math.min(...alturasArray)) : "0",
-      alturaMax: alturasArray.length ? formatarAltura(Math.max(...alturasArray)) : "0",
+      alturaMin: alturasArray.length ? Math.min(...alturasArray).toFixed(2) : "0",
+      alturaMax: alturasArray.length ? Math.max(...alturasArray).toFixed(2) : "0",
     };
   }, [atletasParaAnalise]);
 
@@ -171,7 +170,7 @@ export default function StatsScreen() {
 
     const alturas = base.map((a: any) => parseFloat(a.altura)).filter(v => !isNaN(v)) as number[];
     const mediaAltura = alturas.length
-      ? formatarAltura(alturas.reduce((s, v) => s + v, 0) / alturas.length)
+      ? (alturas.reduce((s, v) => s + v, 0) / alturas.length).toFixed(2)
       : null;
 
     const statsMap = new Map((estatisticasTemporada as any[]).map(s => [s.atletaId, s]));
@@ -705,7 +704,7 @@ export default function StatsScreen() {
                     )}
                     {item.altura && (
                       <View style={{ backgroundColor: colors.surface, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 }}>
-                        <Text style={{ color: colors.muted, fontSize: 11 }}>{formatarAltura(item.altura)} m</Text>
+                        <Text style={{ color: colors.muted, fontSize: 11 }}>{item.altura} m</Text>
                       </View>
                     )}
                     {item.clube && (

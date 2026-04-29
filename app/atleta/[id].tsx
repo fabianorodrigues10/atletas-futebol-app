@@ -389,12 +389,8 @@ export default function AtletaFormScreen() {
 
       let alturaNum: number | undefined = undefined;
       if (altura && altura.trim()) {
-        let parsed = Number(altura.replace(',', '.'));
+        const parsed = Number(altura);
         if (!isNaN(parsed) && parsed > 0) {
-          // Se o número é menor que 100, assume que está em metros e converte para centímetros
-          if (parsed < 100) {
-            parsed = Math.round(parsed * 100);
-          }
           alturaNum = parsed;
         }
       }
@@ -414,7 +410,7 @@ export default function AtletaFormScreen() {
         clube: (clubeFormatado || "").toLowerCase().trim(),
         dataNascimento: dataNascimentoISO,
         idade: idadeNum,
-        altura: alturaNum ? alturaNum / 100 : undefined,
+        altura: alturaNum,
         pe: (pe || "").toLowerCase().trim(),
         link: (link || "").toLowerCase().trim(),
         escala: (escala || "").toLowerCase().trim(),
@@ -539,12 +535,8 @@ export default function AtletaFormScreen() {
 
       let alturaNum: number | undefined = undefined;
       if (altura && altura.trim()) {
-        let parsed = Number(altura.replace(',', '.'));
+        const parsed = Number(altura);
         if (!isNaN(parsed) && parsed > 0) {
-          // Se o número é menor que 100, assume que está em metros e converte para centímetros
-          if (parsed < 100) {
-            parsed = Math.round(parsed * 100);
-          }
           alturaNum = parsed;
         }
       }
@@ -564,7 +556,7 @@ export default function AtletaFormScreen() {
         clube: clubeFormatado || undefined,
         dataNascimento: dataNascimentoISO,
         idade: idadeNum,
-        altura: alturaNum ? alturaNum / 100 : undefined,
+        altura: alturaNum,
         pe: pe as any || undefined,
         link: link || undefined,
         escala: escala || undefined,
