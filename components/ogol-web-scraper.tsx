@@ -208,8 +208,8 @@ const INJECTED_JS = `
       // Tenta de novo em 2 segundos (a página pode ainda estar carregando)
       if (!window.__ogolRetries) window.__ogolRetries = 0;
       window.__ogolRetries++;
-      if (window.__ogolRetries < 5) {
-        setTimeout(tryExtract, 2000);
+      if (window.__ogolRetries < 10) {
+        setTimeout(tryExtract, 3000);
       } else {
         window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'error', message: 'Não foi possível extrair dados desta página. Verifique se o link está correto.' }));
       }
@@ -217,7 +217,7 @@ const INJECTED_JS = `
   }
 
   // Aguarda um pouco para a página renderizar
-  setTimeout(tryExtract, 1500);
+  setTimeout(tryExtract, 3000);
 })();
 true;
 `;
@@ -281,11 +281,11 @@ export function OgolWebScraper({ url, onResult, onError, onLoadStart }: OgolWebS
     if (url) {
       setKey((k) => k + 1);
       onLoadStart?.();
-      // Timeout de segurança: 20 segundos
+      // Timeout de segurança: 45 segundos (aumentado para dar mais tempo de carregamento)
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       timeoutRef.current = setTimeout(() => {
-        onError("Tempo esgotado. O site do Ogol pode estar lento. Tente novamente.");
-      }, 20000);
+        onError("Tempo esgotado. O site do Ogol pode estar lento ou indisponível. Tente novamente ou preencha manualmente.");
+      }, 45000);
     }
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
