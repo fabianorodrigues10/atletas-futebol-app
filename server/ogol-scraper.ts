@@ -1,4 +1,4 @@
-/**
+/*
  * Ogol Scraper - Extrai dados de atletas do site ogol.com.br
  * Faz fetch da página HTML e parseia os dados pessoais do jogador.
  */
@@ -70,42 +70,12 @@ function mapPe(ogolPe: string | null): string | null {
 }
 
 /**
- * Extrai o valor de um campo específico do HTML do Ogol.
- * Usa padrões específicos baseados na estrutura real do HTML.
- */
-function extractField(html: string, labelText: string): string | null {
-  // Escapar caracteres especiais no label para usar em regex
-  const escapedLabel = labelText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-  // Pattern 1: Label seguido por card-data__value (caso comum)
-  const pattern1 = new RegExp(
-    `card-data__label"[^>]*>${escapedLabel}<\\/span>\\s*<span class="card-data__value"[^>]*>([^<]+)<`,
-    "i"
-  );
-  const match1 = html.match(pattern1);
-  if (match1?.[1]) {
-    const text = match1[1].trim();
-    if (text.length > 0) return text;
-  }
-
-  // Pattern 2: Label seguido por card-data__values (plural, usado para Posição)
-  const pattern2 = new RegExp(
-    `card-data__label"[^>]*>${escapedLabel}<\\/span>\\s*<span class="card-data__values"[^>]*>\\s*<span class="card-data__value"[^>]*>([^<]+)<`,
-    "i"
-  );
-  const match2 = html.match(pattern2);
-  if (match2?.[1]) {
-    const text = match2[1].trim();
-    if (text.length > 0) return text;
-  }
-
-  return null;
-}
-
-/**
- * Parseia HTML do Ogol e extrai dados do jogador
+ * Parseia o HTML do Ogol e extrai os dados do jogador usando cheerio
  */
 function parseOgolHtml(html: string): OgolPlayerData {
+  const cheerio = require('cheerio');
+  const $ = cheerio.load(html);
+  
   const result: OgolPlayerData = {
     nome: null,
     posicao: null,
@@ -118,18 +88,44 @@ function parseOgolHtml(html: string): OgolPlayerData {
     naturalidade: null,
   };
 
+  // Função auxiliar para extrair valor de um label usando cheerio
+  const getFieldValue = (labelText: string): string | null => {
+    let value: string | null = null;
+    
+    // Procura por span com class card-data__label que contenha o texto
+    $('span.card-data__label').each((i, el) => {
+      const label = $(el).text().trim();
+      // Verifica se o label contém o texto procurado (case-insensitive)
+      if (label.toLowerCase().includes(labelText.toLowerCase())) {
+        // Procura pelo próximo span com class card-data__value ou card-data__values
+        const parent = $(el).closest('.card-data__row');
+        if (parent.length) {
+          // Tenta encontrar card-data__value
+          let valueSpan = parent.find('span.card-data__value').first();
+          if (!valueSpan.length) {
+            // Se não encontrou, tenta card-data__values > card-data__value
+            valueSpan = parent.find('span.card-data__values span.card-data__value').first();
+          }
+          if (valueSpan.length) {
+            value = valueSpan.text().trim();
+          }
+        }
+      }
+    });
+    
+    return value && value.length > 0 ? value : null;
+  };
+  
   // Nome completo
-  const nomeRaw = extractField(html, "Nome");
+  const nomeRaw = getFieldValue('Nome');
   if (nomeRaw && nomeRaw.length > 2) {
     result.nome = nomeRaw;
   }
 
   // Data de nascimento e idade
-  const dataRaw = extractField(html, "Data de Nascimento");
+  const dataRaw = getFieldValue('Data de Nascimento');
   if (dataRaw) {
-    const dataMatch = dataRaw.match(
-      /(\d{4})-(\d{2})-(\d{2})\s*\((\d+)\s*anos?\)/
-    );
+    const dataMatch = dataRaw.match(/(\d{4})-(\d{2})-(\d{2})\s*\((\d+)\s*anos?\)/);
     if (dataMatch) {
       const yy = dataMatch[1].slice(2);
       result.dataNascimento = `${dataMatch[3]}/${dataMatch[2]}/${yy}`; // dd/mm/aa
@@ -138,25 +134,25 @@ function parseOgolHtml(html: string): OgolPlayerData {
   }
 
   // Posição
-  const posRaw = extractField(html, "Posição");
+  const posRaw = getFieldValue('Posição');
   if (posRaw && posRaw.length < 30) {
     result.posicao = mapPosicao(posRaw);
   }
 
   // Pé preferencial
-  const peRaw = extractField(html, "Pé preferencial");
+  const peRaw = getFieldValue('Pé preferencial');
   if (peRaw) {
     result.pe = mapPe(peRaw);
   }
 
   // Naturalidade
-  const naturalidadeRaw = extractField(html, "Naturalidade");
+  const naturalidadeRaw = getFieldValue('Naturalidade');
   if (naturalidadeRaw && naturalidadeRaw.length > 0) {
     result.naturalidade = naturalidadeRaw;
   }
 
   // Altura / Peso
-  const alturaRaw = extractField(html, "Altura / Peso");
+  const alturaRaw = getFieldValue('Altura / Peso') || getFieldValue('Altura');
   if (alturaRaw) {
     const altMatch = alturaRaw.match(/(\d{3})\s*cm/);
     if (altMatch) {
@@ -165,65 +161,31 @@ function parseOgolHtml(html: string): OgolPlayerData {
     }
   }
 
-  // Foto do atleta - múltiplos padrões
-  // Procura por img tags com src contendo foto/imagem do jogador
-  console.log(`[Ogol Parser] Procurando por foto...`);
+  // Foto do atleta - procura por img tags
   const fotoPatterns = [
-    // Padrão 1: img com class contendo "player"
-    /<img[^>]*class="[^"]*player[^"]*"[^>]*src="([^"]+)"/i,
-    // Padrão 2: img com class contendo "photo"
-    /<img[^>]*class="[^"]*photo[^"]*"[^>]*src="([^"]+)"/i,
-    // Padrão 3: img com class contendo "jogador"
-    /<img[^>]*class="[^"]*jogador[^"]*"[^>]*src="([^"]+)"/i,
-    // Padrão 4: img com src contendo /jogador/
-    /<img[^>]*src="([^"]*\/jogador\/[^"]+)"/i,
-    // Padrão 5: img com src contendo /player
-    /<img[^>]*src="([^"]*\/player[^"]+)"/i,
-    // Padrão 6: img com src contendo /fotos/ ou /images/
-    /<img[^>]*src="([^"]*\/fotos\/[^"]+)"/i,
-    /<img[^>]*src="([^"]*\/images\/[^"]+)"/i,
-    // Padrão 7: Qualquer img dentro de divs com id/class de perfil
-    /<div[^>]*class="[^"]*perfil[^"]*"[^>]*>.*?<img[^>]*src="([^"]+)"/is,
-    // Padrão 8: img com alt contendo nome do jogador
-    /<img[^>]*alt="[^"]*jogador[^"]*"[^>]*src="([^"]+)"/i,
-    // Padrão 9: Procura por qualquer img com src que não seja placeholder
-    /<img[^>]*src="([^"]*(?:jpg|jpeg|png|webp)[^"]*jogador[^"]*)"/i,
-    /<img[^>]*src="([^"]*(?:jpg|jpeg|png|webp)[^"]*player[^"]*)"/i,
+    // Padrão 1: img com class contendo "player" ou "jogador"
+    'img[class*="player"], img[class*="jogador"]',
+    // Padrão 2: img com src contendo /jogador/ ou /player
+    'img[src*="/jogador/"], img[src*="/player"]',
+    // Padrão 3: img com src contendo /fotos/ ou /images/
+    'img[src*="/fotos/"], img[src*="/images/"]',
+    // Padrão 4: Qualquer img dentro de divs com id/class de perfil
+    'div[class*="perfil"] img, div[id*="perfil"] img',
   ];
   
-  for (const pattern of fotoPatterns) {
-    const match = html.match(pattern);
-    if (match?.[1]) {
-      let fotoUrl = match[1].trim();
-      // Validar que não é um placeholder ou ícone
-      if (fotoUrl.includes("placeholder") || fotoUrl.includes("icon") || fotoUrl.includes("default")) {
-        continue;
-      }
-      // Converter URLs relativas em absolutas
-      if (fotoUrl.startsWith("/")) {
-        fotoUrl = "https://www.ogol.com.br" + fotoUrl;
-      } else if (!fotoUrl.startsWith("http")) {
-        fotoUrl = "https://www.ogol.com.br/" + fotoUrl;
-      }
-      result.fotoUrl = fotoUrl;
-      break;
-    }
-  }
-  
-  // Se não encontrou com os padrões, tenta uma busca mais genérica
-  if (!result.fotoUrl) {
-    // Procura por qualquer img tag com src que pareça uma foto
-    const genericPattern = /<img[^>]*src="([^"]*\.(?:jpg|jpeg|png|webp))[^"]*"[^>]*>/i;
-    const match = html.match(genericPattern);
-    if (match?.[1]) {
-      let fotoUrl = match[1].trim();
-      if (!fotoUrl.includes("placeholder") && !fotoUrl.includes("icon")) {
-        if (fotoUrl.startsWith("/")) {
-          fotoUrl = "https://www.ogol.com.br" + fotoUrl;
-        } else if (!fotoUrl.startsWith("http")) {
-          fotoUrl = "https://www.ogol.com.br/" + fotoUrl;
+  for (const selector of fotoPatterns) {
+    const img = $(selector).first();
+    if (img.length) {
+      let fotoUrl = img.attr('src');
+      if (fotoUrl && !fotoUrl.includes('placeholder') && !fotoUrl.includes('icon') && !fotoUrl.includes('default')) {
+        // Converter URLs relativas em absolutas
+        if (fotoUrl.startsWith('/')) {
+          fotoUrl = 'https://www.ogol.com.br' + fotoUrl;
+        } else if (!fotoUrl.startsWith('http')) {
+          fotoUrl = 'https://www.ogol.com.br/' + fotoUrl;
         }
         result.fotoUrl = fotoUrl;
+        break;
       }
     }
   }
@@ -345,20 +307,23 @@ export function registerOgolRoutes(app: any) {
       }
 
       console.log(`[Ogol Scraper] HTML length: ${html.length}`);
+      
+      // Detectar Cloudflare challenge ou conteúdo inválido
+      const isCloudflareChallenge = html.includes('cf-challenge') || html.includes('cloudflare') || html.includes('turnstile') || html.includes('captcha');
+      const hasValidContent = html.includes('card-data__label') || html.includes('DADOS PESSOAIS') || html.includes('Dados Pessoais');
+      
+      if (isCloudflareChallenge || !hasValidContent) {
+        console.error('[Ogol Scraper] Cloudflare challenge detectado ou conteúdo inválido');
+        console.error(`  - isCloudflareChallenge: ${isCloudflareChallenge}`);
+        console.error(`  - hasValidContent: ${hasValidContent}`);
+        console.error(`  - HTML preview: ${html.substring(0, 500)}`);
+        res.status(502).json({ error: "Erro ao acessar o Ogol (Cloudflare bloqueado ou conteúdo indisponível)" });
+        return;
+      }
 
       // Parsear os dados
       const data = parseOgolHtml(html);
       console.log(`[Ogol Scraper] Parsed data:`, JSON.stringify(data));
-      
-      // Debug: Log de imagens encontradas
-      const imgMatches = html.match(/<img[^>]*src="([^"]+)"[^>]*>/g) || [];
-      console.log(`[Ogol Scraper] Total de img tags encontradas: ${imgMatches.length}`);
-      if (imgMatches.length > 0) {
-        console.log(`[Ogol Scraper] Primeiras 5 img tags:`);
-        imgMatches.slice(0, 5).forEach((img, idx) => {
-          console.log(`  ${idx + 1}. ${img.substring(0, 150)}...`);
-        });
-      }
 
       res.json({ success: true, data });
     } catch (error: any) {
