@@ -417,21 +417,19 @@ export default function AtletaFormScreen() {
         valencia: (valencia || "").toLowerCase().trim(),
       };
       
-      // Procurar por atleta com TODOS os dados idênticos
+      // Procurar por atleta com nome + posicao + link identicos
       const atletaDuplicado = todosAtletas.find((a: any) => {
-        return (
-          a.nome.toLowerCase().trim() === novoAtleta.nome &&
-          (a.posicao || "").toLowerCase().trim() === novoAtleta.posicao &&
-          (a.segundaPosicao || "").toLowerCase().trim() === novoAtleta.segundaPosicao &&
-          (a.clube || "").toLowerCase().trim() === novoAtleta.clube &&
-          a.dataNascimento === novoAtleta.dataNascimento &&
-          a.idade === novoAtleta.idade &&
-          a.altura === novoAtleta.altura &&
-          (a.pe || "").toLowerCase().trim() === novoAtleta.pe &&
-          (a.link || "").toLowerCase().trim() === novoAtleta.link &&
-          (a.escala || "").toLowerCase().trim() === novoAtleta.escala &&
-          (a.valencia || "").toLowerCase().trim() === novoAtleta.valencia
-        );
+        const nomeIgual = a.nome.toLowerCase().trim() === novoAtleta.nome;
+        const posicaoIgual = (a.posicao || "").toLowerCase().trim() === novoAtleta.posicao;
+        const linkIgual = (a.link || "").toLowerCase().trim() === novoAtleta.link;
+        
+        // Se o link esta preenchido, verificar nome + posicao + link
+        if (novoAtleta.link) {
+          return nomeIgual && posicaoIgual && linkIgual;
+        }
+        
+        // Se o link nao esta preenchido, verificar apenas nome + posicao
+        return nomeIgual && posicaoIgual;
       });
       
       if (atletaDuplicado) {
@@ -933,18 +931,32 @@ export default function AtletaFormScreen() {
   };
   
   const confirmarExclusao = async () => {
-    try {
-      console.log("[Delete] Iniciando exclusão do atleta ID:", id);
-      await deleteMutation.mutateAsync({ id: Number(id) });
-      console.log("[Delete] Sucesso");
-      setShowDeleteModal(false);
-      Alert.alert("Sucesso", "Atleta excluído com sucesso");
-      router.back();
-    } catch (error: any) {
-      console.error("[Delete] Erro:", error);
-      Alert.alert("Erro", error.message || "Erro ao excluir atleta");
-      setShowDeleteModal(false);
-    }
+    // Mostrar confirmacao antes de deletar
+    Alert.alert(
+      "Tem certeza que deseja excluir?",
+      `Voce esta prestes a excluir o atleta "${nome}". Esta acao nao pode ser desfeita.`,
+      [
+        { text: "Nao", style: "cancel" },
+        {
+          text: "Sim, excluir",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              console.log("[Delete] Iniciando exclusao do atleta ID:", id);
+              await deleteMutation.mutateAsync({ id: Number(id) });
+              console.log("[Delete] Sucesso");
+              setShowDeleteModal(false);
+              Alert.alert("Sucesso", "Atleta excluido com sucesso");
+              router.back();
+            } catch (error: any) {
+              console.error("[Delete] Erro:", error);
+              Alert.alert("Erro", error.message || "Erro ao excluir atleta");
+              setShowDeleteModal(false);
+            }
+          },
+        },
+      ]
+    );
   };
   
   const cancelarExclusao = () => {
