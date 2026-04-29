@@ -492,3 +492,8 @@
 - [ ] Testar autenticação com admin (admin / Marcilio1919!)
 - [ ] Testar cadastro de usuário comum
 - [ ] Testar permissões (visualizar vs editar)
+
+## Bug: Busca no Radar não encontra atletas com acentos ou espaços extras
+- [x] Investigar por que certos atletas não aparecem na busca do Radar
+- [x] Implementar normalização de strings (remover acentos e espaços extras) na busca
+- [x] Adicionar testes para validar a busca normalizada (8 testes passando)
