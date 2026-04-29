@@ -542,6 +542,40 @@ export const appRouter = router({
       }),
   }),
 
+  // ==================== MANUTENCAO ====================
+  manutencao: router({
+    // Corrigir altura de atletas que estao em formato antigo (ex: 168.00 em vez de 1.68)
+    corrigirAltura: publicProcedure.mutation(async ({ ctx }) => {
+      try {
+        const userId = ctx.user?.id || 1;
+        const atletas = await db.getAtletas(userId);
+        
+        let corrigidos = 0;
+        for (const atleta of atletas) {
+          // Se altura > 10, significa que esta em centimetros (ex: 168.00)
+          if (atleta.altura && atleta.altura > 10) {
+            const novaAltura = Math.round((atleta.altura / 100) * 100) / 100; // Dividir por 100 e arredondar para 2 casas
+            await db.updateAtleta(atleta.id, userId, { altura: novaAltura });
+            corrigidos++;
+          }
+        }
+        
+        return {
+          success: true,
+          message: `${corrigidos} atletas corrigidos com sucesso`,
+          corrigidos,
+        };
+      } catch (error) {
+        console.error("Erro ao corrigir altura:", error);
+        return {
+          success: false,
+          message: "Erro ao corrigir altura dos atletas",
+          error: String(error),
+        };
+      }
+    }),
+  }),
+
   // ==================== RELATORIOS ====================
   relatorios: router({
     // Gerar relatório em PDF
