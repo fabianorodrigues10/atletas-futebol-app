@@ -413,15 +413,13 @@ export default function HomeScreen() {
           <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
             <TouchableOpacity
               onPress={handleAddAtleta}
-              disabled={!isAdmin}
               style={{
                 width: 40,
                 height: 40,
                 borderRadius: 20,
-                backgroundColor: isAdmin ? colors.primary : colors.muted,
+                backgroundColor: colors.primary,
                 justifyContent: 'center',
                 alignItems: 'center',
-                opacity: isAdmin ? 1 : 0.5,
               }}
             >
               <IconSymbol name="plus" size={20} color="white" />
