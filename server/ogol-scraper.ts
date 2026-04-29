@@ -232,6 +232,38 @@ function parseOgolHtml(html: string): OgolPlayerData {
 }
 
 /**
+ * Scraping com Playwright como fallback para Cloudflare
+ */
+async function scrapeWithPlaywright(url: string): Promise<string | null> {
+  try {
+    const playwright = await import("playwright");
+    const browser = await playwright.chromium.launch();
+    const context = await browser.createBrowserContext();
+    const page = await context.newPage();
+    
+    // Definir user agent para evitar bloqueios
+    await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+    
+    // Navegar para a URL com timeout de 30s
+    await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
+    
+    // Aguardar o carregamento do conteudo principal
+    await page.waitForSelector(".card-data__label", { timeout: 10000 }).catch(() => null);
+    
+    // Extrair HTML
+    const html = await page.content();
+    
+    // Fechar browser
+    await browser.close();
+    
+    return html;
+  } catch (error: any) {
+    console.error("[Ogol Scraper] Playwright error:", error.message);
+    return null;
+  }
+}
+
+/**
  * Registra a rota Express para scraping do Ogol
  */
 export function registerOgolRoutes(app: any) {
@@ -252,28 +284,43 @@ export function registerOgolRoutes(app: any) {
 
       console.log(`[Ogol Scraper] Fetching: ${url}`);
 
-      // Fetch da página com headers que contornam Cloudflare
-      const response = await fetch(url, {
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-          "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8",
-          "Referer": "https://www.ogol.com.br/",
-          "Origin": "https://www.ogol.com.br",
-          "Cache-Control": "no-cache",
-          "Pragma": "no-cache",
-        },
-      });
+      let html: string | null = null;
+      
+      // Tentar fetch normal primeiro
+      try {
+        const response = await fetch(url, {
+          headers: {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8",
+            "Referer": "https://www.ogol.com.br/",
+            "Origin": "https://www.ogol.com.br",
+            "Cache-Control": "no-cache",
+            "Pragma": "no-cache",
+          },
+          timeout: 10000,
+        });
 
-      if (!response.ok) {
-        res.status(502).json({ error: `Erro ao acessar o Ogol: ${response.status}` });
+        if (response.ok) {
+          const buffer = await response.arrayBuffer();
+          const decoder = new TextDecoder("iso-8859-1");
+          html = decoder.decode(buffer);
+          console.log(`[Ogol Scraper] Fetch bem-sucedido, HTML length: ${html.length}`);
+        }
+      } catch (fetchError: any) {
+        console.log(`[Ogol Scraper] Fetch falhou: ${fetchError.message}, tentando Playwright...`);
+      }
+      
+      // Se fetch falhou ou retornou vazio, usar Playwright
+      if (!html || html.length < 1000) {
+        console.log(`[Ogol Scraper] Usando Playwright como fallback...`);
+        html = await scrapeWithPlaywright(url);
+      }
+      
+      if (!html) {
+        res.status(502).json({ error: "Erro ao acessar o Ogol (Cloudflare bloqueado)" });
         return;
       }
-
-      // Decodificar HTML com tratamento de encoding
-      const buffer = await response.arrayBuffer();
-      const decoder = new TextDecoder("iso-8859-1");
-      const html = decoder.decode(buffer);
 
       console.log(`[Ogol Scraper] HTML length: ${html.length}`);
 
