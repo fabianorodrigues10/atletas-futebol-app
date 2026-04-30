@@ -310,66 +310,59 @@ export default function AtletaDetalhesScreen() {
           )}
 
           {/* Card: Contrato */}
-          <SectionCard title="Contrato" iconName="doc.text.fill" iconColor={colors.primary} colors={colors}>
-            {atleta.contratoTipo ? (
-              <View style={{ gap: 8 }}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text style={{ fontSize: 12, color: colors.muted }}>Tipo:</Text>
-                  <Text style={{ fontSize: 14, fontWeight: '600', color: colors.foreground }}>
-                    {atleta.contratoTipo === 'emprestimo' ? 'Empréstimo' : 'Definitivo'}
+          {atleta.contratoTipo && (
+            <SectionCard title="Contrato" iconName="doc.fill" iconColor={colors.primary} colors={colors}>
+              <View style={{ gap: 12 }}>
+                <View>
+                  <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>Tipo</Text>
+                  <Text style={{ fontSize: 14, color: colors.foreground, fontWeight: "600" }}>
+                    {atleta.contratoTipo === "emprestimo" ? "Empréstimo" : "Definitivo"}
                   </Text>
                 </View>
                 
-                {atleta.contratoTipo === 'emprestimo' && (
+                {atleta.contratoTipo === "emprestimo" ? (
                   <>
-                    {atleta.contratoDataFimEmprestimo && (
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 12, color: colors.muted }}>Fim empréstimo:</Text>
+                    {atleta.contratoDataFim && (
+                      <View>
+                        <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>Data de fim do emprestimo</Text>
                         <Text style={{ fontSize: 14, color: colors.foreground }}>
-                          {new Date(atleta.contratoDataFimEmprestimo).toLocaleDateString('pt-BR')}
+                          {atleta.contratoDataFim}
                         </Text>
                       </View>
                     )}
+                    
                     {atleta.contratoClube && (
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 12, color: colors.muted }}>Clube:</Text>
+                      <View>
+                        <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>Clube (que esta pegando emprestado)</Text>
                         <Text style={{ fontSize: 14, color: colors.foreground }}>
                           {atleta.contratoClube}
                         </Text>
                       </View>
                     )}
-                    {atleta.contratoDataFim && (
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 12, color: colors.muted }}>Fim contrato:</Text>
-                        <Text style={{ fontSize: 14, color: colors.foreground }}>
-                          {new Date(atleta.contratoDataFim).toLocaleDateString('pt-BR')}
-                        </Text>
-                      </View>
-                    )}
+                    
                     {atleta.contratoClubePertence && (
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 12, color: colors.muted }}>Clube cedente:</Text>
+                      <View>
+                        <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>Data de fim do contrato com clube cedente</Text>
                         <Text style={{ fontSize: 14, color: colors.foreground }}>
                           {atleta.contratoClubePertence}
                         </Text>
                       </View>
                     )}
                   </>
-                )}
-                
-                {atleta.contratoTipo === 'definitivo' && (
+                ) : (
                   <>
                     {atleta.contratoDataFim && (
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 12, color: colors.muted }}>Fim contrato:</Text>
+                      <View>
+                        <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>Data de fim do contrato</Text>
                         <Text style={{ fontSize: 14, color: colors.foreground }}>
-                          {new Date(atleta.contratoDataFim).toLocaleDateString('pt-BR')}
+                          {atleta.contratoDataFim}
                         </Text>
                       </View>
                     )}
+                    
                     {atleta.contratoClube && (
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 12, color: colors.muted }}>Clube:</Text>
+                      <View>
+                        <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>Clube</Text>
                         <Text style={{ fontSize: 14, color: colors.foreground }}>
                           {atleta.contratoClube}
                         </Text>
@@ -378,20 +371,8 @@ export default function AtletaDetalhesScreen() {
                   </>
                 )}
               </View>
-            ) : (
-              <View style={{
-                backgroundColor: colors.background,
-                borderRadius: 10,
-                padding: 16,
-                borderWidth: 1,
-                borderColor: colors.border,
-              }}>
-                <Text style={{ fontSize: 13, color: colors.muted, textAlign: "center", fontStyle: "italic" }}>
-                  Sem informação de contrato. Toque em editar para adicionar.
-                </Text>
-              </View>
-            )}
-          </SectionCard>
+            </SectionCard>
+          )}
 
           {/* Card: Fotos */}
           <SectionCard title={`Fotos ${fotos && fotos.length > 0 ? `(${fotos.length})` : "(0)"}`} iconName="photo.fill" iconColor={colors.primary} colors={colors}

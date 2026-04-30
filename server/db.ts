@@ -26,15 +26,11 @@ let _db: ReturnType<typeof drizzle> | null = null;
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      console.log('[Database] Conectando ao banco...');
       _db = drizzle(process.env.DATABASE_URL);
-      console.log('[Database] ✓ Conexão estabelecida');
-    } catch (error: any) {
-      console.error("[Database] Erro ao conectar:", error.message);
+    } catch (error) {
+      console.warn("[Database] Failed to connect:", error);
       _db = null;
     }
-  } else if (!process.env.DATABASE_URL) {
-    console.warn('[Database] DATABASE_URL não está definida');
   }
   return _db;
 }

@@ -1,308 +1,246 @@
-import {
-  boolean,
-  date,
-  decimal,
-  int,
-  mysqlEnum,
-  mysqlTable,
-  text,
-  timestamp,
-  varchar,
-} from "drizzle-orm/mysql-core";
+import { mysqlTable, mysqlEnum, varchar, int, text, date, json, datetime, boolean } from "drizzle-orm/mysql-core";
+import { relations } from "drizzle-orm";
 
-/**
- * Core user table backing auth flow.
- * Extend this file with additional tables as your product grows.
- * Columns use camelCase to match both database fields and generated types.
- */
 export const users = mysqlTable("users", {
-  /**
-   * Surrogate primary key. Auto-incremented numeric value managed by the database.
-   * Use this for relations between tables.
-   */
-  id: int("id").autoincrement().primaryKey(),
-  /** Manus OAuth identifier (openId) returned from the OAuth callback. Unique per user. */
-  openId: varchar("openId", { length: 64 }).notNull().unique(),
-  name: text("name"),
-  email: varchar("email", { length: 320 }),
-  loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-  lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
+  id: int().primaryKey().autoincrement(),
+  email: varchar({ length: 255 }).notNull().unique(),
+  name: varchar({ length: 255 }),
+  createdAt: datetime().defaultNow(),
+  updatedAt: datetime().defaultNow().onUpdateNow(),
 });
 
-export type User = typeof users.$inferSelect;
-export type InsertUser = typeof users.$inferInsert;
-
-// Tabela de atletas
 export const atletas = mysqlTable("atletas", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  
-  // Campos padrão
-  nome: varchar("nome", { length: 255 }).notNull(),
-  posicao: varchar("posicao", { length: 100 }),
-  segundaPosicao: varchar("segundaPosicao", { length: 100 }),
-  clube: varchar("clube", { length: 255 }),
-  dataNascimento: date("dataNascimento"),
-  idade: int("idade"),
-  altura: decimal("altura", { precision: 5, scale: 2 }), // Ex: 180.50 cm
+  id: int().primaryKey().autoincrement(),
+  userId: int().notNull(),
+  nome: varchar({ length: 255 }).notNull(),
+  posicao: varchar({ length: 100 }),
+  segundaPosicao: varchar({ length: 100 }),
+  clube: varchar({ length: 255 }),
+  dataNascimento: date(),
+  idade: int(),
+  altura: varchar({ length: 50 }),
   pe: mysqlEnum("pe", ["direito", "esquerdo", "ambidestro"]),
-  link: text("link"),
-  escala: varchar("escala", { length: 100 }),
+  link: text(),
+  escala: varchar({ length: 100 }),
+  
+  // Contrato: tipo (emprestimo ou definitivo)
+  contratoTipo: mysqlEnum("contratoTipo", ["emprestimo", "definitivo"]),
+  // Contrato: data de fim (armazenado como ISO date)
+  contratoDataFim: date("contratoDataFim"),
+  // Contrato: clube que tem o contrato
+  contratoClube: varchar("contratoClube", { length: 255 }),
+  // Contrato (apenas para emprestimo): clube que ele pertence
+  contratoClubePertence: varchar("contratoClubePertence", { length: 255 }),
+  
   naturalidade: varchar("naturalidade", { length: 255 }), // Cidade/Estado de nascimento
   
   // Campos customizados (JSON para flexibilidade)
-  camposCustomizados: text("camposCustomizados"), // JSON string
-  
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  camposCustomizados: json("camposCustomizados"),
+
+  createdAt: datetime().defaultNow(),
+  updatedAt: datetime().defaultNow().onUpdateNow(),
 });
 
-// Tabela de configuração de campos customizados
-export const configuracaoCampos = mysqlTable("configuracaoCampos", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  
-  // Nome do campo customizado
-  nomeCampo: varchar("nomeCampo", { length: 255 }).notNull(),
-  
-  // Tipo do campo (text, number, select, date)
-  tipoCampo: mysqlEnum("tipoCampo", ["text", "number", "select", "date"]).notNull(),
-  
-  // Opções para campos do tipo select (JSON array)
-  opcoes: text("opcoes"),
-  
-  // Se o campo está ativo
-  ativo: boolean("ativo").default(true).notNull(),
-  
-  // Ordem de exibição
-  ordem: int("ordem").notNull(),
-  
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-// Tabela de configuração de campos padrão (visibilidade)
-export const configuracaoCamposPadrao = mysqlTable("configuracaoCamposPadrao", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  
-  // Nome do campo padrão
-  nomeCampo: varchar("nomeCampo", { length: 100 }).notNull(),
-  
-  // Se o campo está visível
-  visivel: boolean("visivel").default(true).notNull(),
-  
-  // Ordem de exibição
-  ordem: int("ordem").notNull(),
-  
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-// Tabela de avaliações de atletas
-export const avaliacoes = mysqlTable("avaliacoes", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  atletaId: int("atletaId").notNull(),
-  
-  // Nota de 1-10
-  nota: int("nota").notNull(), // 1-10
-  
-  // Comentários técnicos
-  comentarios: text("comentarios"),
-  
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-// Tabela de grupos/seleções de atletas
-export const grupos = mysqlTable("grupos", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  
-  // Nome do grupo (ex: Titulares, Reservas, Monitorados)
-  nome: varchar("nome", { length: 255 }).notNull(),
-  
-  // Descrição do grupo
-  descricao: text("descricao"),
-  
-  // Cor para identificação visual
-  cor: varchar("cor", { length: 7 }).default("#FF6B35"), // Hex color
-  
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-// Tabela de relação muitos-para-muitos: atletas em grupos
-export const atletasEmGrupos = mysqlTable("atletasEmGrupos", {
-  id: int("id").autoincrement().primaryKey(),
-  atletaId: int("atletaId").notNull(),
-  grupoId: int("grupoId").notNull(),
-  posicaoOrdem: int("posicaoOrdem").notNull().default(0),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-// Tabela de mídia (fotos, vídeos, documentos)
 export const midias = mysqlTable("midias", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  atletaId: int("atletaId").notNull(),
-  
-  // Tipo de mídia
-  tipo: mysqlEnum("tipo", ["foto", "video", "documento"]).notNull(),
-  
-  // Nome do arquivo
-  nome: varchar("nome", { length: 255 }).notNull(),
-  
-  // URL da mídia no S3
-  url: text("url").notNull(),
-  
-  // Caminho no S3
-  s3Key: varchar("s3Key", { length: 500 }).notNull(),
-  
-  // Tipo MIME
-  mimeType: varchar("mimeType", { length: 100 }),
-  
-  // Tamanho em bytes
-  tamanho: int("tamanho"),
-  
-  // Descrição/anotações
-  descricao: text("descricao"),
-  
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  id: int().primaryKey().autoincrement(),
+  atletaId: int().notNull(),
+  tipo: mysqlEnum("tipo", ["foto", "video"]),
+  url: text().notNull(),
+  base64: text(), // Para armazenar imagens em base64
+  createdAt: datetime().defaultNow(),
+  updatedAt: datetime().defaultNow().onUpdateNow(),
 });
 
-// Tabela de estatísticas de temporada por atleta
-export const estatisticasTemporada = mysqlTable("estatisticasTemporada", {
-  id: int("id").autoincrement().primaryKey(),
-  atletaId: int("atletaId").notNull(),
-  userId: int("userId").notNull(),
-  temporada: varchar("temporada", { length: 20 }).notNull().default("2025"),
-  minutosJogados: int("minutosJogados").default(0),
-  jogos: int("jogos").default(0),
-  jogosTitular: int("jogosTitular").default(0),
-  gols: int("gols").default(0),
-  assistencias: int("assistencias").default(0),
-  finalizacoes: int("finalizacoes").default(0),
-  desarmes: int("desarmes").default(0),
-  interceptacoes: int("interceptacoes").default(0),
-  duelos: int("duelos").default(0),
-  duelosGanhos: int("duelosGanhos").default(0),
-  passes: int("passes").default(0),
-  passesCompletos: int("passesCompletos").default(0),
-  cruzamentos: int("cruzamentos").default(0),
-  faltasSofridas: int("faltasSofridas").default(0),
-  dribles: int("dribles").default(0),
-  jogosAereos: int("jogosAereos").default(0),
-  duelosAereosPerdidos: int("duelosAereosPerdidos").default(0),
-  faltasCometidas: int("faltasCometidas").default(0),
-  bolasRecuperadas: int("bolasRecuperadas").default(0),
-  cartoesAmarelos: int("cartoesAmarelos").default(0),
-  cartoesVermelhos: int("cartoesVermelhos").default(0),
-  notaTecnica: decimal("notaTecnica", { precision: 3, scale: 1 }),
-  notaFisica: decimal("notaFisica", { precision: 3, scale: 1 }),
-  notaTatica: decimal("notaTatica", { precision: 3, scale: 1 }),
-  notaAtitudinal: decimal("notaAtitudinal", { precision: 3, scale: 1 }),
-  notaPotencial: decimal("notaPotencial", { precision: 3, scale: 1 }),
-  observacoes: text("observacoes"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+export const configuracaoCampos = mysqlTable("configuracaoCampos", {
+  id: int().primaryKey().autoincrement(),
+  userId: int().notNull(),
+  nome: varchar({ length: 255 }).notNull(),
+  tipo: varchar({ length: 50 }).notNull(),
+  ativo: boolean().default(true),
+  ordem: int(),
+  createdAt: datetime().defaultNow(),
+  updatedAt: datetime().defaultNow().onUpdateNow(),
 });
-export type EstatisticaTemporada = typeof estatisticasTemporada.$inferSelect;
-export type InsertEstatisticaTemporada = typeof estatisticasTemporada.$inferInsert;
 
-// Tabela de jogos (scout por jogo)
+export const configuracaoCamposPadrao = mysqlTable("configuracaoCamposPadrao", {
+  id: int().primaryKey().autoincrement(),
+  userId: int().notNull(),
+  nome: varchar({ length: 255 }).notNull(),
+  ativo: boolean().default(true),
+  ordem: int(),
+  createdAt: datetime().defaultNow(),
+  updatedAt: datetime().defaultNow().onUpdateNow(),
+});
+
+export const grupos = mysqlTable("grupos", {
+  id: int().primaryKey().autoincrement(),
+  userId: int().notNull(),
+  nome: varchar({ length: 255 }).notNull(),
+  descricao: text(),
+  createdAt: datetime().defaultNow(),
+  updatedAt: datetime().defaultNow().onUpdateNow(),
+});
+
+export const atletasEmGrupos = mysqlTable("atletasEmGrupos", {
+  id: int().primaryKey().autoincrement(),
+  atletaId: int().notNull(),
+  grupoId: int().notNull(),
+  posicaoOrdem: int().default(0),
+  createdAt: datetime().defaultNow(),
+  updatedAt: datetime().defaultNow().onUpdateNow(),
+});
+
 export const jogos = mysqlTable("jogos", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  mandante: varchar("mandante", { length: 255 }).notNull().default("Marcílio Dias"),
-  visitante: varchar("visitante", { length: 255 }).notNull(),
-  competicao: varchar("competicao", { length: 255 }),
-  data: date("data"),
-  horario: varchar("horario", { length: 10 }), // ex: "16:00"
-  local: varchar("local", { length: 255 }),
-  arbitro: varchar("arbitro", { length: 255 }),
-  assistente1: varchar("assistente1", { length: 255 }),
-  assistente2: varchar("assistente2", { length: 255 }),
-  renda: varchar("renda", { length: 100 }),
-  publico: int("publico"),
-  gols: text("gols"), // texto livre: "Davi Torres 23', Alan Costa 67'"
-  placarMandante: int("placarMandante"),
-  placarVisitante: int("placarVisitante"),
-  observacoes: text("observacoes"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  id: int().primaryKey().autoincrement(),
+  userId: int().notNull(),
+  nome: varchar({ length: 255 }).notNull(),
+  data: date(),
+  adversario: varchar({ length: 255 }),
+  resultado: varchar({ length: 50 }),
+  placar: varchar({ length: 50 }),
+  local: varchar({ length: 255 }),
+  observacoes: text(),
+  createdAt: datetime().defaultNow(),
+  updatedAt: datetime().defaultNow().onUpdateNow(),
 });
 
-export type Jogo = typeof jogos.$inferSelect;
-export type InsertJogo = typeof jogos.$inferInsert;
-
-// Tabela de scout por atleta por jogo
 export const scoutJogo = mysqlTable("scoutJogo", {
-  id: int("id").autoincrement().primaryKey(),
-  jogoId: int("jogoId").notNull(),
-  atletaId: int("atletaId").notNull(),
-  userId: int("userId").notNull(),
-  // Participação
-  titular: boolean("titular").default(false),
-  minutosJogados: int("minutosJogados").default(0),
-  // Ofensivo
-  gols: int("gols").default(0),
-  assistencias: int("assistencias").default(0),
-  finalizacoes: int("finalizacoes").default(0),
-  passes: int("passes").default(0),
-  passesCompletos: int("passesCompletos").default(0),
-  cruzamentos: int("cruzamentos").default(0),
-  faltasSofridas: int("faltasSofridas").default(0),
-  dribles: int("dribles").default(0),
-  // Defensivo
-  desarmes: int("desarmes").default(0),
-  interceptacoes: int("interceptacoes").default(0),
-  duelos: int("duelos").default(0),
-  duelosGanhos: int("duelosGanhos").default(0),
-  jogosAereos: int("jogosAereos").default(0),
-  duelosAereosPerdidos: int("duelosAereosPerdidos").default(0),
-  faltasCometidas: int("faltasCometidas").default(0),
-  bolasRecuperadas: int("bolasRecuperadas").default(0),
-  // Disciplina
-  cartoesAmarelos: int("cartoesAmarelos").default(0),
-  cartoesVermelhos: int("cartoesVermelhos").default(0),
-  // Notas
-  notaTecnica: decimal("notaTecnica", { precision: 3, scale: 1 }),
-  notaFisica: decimal("notaFisica", { precision: 3, scale: 1 }),
-  notaTatica: decimal("notaTatica", { precision: 3, scale: 1 }),
-  notaAtitudinal: decimal("notaAtitudinal", { precision: 3, scale: 1 }),
-  notaPotencial: decimal("notaPotencial", { precision: 3, scale: 1 }),
-  observacoes: text("observacoes"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  id: int().primaryKey().autoincrement(),
+  jogoId: int().notNull(),
+  atletaId: int().notNull(),
+  
+  // Avaliações
+  tecnica: int(),
+  fisica: int(),
+  tatica: int(),
+  
+  // Estatísticas de jogo
+  passes: int(),
+  passesCompletos: int(),
+  chutes: int(),
+  chutesCertos: int(),
+  dribles: int(),
+  driblesTocados: int(),
+  roubada: int(),
+  interceptacoes: int(),
+  faltas: int(),
+  cartaoAmarelo: boolean().default(false),
+  cartaoVermelho: boolean().default(false),
+  gols: int(),
+  assistencias: int(),
+  
+  // Observações
+  observacoes: text(),
+  
+  createdAt: datetime().defaultNow(),
+  updatedAt: datetime().defaultNow().onUpdateNow(),
 });
 
-export type ScoutJogo = typeof scoutJogo.$inferSelect;
-export type InsertScoutJogo = typeof scoutJogo.$inferInsert;
+export const avaliacoes = mysqlTable("avaliacoes", {
+  id: int().primaryKey().autoincrement(),
+  atletaId: int().notNull(),
+  userId: int().notNull(),
+  
+  tecnica: int(),
+  fisica: int(),
+  tatica: int(),
+  
+  observacoes: text(),
+  
+  createdAt: datetime().defaultNow(),
+  updatedAt: datetime().defaultNow().onUpdateNow(),
+});
 
-// Tipos TypeScript adicionais
-export type Atleta = typeof atletas.$inferSelect;
-export type InsertAtleta = typeof atletas.$inferInsert;
+export const estatisticasTemporada = mysqlTable("estatisticasTemporada", {
+  id: int().primaryKey().autoincrement(),
+  atletaId: int().notNull(),
+  
+  // Estatísticas gerais
+  jogosJogados: int(),
+  minutosTotais: int(),
+  
+  // Ofensivas
+  gols: int(),
+  assistencias: int(),
+  chutes: int(),
+  chutesCertos: int(),
+  
+  // Defensivas
+  roubadas: int(),
+  interceptacoes: int(),
+  faltas: int(),
+  
+  // Cartões
+  cartaoAmarelo: int(),
+  cartaoVermelho: int(),
+  
+  // Passes
+  passes: int(),
+  passesCompletos: int(),
+  
+  // Dribles
+  dribles: int(),
+  driblesTocados: int(),
+  
+  createdAt: datetime().defaultNow(),
+  updatedAt: datetime().defaultNow().onUpdateNow(),
+});
 
-export type ConfiguracaoCampo = typeof configuracaoCampos.$inferSelect;
-export type InsertConfiguracaoCampo = typeof configuracaoCampos.$inferInsert;
+// Relations
+export const atletasRelations = relations(atletas, ({ many }) => ({
+  midias: many(midias),
+  grupos: many(atletasEmGrupos),
+  avaliacoes: many(avaliacoes),
+  estatisticas: many(estatisticasTemporada),
+}));
 
-export type ConfiguracaoCampoPadrao = typeof configuracaoCamposPadrao.$inferSelect;
-export type InsertConfiguracaoCampoPadrao = typeof configuracaoCamposPadrao.$inferInsert;
+export const midiasRelations = relations(midias, ({ one }) => ({
+  atleta: one(atletas, {
+    fields: [midias.atletaId],
+    references: [atletas.id],
+  }),
+}));
 
-export type Avaliacao = typeof avaliacoes.$inferSelect;
-export type InsertAvaliacao = typeof avaliacoes.$inferInsert;
+export const atletasEmGruposRelations = relations(atletasEmGrupos, ({ one }) => ({
+  atleta: one(atletas, {
+    fields: [atletasEmGrupos.atletaId],
+    references: [atletas.id],
+  }),
+  grupo: one(grupos, {
+    fields: [atletasEmGrupos.grupoId],
+    references: [grupos.id],
+  }),
+}));
 
-export type Grupo = typeof grupos.$inferSelect;
-export type InsertGrupo = typeof grupos.$inferInsert;
+export const gruposRelations = relations(grupos, ({ many }) => ({
+  atletas: many(atletasEmGrupos),
+}));
 
-export type AtletaEmGrupo = typeof atletasEmGrupos.$inferSelect;
-export type InsertAtletaEmGrupo = typeof atletasEmGrupos.$inferInsert;
+export const jogosRelations = relations(jogos, ({ many }) => ({
+  scout: many(scoutJogo),
+}));
 
-export type Midia = typeof midias.$inferSelect;
-export type InsertMidia = typeof midias.$inferInsert;
+export const scoutJogoRelations = relations(scoutJogo, ({ one }) => ({
+  jogo: one(jogos, {
+    fields: [scoutJogo.jogoId],
+    references: [jogos.id],
+  }),
+  atleta: one(atletas, {
+    fields: [scoutJogo.atletaId],
+    references: [atletas.id],
+  }),
+}));
+
+export const avaliacoesRelations = relations(avaliacoes, ({ one }) => ({
+  atleta: one(atletas, {
+    fields: [avaliacoes.atletaId],
+    references: [atletas.id],
+  }),
+}));
+
+export const estatisticasTemporadaRelations = relations(estatisticasTemporada, ({ one }) => ({
+  atleta: one(atletas, {
+    fields: [estatisticasTemporada.atletaId],
+    references: [atletas.id],
+  }),
+}));
