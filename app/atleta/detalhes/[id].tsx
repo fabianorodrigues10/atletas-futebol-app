@@ -309,12 +309,75 @@ export default function AtletaDetalhesScreen() {
             </SectionCard>
           )}
 
-          {/* Card: Valências */}
-          <SectionCard title="Valências" iconName="bolt.fill" iconColor={colors.primary} colors={colors}>
-            {atleta.valencia ? (
-              <Text style={{ fontSize: 14, color: colors.foreground, lineHeight: 22 }}>
-                {atleta.valencia}
-              </Text>
+          {/* Card: Contrato */}
+          <SectionCard title="Contrato" iconName="doc.text.fill" iconColor={colors.primary} colors={colors}>
+            {atleta.contratoTipo ? (
+              <View style={{ gap: 8 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={{ fontSize: 12, color: colors.muted }}>Tipo:</Text>
+                  <Text style={{ fontSize: 14, fontWeight: '600', color: colors.foreground }}>
+                    {atleta.contratoTipo === 'emprestimo' ? 'Empréstimo' : 'Definitivo'}
+                  </Text>
+                </View>
+                
+                {atleta.contratoTipo === 'emprestimo' && (
+                  <>
+                    {atleta.contratoDataFimEmprestimo && (
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Text style={{ fontSize: 12, color: colors.muted }}>Fim empréstimo:</Text>
+                        <Text style={{ fontSize: 14, color: colors.foreground }}>
+                          {new Date(atleta.contratoDataFimEmprestimo).toLocaleDateString('pt-BR')}
+                        </Text>
+                      </View>
+                    )}
+                    {atleta.contratoClube && (
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Text style={{ fontSize: 12, color: colors.muted }}>Clube:</Text>
+                        <Text style={{ fontSize: 14, color: colors.foreground }}>
+                          {atleta.contratoClube}
+                        </Text>
+                      </View>
+                    )}
+                    {atleta.contratoDataFim && (
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Text style={{ fontSize: 12, color: colors.muted }}>Fim contrato:</Text>
+                        <Text style={{ fontSize: 14, color: colors.foreground }}>
+                          {new Date(atleta.contratoDataFim).toLocaleDateString('pt-BR')}
+                        </Text>
+                      </View>
+                    )}
+                    {atleta.contratoClubePertence && (
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Text style={{ fontSize: 12, color: colors.muted }}>Clube cedente:</Text>
+                        <Text style={{ fontSize: 14, color: colors.foreground }}>
+                          {atleta.contratoClubePertence}
+                        </Text>
+                      </View>
+                    )}
+                  </>
+                )}
+                
+                {atleta.contratoTipo === 'definitivo' && (
+                  <>
+                    {atleta.contratoDataFim && (
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Text style={{ fontSize: 12, color: colors.muted }}>Fim contrato:</Text>
+                        <Text style={{ fontSize: 14, color: colors.foreground }}>
+                          {new Date(atleta.contratoDataFim).toLocaleDateString('pt-BR')}
+                        </Text>
+                      </View>
+                    )}
+                    {atleta.contratoClube && (
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Text style={{ fontSize: 12, color: colors.muted }}>Clube:</Text>
+                        <Text style={{ fontSize: 14, color: colors.foreground }}>
+                          {atleta.contratoClube}
+                        </Text>
+                      </View>
+                    )}
+                  </>
+                )}
+              </View>
             ) : (
               <View style={{
                 backgroundColor: colors.background,
@@ -324,7 +387,7 @@ export default function AtletaDetalhesScreen() {
                 borderColor: colors.border,
               }}>
                 <Text style={{ fontSize: 13, color: colors.muted, textAlign: "center", fontStyle: "italic" }}>
-                  Sem descrição de valências. Toque em editar para adicionar.
+                  Sem informação de contrato. Toque em editar para adicionar.
                 </Text>
               </View>
             )}

@@ -55,7 +55,11 @@ export default function AtletaFormScreen() {
   const [pe, setPe] = useState("");
   const [link, setLink] = useState("");
   const [escala, setEscala] = useState("");
-  const [valencia, setValencia] = useState("");
+  const [contratoTipo, setContratoTipo] = useState<'emprestimo' | 'definitivo' | ''>('');
+  const [contratoDataFim, setContratoDataFim] = useState('');
+  const [contratoClube, setContratoClube] = useState('');
+  const [contratoDataFimEmprestimo, setContratoDataFimEmprestimo] = useState('');
+  const [contratoClubePertence, setContratoClubePertence] = useState('');
   const [naturalidade, setNaturalidade] = useState("");
   const [videoLinks, setVideoLinks] = useState<string[]>([]);
   const [originalVideoLinks, setOriginalVideoLinks] = useState<string[]>([]);
@@ -144,7 +148,11 @@ export default function AtletaFormScreen() {
       setPe(atleta.pe || "");
       setLink(atleta.link || "");
       setEscala(atleta.escala || "");
-      setValencia(atleta.valencia || "");
+      setContratoTipo(atleta.contratoTipo || '');
+      setContratoDataFim(atleta.contratoDataFim ? atleta.contratoDataFim.split('T')[0] : '');
+      setContratoClube(atleta.contratoClube || '');
+      setContratoDataFimEmprestimo(atleta.contratoDataFimEmprestimo ? atleta.contratoDataFimEmprestimo.split('T')[0] : '');
+      setContratoClubePertence(atleta.contratoClubePertence || '');
       setNaturalidade(atleta.naturalidade || "");
       
       // Carregar todas as fotos do atleta
@@ -414,7 +422,11 @@ export default function AtletaFormScreen() {
         pe: (pe || "").toLowerCase().trim(),
         link: (link || "").toLowerCase().trim(),
         escala: (escala || "").toLowerCase().trim(),
-        valencia: (valencia || "").toLowerCase().trim(),
+        contratoTipo: contratoTipo || undefined,
+        contratoDataFim: contratoDataFim || undefined,
+        contratoClube: (contratoClube || "").toLowerCase().trim() || undefined,
+        contratoDataFimEmprestimo: contratoDataFimEmprestimo || undefined,
+        contratoClubePertence: (contratoClubePertence || "").toLowerCase().trim() || undefined,
       };
       
       // Procurar por atleta com nome + posicao + link identicos
@@ -1415,34 +1427,172 @@ export default function AtletaFormScreen() {
             />
           </View>
 
-          {/* Valências */}
+          {/* Contrato */}
           <View style={{ marginBottom: 16 }}>
-            <Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground, marginBottom: 6 }}>
-              Valências
+            <Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground, marginBottom: 8 }}>
+              Contrato
             </Text>
-            <TextInput
-              style={{
-                backgroundColor: colors.surface,
-                borderRadius: 8,
-                paddingHorizontal: 14,
-                paddingVertical: 12,
-                color: colors.foreground,
-                borderWidth: 1,
-                borderColor: colors.border,
-                fontSize: 14,
-                minHeight: 100,
-              }}
-              placeholder="Descreva as características e valências do atleta (até 500 caracteres)..."
-              placeholderTextColor={colors.muted}
-              value={valencia}
-              onChangeText={(text) => setValencia(text.slice(0, 500))}
-              multiline
-              numberOfLines={4}
-              textAlignVertical="top"
-            />
-            <Text style={{ fontSize: 11, color: colors.muted, textAlign: "right", marginTop: 4 }}>
-              {valencia.length}/500
-            </Text>
+            
+            {/* Tipo de Contrato */}
+            <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
+              <TouchableOpacity
+                onPress={() => setContratoTipo('emprestimo')}
+                style={{
+                  flex: 1,
+                  paddingVertical: 10,
+                  paddingHorizontal: 12,
+                  borderRadius: 8,
+                  borderWidth: 2,
+                  borderColor: contratoTipo === 'emprestimo' ? colors.primary : colors.border,
+                  backgroundColor: contratoTipo === 'emprestimo' ? colors.primary + '20' : colors.surface,
+                }}
+              >
+                <Text style={{ color: contratoTipo === 'emprestimo' ? colors.primary : colors.foreground, fontWeight: '600', textAlign: 'center' }}>
+                  Empréstimo
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                onPress={() => setContratoTipo('definitivo')}
+                style={{
+                  flex: 1,
+                  paddingVertical: 10,
+                  paddingHorizontal: 12,
+                  borderRadius: 8,
+                  borderWidth: 2,
+                  borderColor: contratoTipo === 'definitivo' ? colors.primary : colors.border,
+                  backgroundColor: contratoTipo === 'definitivo' ? colors.primary + '20' : colors.surface,
+                }}
+              >
+                <Text style={{ color: contratoTipo === 'definitivo' ? colors.primary : colors.foreground, fontWeight: '600', textAlign: 'center' }}>
+                  Definitivo
+                </Text>
+              </TouchableOpacity>
+            </View>
+            
+            {/* Campos para Empréstimo */}
+            {contratoTipo === 'emprestimo' && (
+              <>
+                <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>Data fim empréstimo (DD/MM/AA)</Text>
+                <TextInput
+                  style={{
+                    backgroundColor: colors.surface,
+                    borderRadius: 8,
+                    paddingHorizontal: 14,
+                    paddingVertical: 12,
+                    color: colors.foreground,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    fontSize: 14,
+                    marginBottom: 12,
+                  }}
+                  placeholder="DD/MM/AA"
+                  placeholderTextColor={colors.muted}
+                  value={contratoDataFimEmprestimo}
+                  onChangeText={setContratoDataFimEmprestimo}
+                />
+                
+                <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>Clube (empréstimo)</Text>
+                <TextInput
+                  style={{
+                    backgroundColor: colors.surface,
+                    borderRadius: 8,
+                    paddingHorizontal: 14,
+                    paddingVertical: 12,
+                    color: colors.foreground,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    fontSize: 14,
+                    marginBottom: 12,
+                  }}
+                  placeholder="Ex: Flamengo"
+                  placeholderTextColor={colors.muted}
+                  value={contratoClube}
+                  onChangeText={setContratoClube}
+                />
+                
+                <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>Data fim contrato (DD/MM/AA)</Text>
+                <TextInput
+                  style={{
+                    backgroundColor: colors.surface,
+                    borderRadius: 8,
+                    paddingHorizontal: 14,
+                    paddingVertical: 12,
+                    color: colors.foreground,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    fontSize: 14,
+                    marginBottom: 12,
+                  }}
+                  placeholder="DD/MM/AA"
+                  placeholderTextColor={colors.muted}
+                  value={contratoDataFim}
+                  onChangeText={setContratoDataFim}
+                />
+                
+                <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>Clube cedente</Text>
+                <TextInput
+                  style={{
+                    backgroundColor: colors.surface,
+                    borderRadius: 8,
+                    paddingHorizontal: 14,
+                    paddingVertical: 12,
+                    color: colors.foreground,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    fontSize: 14,
+                    marginBottom: 12,
+                  }}
+                  placeholder="Ex: São Paulo"
+                  placeholderTextColor={colors.muted}
+                  value={contratoClubePertence}
+                  onChangeText={setContratoClubePertence}
+                />
+              </>
+            )}
+            
+            {/* Campos para Definitivo */}
+            {contratoTipo === 'definitivo' && (
+              <>
+                <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>Data fim contrato (DD/MM/AA)</Text>
+                <TextInput
+                  style={{
+                    backgroundColor: colors.surface,
+                    borderRadius: 8,
+                    paddingHorizontal: 14,
+                    paddingVertical: 12,
+                    color: colors.foreground,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    fontSize: 14,
+                    marginBottom: 12,
+                  }}
+                  placeholder="DD/MM/AA"
+                  placeholderTextColor={colors.muted}
+                  value={contratoDataFim}
+                  onChangeText={setContratoDataFim}
+                />
+                
+                <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>Clube</Text>
+                <TextInput
+                  style={{
+                    backgroundColor: colors.surface,
+                    borderRadius: 8,
+                    paddingHorizontal: 14,
+                    paddingVertical: 12,
+                    color: colors.foreground,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    fontSize: 14,
+                    marginBottom: 12,
+                  }}
+                  placeholder="Ex: Flamengo"
+                  placeholderTextColor={colors.muted}
+                  value={contratoClube}
+                  onChangeText={setContratoClube}
+                />
+              </>
+            )}
           </View>
           
           {/* Campo de Foto */}
