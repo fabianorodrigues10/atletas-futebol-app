@@ -309,70 +309,26 @@ export default function AtletaDetalhesScreen() {
             </SectionCard>
           )}
 
-          {/* Card: Contrato */}
-          {atleta.contratoTipo && (
-            <SectionCard title="Contrato" iconName="doc.fill" iconColor={colors.primary} colors={colors}>
-              <View style={{ gap: 12 }}>
-                <View>
-                  <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>Tipo</Text>
-                  <Text style={{ fontSize: 14, color: colors.foreground, fontWeight: "600" }}>
-                    {atleta.contratoTipo === "emprestimo" ? "Empréstimo" : "Definitivo"}
-                  </Text>
-                </View>
-                
-                {atleta.contratoTipo === "emprestimo" ? (
-                  <>
-                    {atleta.contratoDataFim && (
-                      <View>
-                        <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>Data de fim do emprestimo</Text>
-                        <Text style={{ fontSize: 14, color: colors.foreground }}>
-                          {atleta.contratoDataFim}
-                        </Text>
-                      </View>
-                    )}
-                    
-                    {atleta.contratoClube && (
-                      <View>
-                        <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>Clube (que esta pegando emprestado)</Text>
-                        <Text style={{ fontSize: 14, color: colors.foreground }}>
-                          {atleta.contratoClube}
-                        </Text>
-                      </View>
-                    )}
-                    
-                    {atleta.contratoClubePertence && (
-                      <View>
-                        <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>Data de fim do contrato com clube cedente</Text>
-                        <Text style={{ fontSize: 14, color: colors.foreground }}>
-                          {atleta.contratoClubePertence}
-                        </Text>
-                      </View>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    {atleta.contratoDataFim && (
-                      <View>
-                        <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>Data de fim do contrato</Text>
-                        <Text style={{ fontSize: 14, color: colors.foreground }}>
-                          {atleta.contratoDataFim}
-                        </Text>
-                      </View>
-                    )}
-                    
-                    {atleta.contratoClube && (
-                      <View>
-                        <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>Clube</Text>
-                        <Text style={{ fontSize: 14, color: colors.foreground }}>
-                          {atleta.contratoClube}
-                        </Text>
-                      </View>
-                    )}
-                  </>
-                )}
+          {/* Card: Valências */}
+          <SectionCard title="Valências" iconName="bolt.fill" iconColor={colors.primary} colors={colors}>
+            {atleta.valencia ? (
+              <Text style={{ fontSize: 14, color: colors.foreground, lineHeight: 22 }}>
+                {atleta.valencia}
+              </Text>
+            ) : (
+              <View style={{
+                backgroundColor: colors.background,
+                borderRadius: 10,
+                padding: 16,
+                borderWidth: 1,
+                borderColor: colors.border,
+              }}>
+                <Text style={{ fontSize: 13, color: colors.muted, textAlign: "center", fontStyle: "italic" }}>
+                  Sem descrição de valências. Toque em editar para adicionar.
+                </Text>
               </View>
-            </SectionCard>
-          )}
+            )}
+          </SectionCard>
 
           {/* Card: Fotos */}
           <SectionCard title={`Fotos ${fotos && fotos.length > 0 ? `(${fotos.length})` : "(0)"}`} iconName="photo.fill" iconColor={colors.primary} colors={colors}
