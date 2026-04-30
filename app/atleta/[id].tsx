@@ -56,9 +56,16 @@ export default function AtletaFormScreen() {
   const [link, setLink] = useState("");
   const [escala, setEscala] = useState("");
   const [contratoTipo, setContratoTipo] = useState<"emprestimo" | "definitivo" | "">("" as any);
+  // Empréstimo: data de fim do empréstimo
   const [contratoDataFim, setContratoDataFim] = useState("");
+  // Empréstimo: clube que está pegando emprestado
   const [contratoClube, setContratoClube] = useState("");
-  const [contratoClubePertence, setContratoClubePertence] = useState("");
+  // Empréstimo: data de fim do contrato com clube cedente
+  const [contratoDataFimCedente, setContratoDataFimCedente] = useState("");
+  // Empréstimo: clube cedente (que tem os direitos)
+  const [contratoClubeCedente, setContratoClubeCedente] = useState("");
+  // Definitivo: data de fim do contrato (reutiliza contratoDataFim)
+  // Definitivo: clube (reutiliza contratoClube)
   const [naturalidade, setNaturalidade] = useState("");
   const [videoLinks, setVideoLinks] = useState<string[]>([]);
   const [originalVideoLinks, setOriginalVideoLinks] = useState<string[]>([]);
@@ -1486,84 +1493,177 @@ export default function AtletaFormScreen() {
             {/* Campos de contrato */}
             {contratoTipo && (
               <View style={{ gap: 12 }}>
-                {/* Data de fim do contrato */}
-                <View>
-                  <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>
-                    Data de fim do contrato (DD/MM/AA)
-                  </Text>
-                  <TextInput
-                    style={{
-                      backgroundColor: colors.surface,
-                      borderRadius: 8,
-                      paddingHorizontal: 14,
-                      paddingVertical: 12,
-                      color: colors.foreground,
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                      fontSize: 14,
-                    }}
-                    placeholder="DD/MM/AA"
-                    placeholderTextColor={colors.muted}
-                    value={contratoDataFim}
-                    onChangeText={(text) => {
-                      const cleaned = text.replace(/\D/g, "").slice(0, 6);
-                      if (cleaned.length <= 2) {
-                        setContratoDataFim(cleaned);
-                      } else if (cleaned.length <= 4) {
-                        setContratoDataFim(`${cleaned.slice(0, 2)}/${cleaned.slice(2)}`);
-                      } else {
-                        setContratoDataFim(`${cleaned.slice(0, 2)}/${cleaned.slice(2, 4)}/${cleaned.slice(4)}`);
-                      }
-                    }}
-                  />
-                </View>
-                
-                {/* Clube que tem o contrato */}
-                <View>
-                  <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>
-                    Clube que tem o contrato
-                  </Text>
-                  <TextInput
-                    style={{
-                      backgroundColor: colors.surface,
-                      borderRadius: 8,
-                      paddingHorizontal: 14,
-                      paddingVertical: 12,
-                      color: colors.foreground,
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                      fontSize: 14,
-                    }}
-                    placeholder="Nome do clube"
-                    placeholderTextColor={colors.muted}
-                    value={contratoClube}
-                    onChangeText={setContratoClube}
-                  />
-                </View>
-                
-                {/* Campos adicionais para empréstimo */}
-                {contratoTipo === "emprestimo" && (
-                  <View>
-                    <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>
-                      Clube que ele pertence
-                    </Text>
-                    <TextInput
-                      style={{
-                        backgroundColor: colors.surface,
-                        borderRadius: 8,
-                        paddingHorizontal: 14,
-                        paddingVertical: 12,
-                        color: colors.foreground,
-                        borderWidth: 1,
-                        borderColor: colors.border,
-                        fontSize: 14,
-                      }}
-                      placeholder="Nome do clube"
-                      placeholderTextColor={colors.muted}
-                      value={contratoClubePertence}
-                      onChangeText={setContratoClubePertence}
-                    />
-                  </View>
+                {contratoTipo === "emprestimo" ? (
+                  <>
+                    {/* EMPRÉSTIMO: 4 campos */}
+                    {/* 1. Data de fim do empréstimo */}
+                    <View>
+                      <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>
+                        Data de fim do empréstimo (DD/MM/AA)
+                      </Text>
+                      <TextInput
+                        style={{
+                          backgroundColor: colors.surface,
+                          borderRadius: 8,
+                          paddingHorizontal: 14,
+                          paddingVertical: 12,
+                          color: colors.foreground,
+                          borderWidth: 1,
+                          borderColor: colors.border,
+                          fontSize: 14,
+                        }}
+                        placeholder="DD/MM/AA"
+                        placeholderTextColor={colors.muted}
+                        value={contratoDataFim}
+                        onChangeText={(text) => {
+                          const cleaned = text.replace(/\D/g, "").slice(0, 6);
+                          if (cleaned.length <= 2) {
+                            setContratoDataFim(cleaned);
+                          } else if (cleaned.length <= 4) {
+                            setContratoDataFim(`${cleaned.slice(0, 2)}/${cleaned.slice(2)}`);
+                          } else {
+                            setContratoDataFim(`${cleaned.slice(0, 2)}/${cleaned.slice(2, 4)}/${cleaned.slice(4)}`);
+                          }
+                        }}
+                      />
+                    </View>
+                    
+                    {/* 2. Clube (que está pegando emprestado) */}
+                    <View>
+                      <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>
+                        Clube (que está pegando emprestado)
+                      </Text>
+                      <TextInput
+                        style={{
+                          backgroundColor: colors.surface,
+                          borderRadius: 8,
+                          paddingHorizontal: 14,
+                          paddingVertical: 12,
+                          color: colors.foreground,
+                          borderWidth: 1,
+                          borderColor: colors.border,
+                          fontSize: 14,
+                        }}
+                        placeholder="Nome do clube"
+                        placeholderTextColor={colors.muted}
+                        value={contratoClube}
+                        onChangeText={setContratoClube}
+                      />
+                    </View>
+                    
+                    {/* 3. Data de fim do contrato com clube cedente */}
+                    <View>
+                      <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>
+                        Data de fim do contrato com clube cedente (DD/MM/AA)
+                      </Text>
+                      <TextInput
+                        style={{
+                          backgroundColor: colors.surface,
+                          borderRadius: 8,
+                          paddingHorizontal: 14,
+                          paddingVertical: 12,
+                          color: colors.foreground,
+                          borderWidth: 1,
+                          borderColor: colors.border,
+                          fontSize: 14,
+                        }}
+                        placeholder="DD/MM/AA"
+                        placeholderTextColor={colors.muted}
+                        value={contratoDataFimCedente}
+                        onChangeText={(text) => {
+                          const cleaned = text.replace(/\D/g, "").slice(0, 6);
+                          if (cleaned.length <= 2) {
+                            setContratoDataFimCedente(cleaned);
+                          } else if (cleaned.length <= 4) {
+                            setContratoDataFimCedente(`${cleaned.slice(0, 2)}/${cleaned.slice(2)}`);
+                          } else {
+                            setContratoDataFimCedente(`${cleaned.slice(0, 2)}/${cleaned.slice(2, 4)}/${cleaned.slice(4)}`);
+                          }
+                        }}
+                      />
+                    </View>
+                    
+                    {/* 4. Clube cedente */}
+                    <View>
+                      <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>
+                        Clube cedente (que tem os direitos)
+                      </Text>
+                      <TextInput
+                        style={{
+                          backgroundColor: colors.surface,
+                          borderRadius: 8,
+                          paddingHorizontal: 14,
+                          paddingVertical: 12,
+                          color: colors.foreground,
+                          borderWidth: 1,
+                          borderColor: colors.border,
+                          fontSize: 14,
+                        }}
+                        placeholder="Nome do clube cedente"
+                        placeholderTextColor={colors.muted}
+                        value={contratoClubeCedente}
+                        onChangeText={setContratoClubeCedente}
+                      />
+                    </View>
+                  </>
+                ) : (
+                  <>
+                    {/* DEFINITIVO: 2 campos */}
+                    {/* 1. Data de fim do contrato */}
+                    <View>
+                      <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>
+                        Data de fim do contrato (DD/MM/AA)
+                      </Text>
+                      <TextInput
+                        style={{
+                          backgroundColor: colors.surface,
+                          borderRadius: 8,
+                          paddingHorizontal: 14,
+                          paddingVertical: 12,
+                          color: colors.foreground,
+                          borderWidth: 1,
+                          borderColor: colors.border,
+                          fontSize: 14,
+                        }}
+                        placeholder="DD/MM/AA"
+                        placeholderTextColor={colors.muted}
+                        value={contratoDataFim}
+                        onChangeText={(text) => {
+                          const cleaned = text.replace(/\D/g, "").slice(0, 6);
+                          if (cleaned.length <= 2) {
+                            setContratoDataFim(cleaned);
+                          } else if (cleaned.length <= 4) {
+                            setContratoDataFim(`${cleaned.slice(0, 2)}/${cleaned.slice(2)}`);
+                          } else {
+                            setContratoDataFim(`${cleaned.slice(0, 2)}/${cleaned.slice(2, 4)}/${cleaned.slice(4)}`);
+                          }
+                        }}
+                      />
+                    </View>
+                    
+                    {/* 2. Clube */}
+                    <View>
+                      <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>
+                        Clube
+                      </Text>
+                      <TextInput
+                        style={{
+                          backgroundColor: colors.surface,
+                          borderRadius: 8,
+                          paddingHorizontal: 14,
+                          paddingVertical: 12,
+                          color: colors.foreground,
+                          borderWidth: 1,
+                          borderColor: colors.border,
+                          fontSize: 14,
+                        }}
+                        placeholder="Nome do clube"
+                        placeholderTextColor={colors.muted}
+                        value={contratoClube}
+                        onChangeText={setContratoClube}
+                      />
+                    </View>
+                  </>
                 )}
               </View>
             )}

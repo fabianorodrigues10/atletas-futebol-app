@@ -518,3 +518,17 @@
   - [x] Campo de clube que ele pertence (apenas para empréstimo)
 - [x] Atualizar tela de detalhes do atleta para exibir contrato
 - [x] Criar 8 testes para validar a funcionalidade de contrato (todos passando)
+
+## Feature: Substituir "Valência" por "Contrato"
+- [x] Remover campo "Valência" do formulário
+- [x] Criar novo campo "Contrato" com opções Empréstimo e Definitivo
+- [x] Implementar 4 campos para Empréstimo:
+  - [x] Data de fim do empréstimo (DD/MM/AA)
+  - [x] Clube (que está pegando emprestado)
+  - [x] Data de fim do contrato com clube cedente (DD/MM/AA)
+  - [x] Clube cedente (que tem os direitos)
+- [x] Implementar 2 campos para Definitivo:
+  - [x] Data de fim do contrato (DD/MM/AA)
+  - [x] Clube
+- [x] Atualizar tela de detalhes para exibir os campos corretos
+- [x] Testar formulário de cadastro/edição

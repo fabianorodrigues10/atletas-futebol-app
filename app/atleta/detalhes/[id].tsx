@@ -320,31 +320,55 @@ export default function AtletaDetalhesScreen() {
                   </Text>
                 </View>
                 
-                {atleta.contratoDataFim && (
-                  <View>
-                    <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>Data de fim</Text>
-                    <Text style={{ fontSize: 14, color: colors.foreground }}>
-                      {new Date(atleta.contratoDataFim).toLocaleDateString("pt-BR")}
-                    </Text>
-                  </View>
-                )}
-                
-                {atleta.contratoClube && (
-                  <View>
-                    <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>Clube que tem o contrato</Text>
-                    <Text style={{ fontSize: 14, color: colors.foreground }}>
-                      {atleta.contratoClube}
-                    </Text>
-                  </View>
-                )}
-                
-                {atleta.contratoTipo === "emprestimo" && atleta.contratoClubePertence && (
-                  <View>
-                    <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>Clube que ele pertence</Text>
-                    <Text style={{ fontSize: 14, color: colors.foreground }}>
-                      {atleta.contratoClubePertence}
-                    </Text>
-                  </View>
+                {atleta.contratoTipo === "emprestimo" ? (
+                  <>
+                    {atleta.contratoDataFim && (
+                      <View>
+                        <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>Data de fim do emprestimo</Text>
+                        <Text style={{ fontSize: 14, color: colors.foreground }}>
+                          {atleta.contratoDataFim}
+                        </Text>
+                      </View>
+                    )}
+                    
+                    {atleta.contratoClube && (
+                      <View>
+                        <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>Clube (que esta pegando emprestado)</Text>
+                        <Text style={{ fontSize: 14, color: colors.foreground }}>
+                          {atleta.contratoClube}
+                        </Text>
+                      </View>
+                    )}
+                    
+                    {atleta.contratoClubePertence && (
+                      <View>
+                        <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>Data de fim do contrato com clube cedente</Text>
+                        <Text style={{ fontSize: 14, color: colors.foreground }}>
+                          {atleta.contratoClubePertence}
+                        </Text>
+                      </View>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {atleta.contratoDataFim && (
+                      <View>
+                        <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>Data de fim do contrato</Text>
+                        <Text style={{ fontSize: 14, color: colors.foreground }}>
+                          {atleta.contratoDataFim}
+                        </Text>
+                      </View>
+                    )}
+                    
+                    {atleta.contratoClube && (
+                      <View>
+                        <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>Clube</Text>
+                        <Text style={{ fontSize: 14, color: colors.foreground }}>
+                          {atleta.contratoClube}
+                        </Text>
+                      </View>
+                    )}
+                  </>
                 )}
               </View>
             </SectionCard>
