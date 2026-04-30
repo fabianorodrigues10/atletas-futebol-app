@@ -309,26 +309,89 @@ export default function AtletaDetalhesScreen() {
             </SectionCard>
           )}
 
-          {/* Card: Valências */}
-          <SectionCard title="Valências" iconName="bolt.fill" iconColor={colors.primary} colors={colors}>
-            {atleta.valencia ? (
-              <Text style={{ fontSize: 14, color: colors.foreground, lineHeight: 22 }}>
-                {atleta.valencia}
-              </Text>
-            ) : (
-              <View style={{
-                backgroundColor: colors.background,
-                borderRadius: 10,
-                padding: 16,
-                borderWidth: 1,
-                borderColor: colors.border,
-              }}>
-                <Text style={{ fontSize: 13, color: colors.muted, textAlign: "center", fontStyle: "italic" }}>
-                  Sem descrição de valências. Toque em editar para adicionar.
-                </Text>
-              </View>
-            )}
-          </SectionCard>
+          {/* Card: Contrato */}
+          {(() => {
+            try {
+              const customFields = typeof atleta.camposCustomizados === 'string' 
+                ? JSON.parse(atleta.camposCustomizados) 
+                : atleta.camposCustomizados;
+              const contratoInfo = customFields?.contrato;
+              
+              if (!contratoInfo || !contratoInfo.tipo) return null;
+              
+              return (
+                <SectionCard title="Contrato" iconName="document.fill" iconColor={colors.primary} colors={colors}>
+                  <InfoRow 
+                    icon="tag" 
+                    label="Tipo" 
+                    value={contratoInfo.tipo === 'emprestimo' ? 'Empréstimo' : 'Definitivo'} 
+                    colors={colors} 
+                  />
+                  {contratoInfo.tipo === 'emprestimo' && (
+                    <>
+                      {contratoInfo.dataFimEmprestimo && (
+                        <InfoRow 
+                          icon="calendar" 
+                          label="Fim do Empréstimo" 
+                          value={contratoInfo.dataFimEmprestimo} 
+                          colors={colors} 
+                        />
+                      )}
+                      {contratoInfo.clube && (
+                        <InfoRow 
+                          icon="building.2.fill" 
+                          label="Clube" 
+                          value={contratoInfo.clube} 
+                          colors={colors} 
+                        />
+                      )}
+                      {contratoInfo.clubeCedente && (
+                        <InfoRow 
+                          icon="building.2.fill" 
+                          label="Clube Cedente" 
+                          value={contratoInfo.clubeCedente} 
+                          colors={colors} 
+                        />
+                      )}
+                      {contratoInfo.dataFimContrato && (
+                        <InfoRow 
+                          icon="calendar" 
+                          label="Fim do Contrato" 
+                          value={contratoInfo.dataFimContrato} 
+                          colors={colors}
+                          isLast
+                        />
+                      )}
+                    </>
+                  )}
+                  {contratoInfo.tipo === 'definitivo' && (
+                    <>
+                      {contratoInfo.dataFimContrato && (
+                        <InfoRow 
+                          icon="calendar" 
+                          label="Fim do Contrato" 
+                          value={contratoInfo.dataFimContrato} 
+                          colors={colors} 
+                        />
+                      )}
+                      {contratoInfo.clube && (
+                        <InfoRow 
+                          icon="building.2.fill" 
+                          label="Clube" 
+                          value={contratoInfo.clube} 
+                          colors={colors}
+                          isLast
+                        />
+                      )}
+                    </>
+                  )}
+                </SectionCard>
+              );
+            } catch (e) {
+              console.error("Erro ao exibir contrato:", e);
+              return null;
+            }
+          })()}
 
           {/* Card: Fotos */}
           <SectionCard title={`Fotos ${fotos && fotos.length > 0 ? `(${fotos.length})` : "(0)"}`} iconName="photo.fill" iconColor={colors.primary} colors={colors}
