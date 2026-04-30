@@ -26,6 +26,17 @@ import { useFocusEffect } from "expo-router";
 import { getApiBaseUrl } from "@/constants/oauth";
 import { useAuth } from "@/hooks/use-auth";
 
+// Normaliza string removendo acentos, espaços extras e convertendo para minúsculas
+function normalizeStr(str: string): string {
+  if (!str) return "";
+  return str
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 // Calcula a idade atual a partir da data de nascimento (ISO string)
 function calcularIdadeAtual(dataNascimento: string | null | undefined): number | null {
   if (!dataNascimento) return null;
@@ -155,9 +166,13 @@ export default function HomeScreen() {
   // Filtragem combinada (multi-seleção)
   const filteredAtletas = useMemo(() => {
     return atletas.filter((atleta) => {
-      // Busca por nome (local, nos atletas carregados)
-      if (searchQuery && !atleta.nome.toLowerCase().includes(searchQuery.toLowerCase())) {
-        return false;
+      // Busca por nome (local, nos atletas carregados) - com normalização
+      if (searchQuery) {
+        const nomeNormalizado = normalizeStr(atleta.nome || "");
+        const buscaNormalizada = normalizeStr(searchQuery);
+        if (!nomeNormalizado.includes(buscaNormalizada)) {
+          return false;
+        }
       }
       // Filtro por posição (múltiplas)
       if (selectedPosicoes.length > 0 && !selectedPosicoes.includes(atleta.posicao || "")) {
