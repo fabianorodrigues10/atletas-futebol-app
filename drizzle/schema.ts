@@ -51,7 +51,16 @@ export const atletas = mysqlTable("atletas", {
   pe: mysqlEnum("pe", ["direito", "esquerdo", "ambidestro"]),
   link: text("link"),
   escala: varchar("escala", { length: 100 }),
-  valencia: text("valencia"), // Campo para características detalhadas (até 65535 caracteres)
+  
+  // Contrato: tipo (emprestimo ou definitivo)
+  contratoTipo: mysqlEnum("contratoTipo", ["emprestimo", "definitivo"]),
+  // Contrato: data de fim (armazenado como ISO date)
+  contratoDataFim: date("contratoDataFim"),
+  // Contrato: clube que tem o contrato
+  contratoClube: varchar("contratoClube", { length: 255 }),
+  // Contrato (apenas para emprestimo): clube que ele pertence
+  contratoClubePertence: varchar("contratoClubePertence", { length: 255 }),
+  
   naturalidade: varchar("naturalidade", { length: 255 }), // Cidade/Estado de nascimento
   
   // Campos customizados (JSON para flexibilidade)

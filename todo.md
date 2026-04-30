@@ -497,3 +497,24 @@
 - [x] Investigar por que certos atletas não aparecem na busca do Radar
 - [x] Implementar normalização de strings (remover acentos e espaços extras) na busca
 - [x] Adicionar testes para validar a busca normalizada (8 testes passando)
+
+## Feature: Substituir "Valência" por "Contrato"
+- [ ] Atualizar schema do banco de dados (remover valência, adicionar contrato com tipo e dados)
+- [ ] Atualizar rotas tRPC para contrato
+- [ ] Atualizar formulário de cadastro/edição com UI de contrato (empréstimo/definitivo)
+- [ ] Atualizar tela de detalhes do atleta para exibir contrato
+- [ ] Atualizar relatório PDF para incluir informações de contrato
+- [ ] Testar cadastro, edição e exibição de contrato
+- [ ] Remover campo "valência" de todas as telas
+
+## Feature: Substituir "Valência" por "Contrato"
+- [x] Atualizar schema do banco de dados (remover valência, adicionar contrato com tipo e dados)
+- [x] Criar migração do banco de dados para as novas colunas
+- [x] Atualizar rotas tRPC para suportar contrato (emprestimo/definitivo)
+- [x] Atualizar formulário de cadastro/edição com UI de contrato
+  - [x] Dois botões para selecionar tipo (Empréstimo ou Definitivo)
+  - [x] Campo de data de fim do contrato (DD/MM/AA)
+  - [x] Campo de clube que tem o contrato
+  - [x] Campo de clube que ele pertence (apenas para empréstimo)
+- [x] Atualizar tela de detalhes do atleta para exibir contrato
+- [x] Criar 8 testes para validar a funcionalidade de contrato (todos passando)

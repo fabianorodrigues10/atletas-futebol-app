@@ -80,7 +80,10 @@ export const appRouter = router({
           pe: z.enum(["direito", "esquerdo", "ambidestro"]).optional(),
           link: z.string().optional(),
           escala: z.string().max(100).optional(),
-          valencia: z.string().max(1000).optional(),
+          contratoTipo: z.enum(["emprestimo", "definitivo"]).optional(),
+          contratoDataFim: z.string().optional(), // ISO date string
+          contratoClube: z.string().max(255).optional(),
+          contratoClubePertence: z.string().max(255).optional(),
           camposCustomizados: z.string().optional(), // JSON string
         })
       )
@@ -98,7 +101,10 @@ export const appRouter = router({
           pe: input.pe || null,
           link: input.link || null,
           escala: input.escala || null,
-          valencia: input.valencia || null,
+          contratoTipo: input.contratoTipo || null,
+          contratoDataFim: input.contratoDataFim ? new Date(input.contratoDataFim) : null,
+          contratoClube: input.contratoClube || null,
+          contratoClubePertence: input.contratoClubePertence || null,
           camposCustomizados: input.camposCustomizados || null,
         });
         return { id };
@@ -120,7 +126,10 @@ export const appRouter = router({
           pe: z.enum(["direito", "esquerdo", "ambidestro"]).optional(),
           link: z.string().optional(),
           escala: z.string().max(100).optional(),
-          valencia: z.string().max(1000).optional(),
+          contratoTipo: z.enum(["emprestimo", "definitivo"]).optional(),
+          contratoDataFim: z.string().optional(),
+          contratoClube: z.string().max(255).optional(),
+          contratoClubePertence: z.string().max(255).optional(),
           camposCustomizados: z.string().optional(),
         })
       )
@@ -131,6 +140,11 @@ export const appRouter = router({
         const updateData: any = { ...data };
         if (data.altura !== undefined) {
           updateData.altura = data.altura.toString();
+        }
+        
+        // Converte contratoDataFim para Date se fornecida
+        if (data.contratoDataFim !== undefined) {
+          updateData.contratoDataFim = data.contratoDataFim ? new Date(data.contratoDataFim) : null;
         }
         
         // Manter dataNascimento como string (formato dd/mm/aa)
