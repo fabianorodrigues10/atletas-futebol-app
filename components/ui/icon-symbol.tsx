@@ -103,7 +103,7 @@ export function IconSymbol({
       <MaterialIcons
         color={color}
         size={size}
-        name={iconName}
+        name={iconName as any}
         style={style}
       />
     );
@@ -135,7 +135,7 @@ export function IconSymbol({
       <MaterialIcons
         color={color}
         size={size}
-        name={MAPPING[name]}
+        name={MAPPING[name] as any}
         style={style}
       />
     );

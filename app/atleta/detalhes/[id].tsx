@@ -309,26 +309,7 @@ export default function AtletaDetalhesScreen() {
             </SectionCard>
           )}
 
-          {/* Card: Valências */}
-          <SectionCard title="Valências" iconName="bolt.fill" iconColor={colors.primary} colors={colors}>
-            {atleta.valencia ? (
-              <Text style={{ fontSize: 14, color: colors.foreground, lineHeight: 22 }}>
-                {atleta.valencia}
-              </Text>
-            ) : (
-              <View style={{
-                backgroundColor: colors.background,
-                borderRadius: 10,
-                padding: 16,
-                borderWidth: 1,
-                borderColor: colors.border,
-              }}>
-                <Text style={{ fontSize: 13, color: colors.muted, textAlign: "center", fontStyle: "italic" }}>
-                  Sem descrição de valências. Toque em editar para adicionar.
-                </Text>
-              </View>
-            )}
-          </SectionCard>
+          {/* Seção de Valências removida */}
 
           {/* Card: Fotos */}
           <SectionCard title={`Fotos ${fotos && fotos.length > 0 ? `(${fotos.length})` : "(0)"}`} iconName="photo.fill" iconColor={colors.primary} colors={colors}
