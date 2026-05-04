@@ -769,8 +769,8 @@ export default function MarcilioScreen() {
       const base = getApiBaseUrl();
       const resp = await fetch(`${base}/api/atletas`);
       if (resp.ok) {
-        const data = await resp.json();
-        setElenco(data);
+        const json = await resp.json();
+        setElenco(json.data || json || []);
       }
     } catch (e) {
       console.error("Erro ao carregar elenco:", e);
