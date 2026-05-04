@@ -767,7 +767,7 @@ export default function MarcilioScreen() {
     try {
       setCarregando(true);
       const base = getApiBaseUrl();
-      const resp = await fetch(`${base}/api/atletas/list`);
+      const resp = await fetch(`${base}/api/atletas`);
       if (resp.ok) {
         const data = await resp.json();
         setElenco(data);

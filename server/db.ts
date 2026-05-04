@@ -195,7 +195,7 @@ function calcularCompletude(atleta: any, temFoto: boolean, temVideo: boolean = f
     atleta.pe ? 1 : 0,
     atleta.link ? 1 : 0,
     atleta.escala ? 1 : 0,
-    atleta.valencia ? 1 : 0,
+    atleta ? 1 : 0,
     temFoto ? 1 : 0,
     temVideo ? 1 : 0,
   ];
@@ -305,8 +305,8 @@ export async function searchAtletas(
     conditions.push(eq(atletas.escala, filtros.escala));
   }
   
-  if (filtros.valencia) {
-    conditions.push(eq(atletas.valencia, filtros.valencia));
+  if (filtros) {
+    conditions.push(eq(atletas, filtros));
   }
   
   const query = db

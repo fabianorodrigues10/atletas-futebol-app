@@ -52,7 +52,7 @@ export const atletas = mysqlTable("atletas", {
   link: text("link"),
   escala: varchar("escala", { length: 100 }),
   naturalidade: varchar("naturalidade", { length: 255 }), // Cidade/Estado de nascimento
-  valencia: text("valencia"), // Descrição de valências do atleta
+  // valencia: text("valencia"), // Descrição de valências do atleta - REMOVIDO (não existe no banco remoto)
   
   // Campos customizados (JSON para flexibilidade)
   camposCustomizados: text("camposCustomizados"), // JSON string
