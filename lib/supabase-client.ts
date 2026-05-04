@@ -14,11 +14,8 @@ if (supabaseUrl && supabaseAnonKey) {
 
 export { supabase }
 
-// Helper function to ensure supabase is initialized
+// Helper function to get supabase client (may be null if not initialized)
 export function getSupabase() {
-  if (!supabase) {
-    throw new Error('Supabase not initialized. Check environment variables.')
-  }
   return supabase
 }
 
@@ -52,6 +49,7 @@ export interface Midia {
 // Funções auxiliares
 export async function signUp(email: string, password: string) {
   const sb = getSupabase()
+  if (!sb) throw new Error('Supabase not initialized')
   return sb.auth.signUp({
     email,
     password,
@@ -60,6 +58,7 @@ export async function signUp(email: string, password: string) {
 
 export async function signIn(email: string, password: string) {
   const sb = getSupabase()
+  if (!sb) throw new Error('Supabase not initialized')
   return sb.auth.signInWithPassword({
     email,
     password,
@@ -68,11 +67,13 @@ export async function signIn(email: string, password: string) {
 
 export async function signOut() {
   const sb = getSupabase()
+  if (!sb) throw new Error('Supabase not initialized')
   return sb.auth.signOut()
 }
 
 export async function getCurrentUser() {
   const sb = getSupabase()
+  if (!sb) return null
   const { data: { user } } = await sb.auth.getUser()
   return user
 }
@@ -82,6 +83,7 @@ export async function getAtletas() {
   if (!user) return { data: [], error: 'Not authenticated' }
 
   const sb = getSupabase()
+  if (!sb) return { data: [], error: 'Supabase not initialized' }
   return sb
     .from('atletas')
     .select('*')
@@ -94,6 +96,7 @@ export async function createAtleta(atleta: Omit<Atleta, 'id' | 'user_id' | 'crea
   if (!user) return { data: null, error: 'Not authenticated' }
 
   const sb = getSupabase()
+  if (!sb) return { data: null, error: 'Supabase not initialized' }
   return sb
     .from('atletas')
     .insert([{
@@ -106,6 +109,7 @@ export async function createAtleta(atleta: Omit<Atleta, 'id' | 'user_id' | 'crea
 
 export async function updateAtleta(id: number, updates: Partial<Atleta>) {
   const sb = getSupabase()
+  if (!sb) throw new Error('Supabase not initialized')
   return sb
     .from('atletas')
     .update(updates)
@@ -116,6 +120,7 @@ export async function updateAtleta(id: number, updates: Partial<Atleta>) {
 
 export async function deleteAtleta(id: number) {
   const sb = getSupabase()
+  if (!sb) throw new Error('Supabase not initialized')
   return sb
     .from('atletas')
     .delete()
@@ -124,6 +129,7 @@ export async function deleteAtleta(id: number) {
 
 export async function getMidias(atletaId: number) {
   const sb = getSupabase()
+  if (!sb) return { data: [], error: 'Supabase not initialized' }
   return sb
     .from('midias')
     .select('*')
@@ -133,6 +139,7 @@ export async function getMidias(atletaId: number) {
 
 export async function createMidia(midia: Omit<Midia, 'id' | 'created_at'>) {
   const sb = getSupabase()
+  if (!sb) throw new Error('Supabase not initialized')
   return sb
     .from('midias')
     .insert([midia])
@@ -142,6 +149,7 @@ export async function createMidia(midia: Omit<Midia, 'id' | 'created_at'>) {
 
 export async function deleteMidia(id: number) {
   const sb = getSupabase()
+  if (!sb) throw new Error('Supabase not initialized')
   return sb
     .from('midias')
     .delete()
