@@ -93,7 +93,7 @@ function parseOgolHtml(html: string): OgolPlayerData {
     let value: string | null = null;
     
     // Procura por span com class card-data__label que contenha o texto
-    $('span.card-data__label').each((i, el) => {
+    $('span.card-data__label').each((i: number, el: any) => {
       const label = $(el).text().trim();
       // Verifica se o label contém o texto procurado (case-insensitive)
       if (label.toLowerCase().includes(labelText.toLowerCase())) {
@@ -113,7 +113,7 @@ function parseOgolHtml(html: string): OgolPlayerData {
       }
     });
     
-    return value && value.length > 0 ? value : null;
+    return value && (value as string).length > 0 ? value : null;
   };
   
   // Nome completo

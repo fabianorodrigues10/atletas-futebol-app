@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { InsertAtleta } from "../drizzle/schema";
 import { COOKIE_NAME } from "../shared/const.js";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
@@ -41,7 +42,9 @@ export const appRouter = router({
     // Buscar atletas sem data de nascimento/idade
     getSemData: publicProcedure.query(({ ctx }) => {
       const userId = ctx.user?.id || 1;
-      return db.getAtletasSemData(userId);
+      return db.getAtletas(userId).then(atletas => 
+        atletas.filter(a => !a.dataNascimento || !a.idade)
+      );
     }),
 
     // Buscar atletas com filtros
@@ -57,12 +60,11 @@ export const appRouter = router({
           alturaMax: z.number().optional(),
           pe: z.string().optional(),
           escala: z.string().optional(),
-          valencia: z.string().optional(),
           limit: z.number().optional(),
         })
       )
       .query(({ ctx, input }) => {
-        return db.searchAtletas(ctx.user?.id || 1, input);
+        return db.searchAtletas(ctx.user?.id || 1, input as any);
       }),
 
     // Criar novo atleta
@@ -76,11 +78,10 @@ export const appRouter = router({
           naturalidade: z.string().max(255).optional(),
           dataNascimento: z.string().optional(), // ISO date string
           idade: z.number().optional(),
-          altura: z.number().optional(),
+          altura: z.union([z.number(), z.string()]).optional(),
           pe: z.enum(["direito", "esquerdo", "ambidestro"]).optional(),
           link: z.string().optional(),
           escala: z.string().max(100).optional(),
-          valencia: z.string().max(1000).optional(),
           camposCustomizados: z.string().optional(), // JSON string
         })
       )
@@ -98,7 +99,6 @@ export const appRouter = router({
           pe: input.pe || null,
           link: input.link || null,
           escala: input.escala || null,
-          valencia: input.valencia || null,
           camposCustomizados: input.camposCustomizados || null,
         });
         return { id };
@@ -116,11 +116,10 @@ export const appRouter = router({
           naturalidade: z.string().max(255).optional(),
           dataNascimento: z.string().optional(),
           idade: z.number().optional(),
-          altura: z.number().optional(),
+          altura: z.union([z.number(), z.string()]).optional(),
           pe: z.enum(["direito", "esquerdo", "ambidestro"]).optional(),
           link: z.string().optional(),
           escala: z.string().max(100).optional(),
-          valencia: z.string().max(1000).optional(),
           camposCustomizados: z.string().optional(),
         })
       )
@@ -130,7 +129,7 @@ export const appRouter = router({
         // Converte altura para string se fornecida
         const updateData: any = { ...data };
         if (data.altura !== undefined) {
-          updateData.altura = data.altura.toString();
+          updateData.altura = typeof data.altura === 'number' ? data.altura.toString() : data.altura;
         }
         
         // Manter dataNascimento como string (formato dd/mm/aa)
@@ -205,36 +204,33 @@ export const appRouter = router({
         return db.getGrupoById(input.id, userId);
       }),
 
-    // Buscar atletas de um grupo
-    getAtletas: publicProcedure
-      .input(z.object({ grupoId: z.number() }))
-      .query(({ input }) => {
-        return db.getAtletasDoGrupo(input.grupoId);
-      }),
-
     // Criar novo grupo
     create: publicProcedure
       .input(
         z.object({
           nome: z.string().min(1).max(255),
           descricao: z.string().optional(),
-          cor: z.string().regex(/^#[0-9A-F]{6}$/i).optional(),
+          atletasIds: z.array(z.number()).optional(),
         })
       )
       .mutation(async ({ ctx, input }) => {
         const userId = ctx.user?.id || 1;
-        // Verificar se já existe grupo com esse nome para esse usuário
-        const gruposExistentes = await db.getGrupos(userId);
-        const existente = gruposExistentes.find((g: any) => g.nome === input.nome);
-        if (existente) {
-          return { id: existente.id };
-        }
         const id = await db.createGrupo({
           userId,
           nome: input.nome,
           descricao: input.descricao || null,
-          cor: input.cor || "#FF6B35",
         });
+        
+        // Adicionar atletas ao grupo
+        if (input.atletasIds && input.atletasIds.length > 0) {
+          for (const atletaId of input.atletasIds) {
+            await db.addAtletaAoGrupo({
+              grupoId: id,
+              atletaId: atletaId,
+            });
+          }
+        }
+        
         return { id };
       }),
 
@@ -245,7 +241,6 @@ export const appRouter = router({
           id: z.number(),
           nome: z.string().min(1).max(255).optional(),
           descricao: z.string().optional(),
-          cor: z.string().regex(/^#[0-9A-F]{6}$/i).optional(),
         })
       )
       .mutation(async ({ ctx, input }) => {
@@ -255,80 +250,68 @@ export const appRouter = router({
         return { success: true };
       }),
 
-    // Deletar grupo
+    // Excluir grupo
     delete: publicProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ ctx, input }) => {
         const userId = ctx.user?.id || 1;
-        await db.removeAllAtletasDoGrupo(input.id);
         await db.deleteGrupo(input.id, userId);
         return { success: true };
       }),
 
     // Adicionar atleta ao grupo
     addAtleta: publicProcedure
-      .input(z.object({ atletaId: z.number(), grupoId: z.number() }))
-      .mutation(async ({ input }) => {
-        const id = await db.addAtletaAoGrupo({
-          atletaId: input.atletaId,
+      .input(z.object({ grupoId: z.number(), atletaId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await db.addAtletaAoGrupo({
           grupoId: input.grupoId,
+          atletaId: input.atletaId,
         });
-        return { id };
+        return { success: true };
       }),
 
     // Remover atleta do grupo
     removeAtleta: publicProcedure
-      .input(z.object({ atletaId: z.number(), grupoId: z.number() }))
-      .mutation(async ({ input }) => {
+      .input(z.object({ grupoId: z.number(), atletaId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
         await db.removeAtletaDoGrupo(input.atletaId, input.grupoId);
-        return { success: true };
-      }),
-
-    reordenar: publicProcedure
-      .input(z.object({ grupoId: z.number(), atletaIds: z.array(z.number()) }))
-      .mutation(async ({ input }) => {
-        await db.reordenarAtletasDoGrupo(input.grupoId, input.atletaIds);
         return { success: true };
       }),
   }),
 
-  // ==================== CONFIGURAÇÃO DE CAMPOS ====================
-  campos: router({
+  // ==================== CAMPOS CUSTOMIZADOS ====================
+  camposCustomizados: router({
     // Listar campos customizados
-    listCustomizados: publicProcedure.query(({ ctx }) => {
-      return db.getCamposCustomizados(ctx.user?.id || 1);
-    }),
-
-    // Listar configuração de campos padrão
-    listPadrao: publicProcedure.query(({ ctx }) => {
-      return db.getCamposPadrao(ctx.user?.id || 1);
+    list: publicProcedure.query(({ ctx }) => {
+      const userId = ctx.user?.id || 1;
+      return db.getCamposCustomizados(userId);
     }),
 
     // Criar campo customizado
-    createCustomizado: publicProcedure
+    create: publicProcedure
       .input(
         z.object({
           nomeCampo: z.string().min(1).max(255),
           tipoCampo: z.enum(["text", "number", "select", "date"]),
-          opcoes: z.string().optional(), // JSON array para selects
-          ativo: z.boolean().default(true),
+          opcoes: z.string().optional(), // JSON array
           ordem: z.number(),
         })
       )
       .mutation(async ({ ctx, input }) => {
+        const userId = ctx.user?.id || 1;
         const id = await db.createCampoCustomizado({
-          userId: ctx.user?.id || 1,
+          userId,
           nomeCampo: input.nomeCampo,
           tipoCampo: input.tipoCampo,
           opcoes: input.opcoes || null,
-          ativo: input.ativo,
+          ativo: true,
           ordem: input.ordem,
         });
         return { id };
       }),
 
     // Atualizar campo customizado
-    updateCustomizado: publicProcedure
+    update: publicProcedure
       .input(
         z.object({
           id: z.number(),
@@ -340,222 +323,131 @@ export const appRouter = router({
         })
       )
       .mutation(async ({ ctx, input }) => {
-        const { id, ...data } = input;
-        await db.updateCampoCustomizado(id, ctx.user?.id || 1, data);
-        return { success: true };
-      }),
-
-    // Excluir campo customizado
-    deleteCustomizado: publicProcedure
-      .input(z.object({ id: z.number() }))
-      .mutation(async ({ ctx, input }) => {
-        await db.deleteCampoCustomizado(input.id, ctx.user?.id || 1);
-        return { success: true };
-      }),
-
-    // Atualizar configuração de campo padrão
-    updatePadrao: publicProcedure
-      .input(
-        z.object({
-          nomeCampo: z.string().min(1).max(100),
-          visivel: z.boolean(),
-          ordem: z.number(),
-        })
-      )
-      .mutation(async ({ ctx, input }) => {
-        const id = await db.upsertCampoPadrao({
-          userId: ctx.user?.id || 1,
-          nomeCampo: input.nomeCampo,
-          visivel: input.visivel,
-          ordem: input.ordem,
-        });
-        return { id };
-      }),
-  }),
-
-  // ==================== MÍDIA ====================
-  midias: router({
-    // Gerar URL de upload para S3
-    getUploadUrl: publicProcedure
-      .input(
-        z.object({
-          atletaId: z.number(),
-          fileName: z.string().min(1).max(255),
-          mimeType: z.string(),
-        })
-      )
-      .mutation(async ({ ctx, input }) => {
-        const userId = ctx.user?.id || 1;
-        const timestamp = Date.now();
-        const random = Math.random().toString(36).substring(7);
-        const s3Key = `atletas/${userId}/${input.atletaId}/${timestamp}-${random}-${input.fileName}`;
-        return { s3Key };
-      }),
-
-    // Upload de foto com base64 (funciona na web e celular)
-    uploadFoto: publicProcedure
-      .input(
-        z.object({
-          atletaId: z.number(),
-          fileName: z.string().min(1).max(255),
-          mimeType: z.string(),
-          base64Data: z.string(), // base64 encoded image data
-          descricao: z.string().optional(),
-        })
-      )
-      .mutation(async ({ ctx, input }) => {
-        const userId = ctx.user?.id || 1;
-        const timestamp = Date.now();
-        const random = Math.random().toString(36).substring(7);
-        const s3Key = `atletas/${userId}/${input.atletaId}/${timestamp}-${random}-${input.fileName}`;
-        
-        // Decodifica base64 e faz upload ao S3
-        const buffer = Buffer.from(input.base64Data, 'base64');
-        const { url } = await storagePut(s3Key, buffer, input.mimeType);
-        
-        // Salva referência no banco
-        const id = await db.createMidia({
-          userId,
-          atletaId: input.atletaId,
-          tipo: 'foto',
-          nome: input.fileName,
-          url,
-          s3Key,
-          mimeType: input.mimeType,
-          tamanho: buffer.length,
-          descricao: input.descricao,
-        });
-        
-        return { id, url };
-      }),
-
-    // Listar mídias de um atleta
-    getByAtleta: publicProcedure
-      .input(z.object({ atletaId: z.number() }))
-      .query(({ ctx, input }) => {
-        const userId = ctx.user?.id || 1;
-        return db.getMidiasDoAtleta(input.atletaId, userId);
-      }),
-
-    // Buscar mídia por ID
-    getById: publicProcedure
-      .input(z.object({ id: z.number() }))
-      .query(({ ctx, input }) => {
-        const userId = ctx.user?.id || 1;
-        return db.getMidiaById(input.id, userId);
-      }),
-
-    // Criar nova mídia (após upload para S3)
-    create: publicProcedure
-      .input(
-        z.object({
-          atletaId: z.number(),
-          tipo: z.enum(["foto", "video", "documento"]),
-          nome: z.string().min(1).max(255),
-          url: z.string().url(),
-          s3Key: z.string().min(1).max(500).optional(), // Opcional para vídeos do YouTube
-          mimeType: z.string().optional(),
-          tamanho: z.number().optional(),
-          descricao: z.string().optional(),
-        })
-      )
-      .mutation(async ({ ctx, input }) => {
-        const userId = ctx.user?.id || 1;
-        // Para vídeos sem s3Key, gerar um s3Key sintético
-        const s3Key = input.s3Key || `videos/${userId}/${input.atletaId}/${Date.now()}-${Math.random().toString(36).substring(7)}.url`;
-        const id = await db.createMidia({
-          userId,
-          atletaId: input.atletaId,
-          tipo: input.tipo,
-          nome: input.nome,
-          url: input.url,
-          s3Key: s3Key,
-          mimeType: input.mimeType,
-          tamanho: input.tamanho,
-          descricao: input.descricao,
-        });
-        return { id };
-      }),
-
-    // Atualizar mídia
-    update: publicProcedure
-      .input(
-        z.object({
-          id: z.number(),
-          descricao: z.string().optional(),
-          nome: z.string().optional(),
-        })
-      )
-      .mutation(async ({ ctx, input }) => {
         const userId = ctx.user?.id || 1;
         const { id, ...data } = input;
-        await db.updateMidia(id, userId, data);
+        await db.updateCampoCustomizado(id, userId, data);
         return { success: true };
       }),
 
-    // Deletar mídia
+    // Deletar campo customizado
     delete: publicProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ ctx, input }) => {
-        // Permitir exclusão sem verificação de userId para evitar problemas de autenticação
-        const db_instance = await db.getDb();
-        if (!db_instance) throw new Error("Database not available");
-        
-        const { eq } = await import("drizzle-orm");
-        const { midias } = await import("../drizzle/schema");
-        
-        await db_instance
-          .delete(midias)
-          .where(eq(midias.id, input.id));
-        
+        const userId = ctx.user?.id || 1;
+        await db.deleteCampoCustomizado(input.id, userId);
         return { success: true };
       }),
   }),
 
-  // ==================== ESTATISTICAS DA TEMPORADA ====================
-  estatisticas: router({
-    // Buscar estatísticas da temporada de múltiplos atletas de uma vez
-    getByAtletaIds: publicProcedure
-      .input(z.object({
-        atletaIds: z.array(z.number()),
-        temporada: z.string().optional(),
-      }))
-      .query(async ({ ctx, input }) => {
-        try {
-          const userId = ctx.user?.id || 1;
-          if (!input.atletaIds.length) return [];
-          const dbConn = await db.getDb();
-          if (!dbConn) return [];
-          const { estatisticasTemporada } = await import("../drizzle/schema");
-          const { and, inArray, eq } = await import("drizzle-orm");
-          const temporada = input.temporada || "2025";
-          const result = await dbConn.select().from(estatisticasTemporada)
-            .where(and(
-              inArray(estatisticasTemporada.atletaId, input.atletaIds),
-              eq(estatisticasTemporada.userId, userId),
-              eq(estatisticasTemporada.temporada, temporada),
-            ));
-          return result;
-        } catch (e) {
-          return [];
-        }
+  // ==================== CAMPOS PADRÃO ====================
+  camposPadrao: router({
+    // Listar configuração de campos padrão
+    list: publicProcedure.query(({ ctx }) => {
+      const userId = ctx.user?.id || 1;
+      return db.getCamposPadrao(userId);
+    }),
+
+    // Atualizar visibilidade de campo padrão
+    updateVisibilidade: publicProcedure
+      .input(
+        z.object({
+          nomeCampo: z.string(),
+          visivel: z.boolean(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const userId = ctx.user?.id || 1;
+        await db.upsertCampoPadrao({
+          userId,
+          nomeCampo: input.nomeCampo,
+          visivel: input.visivel,
+          ordem: 0,
+        });
+        return { success: true };
       }),
   }),
 
-  // ==================== MANUTENCAO ====================
-  manutencao: router({
-    // Corrigir altura de atletas que estao em formato antigo (ex: 168.00 em vez de 1.68)
-    corrigirAltura: publicProcedure.mutation(async ({ ctx }) => {
-      try {
+  // ==================== IMPORTAÇÃO ====================
+  importacao: router({
+    // Importar atletas de CSV
+    importarCSV: publicProcedure
+      .input(
+        z.object({
+          dados: z.string(), // CSV content
+          modoAtualizacao: z.enum(["substituir", "mesclar"]).default("mesclar"),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
         const userId = ctx.user?.id || 1;
+        
+        // Parse CSV
+        const linhas = input.dados.split("\n").filter(l => l.trim());
+        if (linhas.length < 2) {
+          throw new Error("CSV deve ter pelo menos 2 linhas (cabeçalho + dados)");
+        }
+
+        const cabecalho = linhas[0].split(",").map(h => h.trim());
+        const atletas = [];
+
+        for (let i = 1; i < linhas.length; i++) {
+          const valores = linhas[i].split(",").map(v => v.trim());
+          const atleta: any = {};
+          
+          cabecalho.forEach((col, idx) => {
+            atleta[col] = valores[idx] || null;
+          });
+
+          atletas.push(atleta);
+        }
+
+        // Importar atletas
+        let importados = 0;
+        for (const atleta of atletas) {
+          try {
+            await db.createAtleta({
+              userId,
+              nome: atleta.nome || "Sem nome",
+              posicao: atleta.posicao || null,
+              segundaPosicao: atleta.segundaPosicao || null,
+              clube: atleta.clube || null,
+              naturalidade: atleta.naturalidade || null,
+              dataNascimento: atleta.dataNascimento ? new Date(atleta.dataNascimento) : null,
+              idade: atleta.idade ? parseInt(atleta.idade) : null,
+              altura: atleta.altura?.toString() || null,
+              pe: atleta.pe || null,
+              link: atleta.link || null,
+              escala: atleta.escala || null,
+              camposCustomizados: atleta.camposCustomizados || null,
+            } as any);
+            importados++;
+          } catch (error) {
+            console.error(`Erro ao importar atleta ${atleta.nome}:`, error);
+          }
+        }
+
+        return {
+          success: true,
+          message: `${importados} atletas importados com sucesso`,
+          importados,
+        };
+      }),
+  }),
+
+  // ==================== UTILITÁRIOS ====================
+  utils: router({
+    // Corrigir alturas (converter de cm para m se necessário)
+    corrigirAlturas: publicProcedure.mutation(async ({ ctx }) => {
+      const userId = ctx.user?.id || 1;
+      
+      try {
         const atletas = await db.getAtletas(userId);
         
         let corrigidos = 0;
         for (const atleta of atletas) {
-          // Se altura > 10, significa que esta em centimetros (ex: 168.00)
-          if (atleta.altura && atleta.altura > 10) {
-            const novaAltura = Math.round((atleta.altura / 100) * 100) / 100; // Dividir por 100 e arredondar para 2 casas
-            await db.updateAtleta(atleta.id, userId, { altura: novaAltura });
+          // Se altura > 10, significa que está em centímetros (ex: 168.00)
+          if (atleta.altura && Number(atleta.altura) > 10) {
+            const novaAltura = Math.round((Number(atleta.altura) / 100) * 100) / 100; // Dividir por 100 e arredondar para 2 casas
+            await db.updateAtleta(atleta.id, userId, { altura: novaAltura.toString() } as any);
             corrigidos++;
           }
         }
@@ -569,51 +461,11 @@ export const appRouter = router({
         console.error("Erro ao corrigir altura:", error);
         return {
           success: false,
-          message: "Erro ao corrigir altura dos atletas",
-          error: String(error),
+          message: "Erro ao corrigir alturas",
+          corrigidos: 0,
         };
       }
     }),
-  }),
-
-  // ==================== RELATORIOS ====================
-  relatorios: router({
-    // Gerar relatório em PDF
-    gerarPDF: publicProcedure
-      .input(
-        z.object({
-          titulo: z.string(),
-          posicoes: z.array(z.string()).optional(),
-          idades: z.array(z.number()).optional(),
-          clubes: z.array(z.string()).optional(),
-          atletaIds: z.array(z.number()).optional(),
-        })
-      )
-      .mutation(async ({ ctx, input }) => {
-        try {
-          const userId = ctx.user?.id || 1;
-          let atletasQuery = await db.getAtletas(userId);
-          
-          if (input.atletaIds && input.atletaIds.length > 0) {
-            atletasQuery = atletasQuery.filter((a: any) => input.atletaIds!.includes(a.id));
-          }
-          
-          const { gerarRelatorioPDF } = await import("./pdf-generator.js");
-          const pdfBuffer = await gerarRelatorioPDF(input.titulo, atletasQuery, { totalAtletas: atletasQuery.length, idadeMedia: 0, alturaMedia: "0", posicoes: {} });
-          
-          return {
-            success: true,
-            message: "Relatório gerado com sucesso",
-            pdfBase64: pdfBuffer.toString("base64"),
-          };
-        } catch (error) {
-          console.error("Erro ao gerar PDF:", error);
-          return {
-            success: false,
-            message: "Erro ao gerar relatório",
-          };
-        }
-      }),
   }),
 });
 
