@@ -392,20 +392,20 @@ function ModalEstatisticas({
 
           <Text style={styles.secaoTitulo}>⚽ Ofensivo</Text>
           <View style={styles.gridCampos}>
-            {campo("Gols", "gols")}
-            {campo("Assistências", "assistencias")}
-            {campo("Finalizações", "finalizacoes")}
-            {campo("Passes", "passes")}
-            {campo("Passes Certos", "passesCompletos")}
+            {campo("Gol", "gols")}
+            {campo("Ass", "assistencias")}
+            {campo("Fin C", "finalizacoes")}
+            {campo("Pass C", "passes")}
+            {campo("Pass E", "passesCompletos")}
           </View>
 
           <Text style={styles.secaoTitulo}>🛡 Defensivo</Text>
           <View style={styles.gridCampos}>
-            {campo("Desarmes", "desarmes")}
-            {campo("Interceptações", "interceptacoes")}
-            {campo("Duelos Ganhos", "duelosGanhos")}
-            {campo("Jogo Aéreo", "jogosAereos")}
-            {campo("Duelo Aéreo Perdido", "duelosAereosPerdidos")}
+            {campo("Des", "desarmes")}
+            {campo("Inter", "interceptacoes")}
+            {campo("Duel G", "duelosGanhos")}
+            {campo("Aer G", "jogosAereos")}
+            {campo("Aer P", "duelosAereosPerdidos")}
           </View>
 
           <Text style={styles.secaoTitulo}>🟨 Disciplina</Text>
@@ -414,13 +414,6 @@ function ModalEstatisticas({
             {campo("Vermelhos", "cartoesVermelhos")}
           </View>
 
-          <Text style={styles.secaoTitulo}>⭐ Notas Técnicas (0–10)</Text>
-          <View style={styles.gridCampos}>
-            {campo("Técnica", "notaTecnica", "decimal")}
-            {campo("Física", "notaFisica", "decimal")}
-            {campo("Tática", "notaTatica", "decimal")}
-
-          </View>
 
           <Text style={styles.secaoTitulo}>📝 Observações</Text>
           <TextInput
