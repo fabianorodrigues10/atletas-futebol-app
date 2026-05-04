@@ -1,8 +1,15 @@
 {
-  "buildCommand": "npm run vercel-build",
+  "buildCommand": "pnpm build:web",
   "outputDirectory": "dist/web",
   "installCommand": "pnpm install",
+  "env": {
+    "DATABASE_URL": "@database_url"
+  },
   "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api"
+    },
     {
       "source": "/(.*)",
       "destination": "/index.html"

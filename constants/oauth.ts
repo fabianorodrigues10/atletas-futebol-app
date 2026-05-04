@@ -45,6 +45,11 @@ export function getApiBaseUrl(): string {
       return `${protocol}//127.0.0.1:3000`;
     }
     
+    // For Vercel production: use same origin (API at /api)
+    if (!hostname.includes("manus.computer")) {
+      return `${protocol}//${hostname}`;
+    }
+    
     // Pattern: 8081-sandboxid.region.domain -> 3000-sandboxid.region.domain
     const apiHostname = hostname.replace(/^8081-/, "3000-");
     if (apiHostname !== hostname) {
