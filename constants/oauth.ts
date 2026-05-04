@@ -26,19 +26,19 @@ export const OWNER_NAME = env.ownerName;
 export const API_BASE_URL = env.apiBaseUrl;
 
 /**
- * Get the API base URL, deriving from current hostname if not set.
- * Metro runs on 8081, API server runs on 3000.
- * URL pattern: https://PORT-sandboxid.region.domain
+ * Get the API base URL by deriving from the current connection.
+ * 
+ * Strategy:
+ * 1. On web: Replace port 8081 with 3000 in the hostname
+ * 2. On native (Expo Go): Use hardcoded URL (works reliably in Manus environment)
  */
 export function getApiBaseUrl(): string {
-  // If API_BASE_URL is set, use it
-  if (API_BASE_URL) {
-    return API_BASE_URL.replace(/\/$/, "");
-  }
-
+  console.log('[getApiBaseUrl] Platform:', ReactNative.Platform.OS);
+  
   // On web, derive from current hostname by replacing port 8081 with 3000
   if (ReactNative.Platform.OS === "web" && typeof window !== "undefined" && window.location) {
     const { protocol, hostname } = window.location;
+    console.log('[getApiBaseUrl] Web hostname:', hostname);
     
     // Handle local development: 127.0.0.1:8081 -> 127.0.0.1:3000
     if (hostname.includes("127.0.0.1") || hostname.includes("localhost")) {
@@ -48,18 +48,26 @@ export function getApiBaseUrl(): string {
     // Pattern: 8081-sandboxid.region.domain -> 3000-sandboxid.region.domain
     const apiHostname = hostname.replace(/^8081-/, "3000-");
     if (apiHostname !== hostname) {
+      console.log('[getApiBaseUrl] Derived API hostname:', apiHostname);
       return `${protocol}//${apiHostname}`;
     }
   }
 
-  // On native (Expo Go), use the URL from app.config.ts extra (injected at build time)
-  const extraApiBaseUrl = (Constants.expoConfig?.extra as any)?.apiBaseUrl;
-  if (extraApiBaseUrl) {
-    return extraApiBaseUrl.replace(/\/$/, "");
+  // On native (Expo Go), use hardcoded URL - this is the most reliable approach
+  if (ReactNative.Platform.OS !== "web") {
+    const hardcodedApiUrl = "https://3000-ibvr91xzqokolokpeserq-cc9ce21a.us1.manus.computer";
+    console.log('[getApiBaseUrl] Using hardcoded API URL for native:', hardcodedApiUrl);
+    return hardcodedApiUrl;
   }
 
-  // Fallback to empty (will use relative URL)
-  return "";
+  // Fallback to environment variable if set
+  if (API_BASE_URL && API_BASE_URL.trim()) {
+    console.log('[getApiBaseUrl] Using API_BASE_URL env:', API_BASE_URL);
+    return API_BASE_URL.replace(/\/$/, "");
+  }
+
+  // Final fallback
+  return "https://3000-ibvr91xzqokolokpeserq-cc9ce21a.us1.manus.computer";
 }
 
 export const SESSION_TOKEN_KEY = "app_session_token";
@@ -128,7 +136,6 @@ export async function startOAuthLogin(): Promise<string | null> {
   const supported = await Linking.canOpenURL(loginUrl);
   if (!supported) {
     console.warn("[OAuth] Cannot open login URL: URL scheme not supported");
-    // 可考虑抛出错误或返回错误状态，让调用方处理
     return null;
   }
 
@@ -136,9 +143,7 @@ export async function startOAuthLogin(): Promise<string | null> {
     await Linking.openURL(loginUrl);
   } catch (error) {
     console.error("[OAuth] Failed to open login URL:", error);
-    // 可考虑抛出错误让调用方处理
   }
 
-  // The OAuth callback will reopen the app via deep link.
   return null;
 }

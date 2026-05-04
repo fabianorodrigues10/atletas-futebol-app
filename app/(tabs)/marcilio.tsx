@@ -781,6 +781,11 @@ export default function MarcilioScreen() {
       }
     } catch (e) {
       console.error('Erro ao carregar elenco:', e);
+      console.error('[DEBUG] Erro completo:', JSON.stringify(e, null, 2));
+      if (e instanceof Error) {
+        console.error('[DEBUG] Mensagem:', e.message);
+        console.error('[DEBUG] Stack:', e.stack);
+      }
     } finally {
       setCarregando(false);
     }

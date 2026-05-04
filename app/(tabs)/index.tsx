@@ -95,12 +95,19 @@ export default function HomeScreen() {
   const refetch = useCallback(async () => {
     try {
       setIsLoading(true);
-      const baseUrl = getApiBaseUrl();
-      const url = `${baseUrl}/api/atletas`;
+      let baseUrl = getApiBaseUrl();
+      let url = `${baseUrl}/api/atletas`;
       console.log('[DEBUG] Iniciando fetch de atletas...');
       console.log('[DEBUG] URL:', url);
-      const response = await fetch(url);
+      
+      const response = await fetch(url, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      });
       console.log('[DEBUG] Status:', response.status, 'URL:', url);
+      
       if (!response.ok) {
         const errorText = await response.text();
         console.log('[DEBUG] Erro:', errorText);
@@ -724,39 +731,36 @@ export default function HomeScreen() {
       </Modal>
 
       {/* Modal de Estatísticas de Completude */}
-      {useMemo(() => {
-        const stats = [
-          { min: 100, max: 100, label: "100% Completo", count: 0, percentage: 0 },
-          { min: 90, max: 99, label: "90-99%", count: 0, percentage: 0 },
-          { min: 80, max: 89, label: "80-89%", count: 0, percentage: 0 },
-          { min: 70, max: 79, label: "70-79%", count: 0, percentage: 0 },
-          { min: 60, max: 69, label: "60-69%", count: 0, percentage: 0 },
-          { min: 50, max: 59, label: "50-59%", count: 0, percentage: 0 },
-          { min: 0, max: 49, label: "Menos de 50%", count: 0, percentage: 0 },
-        ];
-
-        atletas.forEach((atleta) => {
-          const completude = atleta.completude || 0;
-          const bracket = stats.find((s) => completude >= s.min && completude <= s.max);
-          if (bracket) {
-            bracket.count++;
-          }
-        });
-
-        stats.forEach((stat) => {
-          stat.percentage = atletas.length > 0 ? Math.round((stat.count / atletas.length) * 100) : 0;
-        });
-
-        return (
-          <CompletudStatsModal
-            visible={showStatsModal}
-            onClose={() => setShowStatsModal(false)}
-            stats={stats}
-            totalAtletas={atletas.length}
-            onSelectBracket={handleSelectCompletudeBracket}
-          />
-        );
-      }, [atletas, showStatsModal, handleSelectCompletudeBracket])}
+      {useMemo(() => (
+        <CompletudStatsModal
+          visible={showStatsModal}
+          onClose={() => setShowStatsModal(false)}
+          stats={(() => {
+            const stats = [
+              { min: 100, max: 100, label: "100% Completo", count: 0, percentage: 0 },
+              { min: 90, max: 99, label: "90-99%", count: 0, percentage: 0 },
+              { min: 80, max: 89, label: "80-89%", count: 0, percentage: 0 },
+              { min: 70, max: 79, label: "70-79%", count: 0, percentage: 0 },
+              { min: 60, max: 69, label: "60-69%", count: 0, percentage: 0 },
+              { min: 50, max: 59, label: "50-59%", count: 0, percentage: 0 },
+              { min: 0, max: 49, label: "Menos de 50%", count: 0, percentage: 0 },
+            ];
+            atletas.forEach((atleta) => {
+              const completude = atleta.completude || 0;
+              const bracket = stats.find((s) => completude >= s.min && completude <= s.max);
+              if (bracket) {
+                bracket.count++;
+              }
+            });
+            stats.forEach((stat) => {
+              stat.percentage = atletas.length > 0 ? Math.round((stat.count / atletas.length) * 100) : 0;
+            });
+            return stats;
+          })()}
+          totalAtletas={atletas.length}
+          onSelectBracket={handleSelectCompletudeBracket}
+        />
+      ), [atletas, showStatsModal, handleSelectCompletudeBracket])}
 
     </ScreenContainer>
   );
