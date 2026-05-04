@@ -1,13 +1,26 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+// Use process.env for Expo (with EXPO_PUBLIC_ prefix)
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables')
+let supabase: ReturnType<typeof createClient> | null = null
+
+if (supabaseUrl && supabaseAnonKey) {
+  supabase = createClient(supabaseUrl, supabaseAnonKey)
+} else {
+  console.error('Missing Supabase environment variables. Expected EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY')
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export { supabase }
+
+// Helper function to ensure supabase is initialized
+export function getSupabase() {
+  if (!supabase) {
+    throw new Error('Supabase not initialized. Check environment variables.')
+  }
+  return supabase
+}
 
 // Tipos para o banco de dados
 export interface Atleta {
@@ -38,25 +51,29 @@ export interface Midia {
 
 // Funções auxiliares
 export async function signUp(email: string, password: string) {
-  return supabase.auth.signUp({
+  const sb = getSupabase()
+  return sb.auth.signUp({
     email,
     password,
   })
 }
 
 export async function signIn(email: string, password: string) {
-  return supabase.auth.signInWithPassword({
+  const sb = getSupabase()
+  return sb.auth.signInWithPassword({
     email,
     password,
   })
 }
 
 export async function signOut() {
-  return supabase.auth.signOut()
+  const sb = getSupabase()
+  return sb.auth.signOut()
 }
 
 export async function getCurrentUser() {
-  const { data: { user } } = await supabase.auth.getUser()
+  const sb = getSupabase()
+  const { data: { user } } = await sb.auth.getUser()
   return user
 }
 
@@ -64,7 +81,8 @@ export async function getAtletas() {
   const user = await getCurrentUser()
   if (!user) return { data: [], error: 'Not authenticated' }
 
-  return supabase
+  const sb = getSupabase()
+  return sb
     .from('atletas')
     .select('*')
     .eq('user_id', user.id)
@@ -75,7 +93,8 @@ export async function createAtleta(atleta: Omit<Atleta, 'id' | 'user_id' | 'crea
   const user = await getCurrentUser()
   if (!user) return { data: null, error: 'Not authenticated' }
 
-  return supabase
+  const sb = getSupabase()
+  return sb
     .from('atletas')
     .insert([{
       ...atleta,
@@ -86,7 +105,8 @@ export async function createAtleta(atleta: Omit<Atleta, 'id' | 'user_id' | 'crea
 }
 
 export async function updateAtleta(id: number, updates: Partial<Atleta>) {
-  return supabase
+  const sb = getSupabase()
+  return sb
     .from('atletas')
     .update(updates)
     .eq('id', id)
@@ -95,14 +115,16 @@ export async function updateAtleta(id: number, updates: Partial<Atleta>) {
 }
 
 export async function deleteAtleta(id: number) {
-  return supabase
+  const sb = getSupabase()
+  return sb
     .from('atletas')
     .delete()
     .eq('id', id)
 }
 
 export async function getMidias(atletaId: number) {
-  return supabase
+  const sb = getSupabase()
+  return sb
     .from('midias')
     .select('*')
     .eq('atleta_id', atletaId)
@@ -110,7 +132,8 @@ export async function getMidias(atletaId: number) {
 }
 
 export async function createMidia(midia: Omit<Midia, 'id' | 'created_at'>) {
-  return supabase
+  const sb = getSupabase()
+  return sb
     .from('midias')
     .insert([midia])
     .select()
@@ -118,7 +141,8 @@ export async function createMidia(midia: Omit<Midia, 'id' | 'created_at'>) {
 }
 
 export async function deleteMidia(id: number) {
-  return supabase
+  const sb = getSupabase()
+  return sb
     .from('midias')
     .delete()
     .eq('id', id)
