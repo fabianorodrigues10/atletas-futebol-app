@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator, ScrollView } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || "http://localhost:3000";
@@ -13,7 +13,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!username || !password) {
-      Alert.alert("Erro", "Preencha usuário e senha");
+      if (typeof window !== "undefined") window.alert("Erro: Preencha usuário e senha");
       return;
     }
 
@@ -38,10 +38,10 @@ export default function LoginScreen() {
         localStorage.setItem("user", JSON.stringify(data.user));
       }
 
-      Alert.alert("Sucesso", `Bem-vindo, ${data.user.username}!`);
+      if (typeof window !== "undefined") window.alert(`Sucesso: Bem-vindo, ${data.user.username}!`);
       router.replace("/(tabs)");
     } catch (error: any) {
-      Alert.alert("Erro", error.message);
+      if (typeof window !== "undefined") window.alert(`Erro: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -49,12 +49,12 @@ export default function LoginScreen() {
 
   const handleSignup = async () => {
     if (!username || !password) {
-      Alert.alert("Erro", "Preencha usuário e senha");
+      if (typeof window !== "undefined") window.alert("Erro: Preencha usuário e senha");
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert("Erro", "Senha deve ter no mínimo 6 caracteres");
+      if (typeof window !== "undefined") window.alert("Erro: Senha deve ter no mínimo 6 caracteres");
       return;
     }
 
@@ -71,11 +71,11 @@ export default function LoginScreen() {
         throw new Error(error.error || "Erro ao criar usuário");
       }
 
-      Alert.alert("Sucesso", "Usuário criado! Faça login para continuar");
+      if (typeof window !== "undefined") window.alert("Sucesso: Usuário criado! Faça login para continuar");
       setIsLogin(true);
       setPassword("");
     } catch (error: any) {
-      Alert.alert("Erro", error.message);
+      if (typeof window !== "undefined") window.alert(`Erro: ${error.message}`);
     } finally {
       setLoading(false);
     }
