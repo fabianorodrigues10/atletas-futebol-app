@@ -96,22 +96,34 @@ type ScoutAtleta = {
   atletaId: number;
   titular: boolean;
   minutosJogados: number;
-  gols: number;
-  assistencias: number;
-  finalizacoes: number;
-  passes: number;
-  passesCompletos: number;
-  cruzamentos: number;
-  faltasSofridas: number;
-  dribles: number;
-  desarmes: number;
-  interceptacoes: number;
-  duelos: number;
-  duelosGanhos: number;
-  jogosAereos: number;
-  duelosAereosPerdidos: number;
-  faltasCometidas: number;
-  bolasRecuperadas: number;
+  // Ofensivo
+  gol: number;
+  assistencia: number;
+  finalizacaoCerta: number;
+  finalizacaoErrada: number;
+  passeCerto: number;
+  passeErrado: number;
+  passeFinalizacao: number;
+  cruzamentoCerto: number;
+  cruzamentoErrado: number;
+  passeLongoCerto: number;
+  passeLongoErrado: number;
+  dribleCerto: number;
+  dribleErrado: number;
+  desperdicio: number;
+  faltaSofrida: number;
+  // Defensivo
+  desarme: number;
+  jogoAereoGanho: number;
+  jogoAereoPerdido: number;
+  bolaAreaGanha: number;
+  bolaAreaPerdida: number;
+  faltaCometida: number;
+  bolaRecuperada: number;
+  finalizacaoInterceptada: number;
+  duelChaoGanho: number;
+  duelChaoPerdido: number;
+  // Disciplina e Notas
   cartoesAmarelos: number;
   cartoesVermelhos: number;
   notaTecnica: string;
@@ -129,22 +141,34 @@ type EstatisticasTemporada = {
   minutosJogados: number;
   jogos: number;
   jogosTitular: number;
-  gols: number;
-  assistencias: number;
-  finalizacoes: number;
-  desarmes: number;
-  interceptacoes: number;
-  duelos: number;
-  duelosGanhos: number;
-  passes: number;
-  passesCompletos: number;
-  cruzamentos: number;
-  faltasSofridas: number;
-  dribles: number;
-  jogosAereos: number;
-  duelosAereosPerdidos: number;
-  faltasCometidas: number;
-  bolasRecuperadas: number;
+  // Ofensivo
+  gol: number;
+  assistencia: number;
+  finalizacaoCerta: number;
+  finalizacaoErrada: number;
+  passeCerto: number;
+  passeErrado: number;
+  passeFinalizacao: number;
+  cruzamentoCerto: number;
+  cruzamentoErrado: number;
+  passeLongoCerto: number;
+  passeLongoErrado: number;
+  dribleCerto: number;
+  dribleErrado: number;
+  desperdicio: number;
+  faltaSofrida: number;
+  // Defensivo
+  desarme: number;
+  jogoAereoGanho: number;
+  jogoAereoPerdido: number;
+  bolaAreaGanha: number;
+  bolaAreaPerdida: number;
+  faltaCometida: number;
+  bolaRecuperada: number;
+  finalizacaoInterceptada: number;
+  duelChaoGanho: number;
+  duelChaoPerdido: number;
+  // Disciplina e Notas
   cartoesAmarelos: number;
   cartoesVermelhos: number;
   notaTecnica: string | null;
@@ -157,10 +181,20 @@ type EstatisticasTemporada = {
 
 const STATS_VAZIA: EstatisticasTemporada = {
   minutosJogados: 0, jogos: 0, jogosTitular: 0,
-  gols: 0, assistencias: 0, finalizacoes: 0,
-  desarmes: 0, interceptacoes: 0, duelos: 0, duelosGanhos: 0,
-  passes: 0, passesCompletos: 0, cruzamentos: 0, faltasSofridas: 0, dribles: 0,
-  jogosAereos: 0, duelosAereosPerdidos: 0, faltasCometidas: 0, bolasRecuperadas: 0,
+  // Ofensivo
+  gol: 0, assistencia: 0, finalizacaoCerta: 0, finalizacaoErrada: 0,
+  passeCerto: 0, passeErrado: 0, passeFinalizacao: 0,
+  cruzamentoCerto: 0, cruzamentoErrado: 0,
+  passeLongoCerto: 0, passeLongoErrado: 0,
+  dribleCerto: 0, dribleErrado: 0,
+  desperdicio: 0, faltaSofrida: 0,
+  // Defensivo
+  desarme: 0, jogoAereoGanho: 0, jogoAereoPerdido: 0,
+  bolaAreaGanha: 0, bolaAreaPerdida: 0,
+  faltaCometida: 0, bolaRecuperada: 0,
+  finalizacaoInterceptada: 0,
+  duelChaoGanho: 0, duelChaoPerdido: 0,
+  // Disciplina e Notas
   cartoesAmarelos: 0, cartoesVermelhos: 0,
   notaTecnica: null, notaFisica: null, notaTatica: null, notaAtitudinal: null, notaPotencial: null,
   observacoes: null,
@@ -392,20 +426,35 @@ function ModalEstatisticas({
 
           <Text style={styles.secaoTitulo}>⚽ Ofensivo</Text>
           <View style={styles.gridCampos}>
-            {campo("Gol", "gols")}
-            {campo("Ass", "assistencias")}
-            {campo("Fin C", "finalizacoes")}
-            {campo("Pass C", "passes")}
-            {campo("Pass E", "passesCompletos")}
+            {campo("Gol", "gol")}
+            {campo("Ass", "assistencia")}
+            {campo("Fin C", "finalizacaoCerta")}
+            {campo("Fin E", "finalizacaoErrada")}
+            {campo("Pass C", "passeCerto")}
+            {campo("Pass E", "passeErrado")}
+            {campo("Pass F", "passeFinalizacao")}
+            {campo("Crz C", "cruzamentoCerto")}
+            {campo("Crz E", "cruzamentoErrado")}
+            {campo("PL C", "passeLongoCerto")}
+            {campo("PL E", "passeLongoErrado")}
+            {campo("Drib C", "dribleCerto")}
+            {campo("Drib E", "dribleErrado")}
+            {campo("Desp", "desperdicio")}
+            {campo("FS", "faltaSofrida")}
           </View>
 
           <Text style={styles.secaoTitulo}>🛡 Defensivo</Text>
           <View style={styles.gridCampos}>
-            {campo("Des", "desarmes")}
-            {campo("Inter", "interceptacoes")}
-            {campo("Duel G", "duelosGanhos")}
-            {campo("Aer G", "jogosAereos")}
-            {campo("Aer P", "duelosAereosPerdidos")}
+            {campo("Des", "desarme")}
+            {campo("Aer G", "jogoAereoGanho")}
+            {campo("Aer P", "jogoAereoPerdido")}
+            {campo("Área G", "bolaAreaGanha")}
+            {campo("Área P", "bolaAreaPerdida")}
+            {campo("FC", "faltaCometida")}
+            {campo("BR", "bolaRecuperada")}
+            {campo("FI", "finalizacaoInterceptada")}
+            {campo("DC G", "duelChaoGanho")}
+            {campo("DC P", "duelChaoPerdido")}
           </View>
 
           <Text style={styles.secaoTitulo}>🟨 Disciplina</Text>
@@ -480,17 +529,17 @@ function CardAtleta({
             <Text style={styles.statLabel}>Min</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statValor}>{stats!.gols}</Text>
+            <Text style={styles.statValor}>{stats!.gol}</Text>
             <Text style={styles.statLabel}>Gols</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statValor}>{stats!.assistencias}</Text>
+            <Text style={styles.statValor}>{stats!.assistencia}</Text>
             <Text style={styles.statLabel}>Assist</Text>
           </View>
-          {stats!.passes > 0 && (
+          {stats!.passeCerto > 0 && (
             <View style={styles.statItem}>
               <Text style={styles.statValor}>
-                {Math.round((stats!.passesCompletos / stats!.passes) * 100)}%
+                {Math.round((stats!.passeCerto / (stats!.passeCerto + stats!.passeErrado)) * 100)}%
               </Text>
               <Text style={styles.statLabel}>Passes</Text>
             </View>
@@ -570,22 +619,34 @@ export default function MarcilioScreen() {
             atletaId: s.atletaId,
             titular: s.titular || false,
             minutosJogados: s.minutosJogados || 0,
-            gols: s.gols || 0,
-            assistencias: s.assistencias || 0,
-            finalizacoes: s.finalizacoes || 0,
-            passes: s.passes || 0,
-            passesCompletos: s.passesCompletos || 0,
-            cruzamentos: s.cruzamentos || 0,
-            faltasSofridas: s.faltasSofridas || 0,
-            dribles: s.dribles || 0,
-            desarmes: s.desarmes || 0,
-            interceptacoes: s.interceptacoes || 0,
-            duelos: s.duelos || 0,
-            duelosGanhos: s.duelosGanhos || 0,
-            jogosAereos: s.jogosAereos || 0,
-            duelosAereosPerdidos: s.duelosAereosPerdidos || 0,
-            faltasCometidas: s.faltasCometidas || 0,
-            bolasRecuperadas: s.bolasRecuperadas || 0,
+            // Ofensivo
+            gol: s.gol || 0,
+            assistencia: s.assistencia || 0,
+            finalizacaoCerta: s.finalizacaoCerta || 0,
+            finalizacaoErrada: s.finalizacaoErrada || 0,
+            passeCerto: s.passeCerto || 0,
+            passeErrado: s.passeErrado || 0,
+            passeFinalizacao: s.passeFinalizacao || 0,
+            cruzamentoCerto: s.cruzamentoCerto || 0,
+            cruzamentoErrado: s.cruzamentoErrado || 0,
+            passeLongoCerto: s.passeLongoCerto || 0,
+            passeLongoErrado: s.passeLongoErrado || 0,
+            dribleCerto: s.dribleCerto || 0,
+            dribleErrado: s.dribleErrado || 0,
+            desperdicio: s.desperdicio || 0,
+            faltaSofrida: s.faltaSofrida || 0,
+            // Defensivo
+            desarme: s.desarme || 0,
+            jogoAereoGanho: s.jogoAereoGanho || 0,
+            jogoAereoPerdido: s.jogoAereoPerdido || 0,
+            bolaAreaGanha: s.bolaAreaGanha || 0,
+            bolaAreaPerdida: s.bolaAreaPerdida || 0,
+            faltaCometida: s.faltaCometida || 0,
+            bolaRecuperada: s.bolaRecuperada || 0,
+            finalizacaoInterceptada: s.finalizacaoInterceptada || 0,
+            duelChaoGanho: s.duelChaoGanho || 0,
+            duelChaoPerdido: s.duelChaoPerdido || 0,
+            // Disciplina e Notas
             cartoesAmarelos: s.cartoesAmarelos || 0,
             cartoesVermelhos: s.cartoesVermelhos || 0,
             notaTecnica: s.notaTecnica != null ? String(s.notaTecnica) : "",
@@ -679,10 +740,20 @@ export default function MarcilioScreen() {
         ...prev,
         [atletaId]: {
           atletaId, titular: false, minutosJogados: 0,
-          gols: 0, assistencias: 0, finalizacoes: 0,
-          passes: 0, passesCompletos: 0, cruzamentos: 0, faltasSofridas: 0, dribles: 0,
-          desarmes: 0, interceptacoes: 0, duelos: 0, duelosGanhos: 0,
-          jogosAereos: 0, duelosAereosPerdidos: 0, faltasCometidas: 0, bolasRecuperadas: 0,
+          // Ofensivo
+          gol: 0, assistencia: 0, finalizacaoCerta: 0, finalizacaoErrada: 0,
+          passeCerto: 0, passeErrado: 0, passeFinalizacao: 0,
+          cruzamentoCerto: 0, cruzamentoErrado: 0,
+          passeLongoCerto: 0, passeLongoErrado: 0,
+          dribleCerto: 0, dribleErrado: 0,
+          desperdicio: 0, faltaSofrida: 0,
+          // Defensivo
+          desarme: 0, jogoAereoGanho: 0, jogoAereoPerdido: 0,
+          bolaAreaGanha: 0, bolaAreaPerdida: 0,
+          faltaCometida: 0, bolaRecuperada: 0,
+          finalizacaoInterceptada: 0,
+          duelChaoGanho: 0, duelChaoPerdido: 0,
+          // Disciplina e Notas
           cartoesAmarelos: 0, cartoesVermelhos: 0,
           notaTecnica: "", notaFisica: "", notaTatica: "",
           notaAtitudinal: "", notaPotencial: "", observacoes: "",
@@ -768,7 +839,14 @@ export default function MarcilioScreen() {
         console.log('[DEBUG] Response JSON:', json);
         const atletas = json.data || json || [];
         console.log('[DEBUG] Atletas carregados:', atletas.length);
-        setElenco(atletas);
+        // Filtrar apenas atletas do Marcílio Dias
+        const atletasMarcilio = atletas.filter((atleta: any) => {
+          if (!atleta.clube) return false;
+          const clubeNormalizado = atleta.clube.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          return clubeNormalizado.includes('marcilio dias');
+        });
+        console.log('[DEBUG] Atletas do Marcílio Dias:', atletasMarcilio.length);
+        setElenco(atletasMarcilio);
       } else {
         console.error('[DEBUG] Response not ok:', resp.status);
       }
@@ -810,7 +888,7 @@ export default function MarcilioScreen() {
     const alturas = elenco.map(a => parseFloat(a.altura || "0")).filter(Boolean);
     const mediaIdade = idades.length ? (idades.reduce((a, b) => a + b, 0) / idades.length).toFixed(1) : "—";
     const mediaAltura = alturas.length ? (alturas.reduce((a, b) => a + b, 0) / alturas.length).toFixed(2) : "—";
-    const totalGols = elenco.reduce((acc, a) => acc + (a.estatisticas?.gols || 0), 0);
+    const totalGols = elenco.reduce((acc, a) => acc + (a.estatisticas?.gol || 0), 0);
     const totalMinutos = elenco.reduce((acc, a) => acc + (a.estatisticas?.minutosJogados || 0), 0);
     const porPosicao: Record<string, number> = {};
     elenco.forEach(a => { if (a.posicao) porPosicao[a.posicao] = (porPosicao[a.posicao] || 0) + 1; });
@@ -1007,22 +1085,34 @@ export default function MarcilioScreen() {
     const campos: { label: string; chave: keyof EstatisticasTemporada; secao?: string }[] = [
       { label: "Jogos", chave: "jogos" },
       { label: "Minutos", chave: "minutosJogados" },
-      { label: "Gols", chave: "gols", secao: "Ofensivo" },
-      { label: "Assistências", chave: "assistencias", secao: "Ofensivo" },
-      { label: "Finalizações", chave: "finalizacoes", secao: "Ofensivo" },
-      { label: "Cruzamentos", chave: "cruzamentos", secao: "Ofensivo" },
-      { label: "Passes", chave: "passes", secao: "Ofensivo" },
-      { label: "Passes Certos", chave: "passesCompletos", secao: "Ofensivo" },
-      { label: "Faltas Sofridas", chave: "faltasSofridas", secao: "Ofensivo" },
-      { label: "Dribles", chave: "dribles", secao: "Ofensivo" },
-      { label: "Desarmes", chave: "desarmes", secao: "Defensivo" },
-      { label: "Intercepções", chave: "interceptacoes", secao: "Defensivo" },
-      { label: "Duelos", chave: "duelos", secao: "Defensivo" },
-      { label: "Duelos Ganhos", chave: "duelosGanhos", secao: "Defensivo" },
-      { label: "Jogos Aéreos", chave: "jogosAereos", secao: "Defensivo" },
-      { label: "Aéreos Perdidos", chave: "duelosAereosPerdidos", secao: "Defensivo" },
-      { label: "Faltas Cometidas", chave: "faltasCometidas", secao: "Defensivo" },
-      { label: "Bolas Recuperadas", chave: "bolasRecuperadas", secao: "Defensivo" },
+      // Ofensivo
+      { label: "Gol", chave: "gol", secao: "Ofensivo" },
+      { label: "Assistência", chave: "assistencia", secao: "Ofensivo" },
+      { label: "Finalização Certa", chave: "finalizacaoCerta", secao: "Ofensivo" },
+      { label: "Finalização Errada", chave: "finalizacaoErrada", secao: "Ofensivo" },
+      { label: "Passe Certo", chave: "passeCerto", secao: "Ofensivo" },
+      { label: "Passe Errado", chave: "passeErrado", secao: "Ofensivo" },
+      { label: "Passe Finalização", chave: "passeFinalizacao", secao: "Ofensivo" },
+      { label: "Cruzamento Certo", chave: "cruzamentoCerto", secao: "Ofensivo" },
+      { label: "Cruzamento Errado", chave: "cruzamentoErrado", secao: "Ofensivo" },
+      { label: "Passe Longo Certo", chave: "passeLongoCerto", secao: "Ofensivo" },
+      { label: "Passe Longo Errado", chave: "passeLongoErrado", secao: "Ofensivo" },
+      { label: "Drible Certo", chave: "dribleCerto", secao: "Ofensivo" },
+      { label: "Drible Errado", chave: "dribleErrado", secao: "Ofensivo" },
+      { label: "Desperdício", chave: "desperdicio", secao: "Ofensivo" },
+      { label: "Falta Sofrida", chave: "faltaSofrida", secao: "Ofensivo" },
+      // Defensivo
+      { label: "Desarme", chave: "desarme", secao: "Defensivo" },
+      { label: "Jogo Aéreo Ganho", chave: "jogoAereoGanho", secao: "Defensivo" },
+      { label: "Jogo Aéreo Perdido", chave: "jogoAereoPerdido", secao: "Defensivo" },
+      { label: "Bola Área Ganha", chave: "bolaAreaGanha", secao: "Defensivo" },
+      { label: "Bola Área Perdida", chave: "bolaAreaPerdida", secao: "Defensivo" },
+      { label: "Falta Cometida", chave: "faltaCometida", secao: "Defensivo" },
+      { label: "Bola Recuperada", chave: "bolaRecuperada", secao: "Defensivo" },
+      { label: "Finalização Interceptada", chave: "finalizacaoInterceptada", secao: "Defensivo" },
+      { label: "Duel Chão Ganho", chave: "duelChaoGanho", secao: "Defensivo" },
+      { label: "Duel Chão Perdido", chave: "duelChaoPerdido", secao: "Defensivo" },
+      // Disciplina
       { label: "Amarelos", chave: "cartoesAmarelos", secao: "Disciplina" },
       { label: "Vermelhos", chave: "cartoesVermelhos", secao: "Disciplina" },
     ];
@@ -1571,17 +1661,17 @@ export default function MarcilioScreen() {
                       </Text>
                     </View>
                     <View style={{ flexDirection: "row", gap: 4, marginBottom: 4 }}>
-                      {campoCompacto("Gols", "gols")}
-                      {campoCompacto("Assist.", "assistencias")}
-                      {campoCompacto("Finaliz.", "finalizacoes")}
-                      {campoCompacto("Cruzam.", "cruzamentos")}
+                      {campoCompacto("Gol", "gols")}
+                      {campoCompacto("Ass", "assistencias")}
+                      {campoCompacto("Fin C", "finalizacoes")}
+                      {campoCompacto("Cruz C", "cruzamentos")}
                     </View>
                     {/* Ofensivo - linha 2 (4 campos) */}
                     <View style={{ flexDirection: "row", gap: 4, marginBottom: 8 }}>
-                      {campoCompacto("Passes", "passes")}
-                      {campoCompacto("P.Certos", "passesCompletos")}
-                      {campoCompacto("F.Sofrid.", "faltasSofridas")}
-                      {campoCompacto("Dribles", "dribles")}
+                      {campoCompacto("Pass C", "passes")}
+                      {campoCompacto("Pass E", "passesCompletos")}
+                      {campoCompacto("Falt S", "faltasSofridas")}
+                      {campoCompacto("Drib C", "dribles")}
                     </View>
 
                     {/* Defensivo - linha 1 (4 campos) */}
@@ -1592,17 +1682,17 @@ export default function MarcilioScreen() {
                       </Text>
                     </View>
                     <View style={{ flexDirection: "row", gap: 4, marginBottom: 4 }}>
-                      {campoCompacto("Desarmes", "desarmes")}
-                      {campoCompacto("Intercept.", "interceptacoes")}
-                      {campoCompacto("Duelos", "duelos")}
-                      {campoCompacto("D.Ganhos", "duelosGanhos")}
+                      {campoCompacto("Des", "desarmes")}
+                      {campoCompacto("Inter", "interceptacoes")}
+                      {campoCompacto("Duel G", "duelos")}
+                      {campoCompacto("Duel G", "duelosGanhos")}
                     </View>
                     {/* Defensivo - linha 2 (4 campos) */}
                     <View style={{ flexDirection: "row", gap: 4, marginBottom: 8 }}>
-                      {campoCompacto("J.Aéreo", "jogosAereos")}
-                      {campoCompacto("D.Aér.Perd", "duelosAereosPerdidos")}
-                      {campoCompacto("F.Comet.", "faltasCometidas")}
-                      {campoCompacto("B.Recup.", "bolasRecuperadas")}
+                      {campoCompacto("Aer G", "jogosAereos")}
+                      {campoCompacto("Aer P", "duelosAereosPerdidos")}
+                      {campoCompacto("Fal C", "faltasCometidas")}
+                      {campoCompacto("Recu", "bolasRecuperadas")}
                     </View>
 
                     {/* Linha 3: Disciplina + Notas */}
