@@ -87,7 +87,7 @@ async function main() {
         pe: pe as any,
         link: row['LINK'] || null,
         escala: row['ESCALA'] || null,
-
+        valencia: row['VALÊNCIAS'] || null,
       });
 
       imported++;

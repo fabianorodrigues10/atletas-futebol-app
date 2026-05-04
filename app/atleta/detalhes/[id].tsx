@@ -309,7 +309,89 @@ export default function AtletaDetalhesScreen() {
             </SectionCard>
           )}
 
-          {/* Seção de Valências removida */}
+          {/* Card: Contrato */}
+          {(() => {
+            try {
+              const customFields = typeof atleta.camposCustomizados === 'string' 
+                ? JSON.parse(atleta.camposCustomizados) 
+                : atleta.camposCustomizados;
+              const contratoInfo = customFields?.contrato;
+              
+              if (!contratoInfo || !contratoInfo.tipo) return null;
+              
+              return (
+                <SectionCard title="Contrato" iconName="document.fill" iconColor={colors.primary} colors={colors}>
+                  <InfoRow 
+                    icon="tag" 
+                    label="Tipo" 
+                    value={contratoInfo.tipo === 'emprestimo' ? 'Empréstimo' : 'Definitivo'} 
+                    colors={colors} 
+                  />
+                  {contratoInfo.tipo === 'emprestimo' && (
+                    <>
+                      {contratoInfo.dataFimEmprestimo && (
+                        <InfoRow 
+                          icon="calendar" 
+                          label="Fim do Empréstimo" 
+                          value={contratoInfo.dataFimEmprestimo} 
+                          colors={colors} 
+                        />
+                      )}
+                      {contratoInfo.clube && (
+                        <InfoRow 
+                          icon="building.2.fill" 
+                          label="Clube" 
+                          value={contratoInfo.clube} 
+                          colors={colors} 
+                        />
+                      )}
+                      {contratoInfo.clubeCedente && (
+                        <InfoRow 
+                          icon="building.2.fill" 
+                          label="Clube Cedente" 
+                          value={contratoInfo.clubeCedente} 
+                          colors={colors} 
+                        />
+                      )}
+                      {contratoInfo.dataFimContrato && (
+                        <InfoRow 
+                          icon="calendar" 
+                          label="Fim do Contrato" 
+                          value={contratoInfo.dataFimContrato} 
+                          colors={colors}
+                          isLast
+                        />
+                      )}
+                    </>
+                  )}
+                  {contratoInfo.tipo === 'definitivo' && (
+                    <>
+                      {contratoInfo.dataFimContrato && (
+                        <InfoRow 
+                          icon="calendar" 
+                          label="Fim do Contrato" 
+                          value={contratoInfo.dataFimContrato} 
+                          colors={colors} 
+                        />
+                      )}
+                      {contratoInfo.clube && (
+                        <InfoRow 
+                          icon="building.2.fill" 
+                          label="Clube" 
+                          value={contratoInfo.clube} 
+                          colors={colors}
+                          isLast
+                        />
+                      )}
+                    </>
+                  )}
+                </SectionCard>
+              );
+            } catch (e) {
+              console.error("Erro ao exibir contrato:", e);
+              return null;
+            }
+          })()}
 
           {/* Card: Fotos */}
           <SectionCard title={`Fotos ${fotos && fotos.length > 0 ? `(${fotos.length})` : "(0)"}`} iconName="photo.fill" iconColor={colors.primary} colors={colors}

@@ -28,7 +28,13 @@ async function fillValencias() {
     for (const atleta of atletasLista) {
       try {
         // Selecionar valência aleatória
-        // Script desativado - campo valencia removido
+        const valencia = VALENCIAS[Math.floor(Math.random() * VALENCIAS.length)];
+
+        // Atualizar atleta
+        await db
+          .update(atletas)
+          .set({ valencia })
+          .where(eq(atletas.id, atleta.id));
 
         atualizados++;
 

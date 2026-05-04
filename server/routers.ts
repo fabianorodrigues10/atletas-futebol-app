@@ -98,7 +98,7 @@ export const appRouter = router({
           pe: input.pe || null,
           link: input.link || null,
           escala: input.escala || null,
-
+          valencia: input.valencia || null,
           camposCustomizados: input.camposCustomizados || null,
         });
         return { id };
@@ -553,13 +553,10 @@ export const appRouter = router({
         let corrigidos = 0;
         for (const atleta of atletas) {
           // Se altura > 10, significa que esta em centimetros (ex: 168.00)
-          if (atleta.altura) {
-            const alturaNum = typeof atleta.altura === 'string' ? parseFloat(atleta.altura) : atleta.altura;
-            if (alturaNum && alturaNum > 10) {
-              const novaAltura = Math.round((alturaNum / 100) * 100) / 100; // Dividir por 100 e arredondar para 2 casas
-              await db.updateAtleta(atleta.id, userId, { altura: novaAltura.toString() });
-              corrigidos++;
-            }
+          if (atleta.altura && atleta.altura > 10) {
+            const novaAltura = Math.round((atleta.altura / 100) * 100) / 100; // Dividir por 100 e arredondar para 2 casas
+            await db.updateAtleta(atleta.id, userId, { altura: novaAltura });
+            corrigidos++;
           }
         }
         

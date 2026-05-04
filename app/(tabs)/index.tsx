@@ -25,7 +25,6 @@ const marcilioDiasShield = require("@/assets/images/marcilio-dias-shield.png") a
 import { useFocusEffect } from "expo-router";
 import { getApiBaseUrl } from "@/constants/oauth";
 import { useAuth } from "@/hooks/use-auth";
-import { supabase } from "@/lib/supabase-client";
 
 // Normaliza string removendo acentos, espaços extras e convertendo para minúsculas
 function normalizeStr(str: string): string {
@@ -91,27 +90,27 @@ export default function HomeScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
 
   const refetch = useCallback(async () => {
     try {
       setIsLoading(true);
-      console.log('[DEBUG] Iniciando fetch de atletas do Supabase...');
-      const { data, error } = await supabase
-        .from('atletas')
-        .select('*')
-        .order('nome', { ascending: true });
-      
-      if (error) {
-        console.error('[ERROR] Erro ao carregar atletas:', error);
-        throw error;
+      const baseUrl = getApiBaseUrl();
+      const url = `${baseUrl}/api/atletas`;
+      console.log('[DEBUG] Iniciando fetch de atletas...');
+      console.log('[DEBUG] URL:', url);
+      const response = await fetch(url);
+      console.log('[DEBUG] Status:', response.status, 'URL:', url);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log('[DEBUG] Erro:', errorText);
+        throw new Error(`Erro ao carregar atletas: ${response.status}`);
       }
-      
+      const data = await response.json();
       console.log('[DEBUG] Dados recebidos:', data);
-      console.log('[DEBUG] Total de atletas:', data?.length || 0);
-      setAtletas(data || []);
-      setTotalAtletas(data?.length || 0);
+      console.log('[DEBUG] Total:', data.total, 'Atletas:', (data.data || data).length);
+      setAtletas(data.data || data);
+      setTotalAtletas(data.total || (data.data || data).length);
     } catch (error) {
       console.error('[ERROR] Erro ao carregar atletas:', error);
       console.error('[ERROR] Tipo de erro:', error instanceof Error ? error.message : String(error));

@@ -305,6 +305,9 @@ export async function searchAtletas(
     conditions.push(eq(atletas.escala, filtros.escala));
   }
   
+  if (filtros.valencia) {
+    conditions.push(eq(atletas.valencia, filtros.valencia));
+  }
   
   const query = db
     .select()

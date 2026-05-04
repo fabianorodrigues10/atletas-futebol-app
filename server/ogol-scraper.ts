@@ -93,7 +93,7 @@ function parseOgolHtml(html: string): OgolPlayerData {
     let value: string | null = null;
     
     // Procura por span com class card-data__label que contenha o texto
-    $('span.card-data__label').each((i: number, el: any) => {
+    $('span.card-data__label').each((i, el) => {
       const label = $(el).text().trim();
       // Verifica se o label contém o texto procurado (case-insensitive)
       if (label.toLowerCase().includes(labelText.toLowerCase())) {
@@ -113,7 +113,7 @@ function parseOgolHtml(html: string): OgolPlayerData {
       }
     });
     
-    return value ? value : null;
+    return value && value.length > 0 ? value : null;
   };
   
   // Nome completo
@@ -203,9 +203,11 @@ async function scrapeWithPlaywright(url: string): Promise<string | null> {
   try {
     const playwright = await import("playwright");
     const browser = await playwright.chromium.launch({ headless: true });
-    const page = await browser.newPage();
+    const context = await browser.createBrowserContext();
+    const page = await context.newPage();
     
-    // User agent já é definido pelo Playwright por padrão
+    // Definir user agent para evitar bloqueios
+    await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
     
     // Navegar para a URL com timeout de 10s (reduzido de 30s)
     try {
