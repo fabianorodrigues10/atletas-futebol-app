@@ -23,7 +23,6 @@ const MAPPING = {
   "pencil": "edit",
   "trash": "delete",
   "xmark": "close",
-  "xmark.circle.fill": "cancel",
   "checkmark": "check",
   "star.fill": "star",
   "bolt.fill": "flash-on",

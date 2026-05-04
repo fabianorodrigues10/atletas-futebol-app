@@ -73,6 +73,11 @@ const MAPPING = {
   "sportscourt.fill": "sports-soccer",
   "radar": "gps-fixed",
   "people.fill": "group",
+  "arrow.down.circle": "arrow-downward",
+  "chevron.left": "chevron-left",
+  "doc.fill": "description",
+  "line.horizontal.3": "menu",
+  "play.fill": "play-arrow",
 } as IconMapping;
 
 /**
