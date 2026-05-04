@@ -767,13 +767,20 @@ export default function MarcilioScreen() {
     try {
       setCarregando(true);
       const base = getApiBaseUrl();
+      console.log('[DEBUG] Base URL:', base);
       const resp = await fetch(`${base}/api/atletas`);
+      console.log('[DEBUG] Response status:', resp.status);
       if (resp.ok) {
         const json = await resp.json();
-        setElenco(json.data || json || []);
+        console.log('[DEBUG] Response JSON:', json);
+        const atletas = json.data || json || [];
+        console.log('[DEBUG] Atletas carregados:', atletas.length);
+        setElenco(atletas);
+      } else {
+        console.error('[DEBUG] Response not ok:', resp.status);
       }
     } catch (e) {
-      console.error("Erro ao carregar elenco:", e);
+      console.error('Erro ao carregar elenco:', e);
     } finally {
       setCarregando(false);
     }
