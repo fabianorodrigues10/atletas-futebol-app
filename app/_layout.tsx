@@ -28,31 +28,9 @@ export const unstable_settings = {
 };
 
 function useAuthProtection() {
-  const router = require("expo-router").useRouter();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    // Verificar se está no web (domínio)
-    const isWeb = Platform.OS === "web";
-    if (!isWeb) {
-      // No Expo Go, não precisa de autenticação
-      setIsAuthenticated(true);
-      setIsLoading(false);
-      return;
-    }
-
-    // No web, verificar se tem token salvo
-    const token = typeof window !== "undefined" ? localStorage.getItem("authToken") : null;
-    if (token) {
-      setIsAuthenticated(true);
-    } else {
-      setIsAuthenticated(false);
-    }
-    setIsLoading(false);
-  }, []);
-
-  return { isAuthenticated, isLoading };
+  // REMOVIDO: Autenticação desabilitada para acesso imediato
+  // Todos os usuários têm acesso direto ao app
+  return { isAuthenticated: true, isLoading: false };
 }
 
 export default function RootLayout() {
