@@ -1,22 +1,8 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, ScrollView, Platform } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || "http://localhost:3000";
-
-function showAlert(title: string, message: string) {
-  if (Platform.OS === "web") {
-    alert(`${title}: ${message}`);
-  } else {
-    // React Native Alert (não será usado em web)
-    try {
-      const Alert = require("react-native").Alert;
-      Alert.alert(title, message);
-    } catch {
-      console.error(`${title}: ${message}`);
-    }
-  }
-}
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -27,7 +13,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!username || !password) {
-      showAlert("Erro", "Preencha usuário e senha");
+      Alert.alert("Erro", "Preencha usuário e senha");
       return;
     }
 
@@ -40,12 +26,8 @@ export default function LoginScreen() {
       });
 
       if (!response.ok) {
-        try {
-          const error = await response.json();
-          throw new Error(error.error || "Erro ao fazer login");
-        } catch {
-          throw new Error("Erro ao fazer login");
-        }
+        const error = await response.json();
+        throw new Error(error.error || "Erro ao fazer login");
       }
 
       const data = await response.json();
@@ -56,10 +38,10 @@ export default function LoginScreen() {
         localStorage.setItem("user", JSON.stringify(data.user));
       }
 
-      showAlert("Sucesso", `Bem-vindo, ${data.user.username}!`);
+      Alert.alert("Sucesso", `Bem-vindo, ${data.user.username}!`);
       router.replace("/(tabs)");
     } catch (error: any) {
-      showAlert("Erro", error.message);
+      Alert.alert("Erro", error.message);
     } finally {
       setLoading(false);
     }
@@ -67,12 +49,12 @@ export default function LoginScreen() {
 
   const handleSignup = async () => {
     if (!username || !password) {
-      showAlert("Erro", "Preencha usuário e senha");
+      Alert.alert("Erro", "Preencha usuário e senha");
       return;
     }
 
     if (password.length < 6) {
-      showAlert("Erro", "Senha deve ter no mínimo 6 caracteres");
+      Alert.alert("Erro", "Senha deve ter no mínimo 6 caracteres");
       return;
     }
 
@@ -85,19 +67,15 @@ export default function LoginScreen() {
       });
 
       if (!response.ok) {
-        try {
-          const error = await response.json();
-          throw new Error(error.error || "Erro ao criar usuário");
-        } catch {
-          throw new Error("Erro ao criar usuário");
-        }
+        const error = await response.json();
+        throw new Error(error.error || "Erro ao criar usuário");
       }
 
-      showAlert("Sucesso", "Usuário criado! Faça login para continuar");
+      Alert.alert("Sucesso", "Usuário criado! Faça login para continuar");
       setIsLogin(true);
       setPassword("");
     } catch (error: any) {
-      showAlert("Erro", error.message);
+      Alert.alert("Erro", error.message);
     } finally {
       setLoading(false);
     }
