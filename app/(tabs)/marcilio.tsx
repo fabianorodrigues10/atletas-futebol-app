@@ -405,7 +405,7 @@ function ModalEstatisticas({
   if (!atleta) return null;
 
   return (
-    <Modal visible={visivel} animationType="slide" presentationStyle="pageSheet">
+    <Modal visible={visivel} animationType="slide">
       <View style={{ flex: 1, backgroundColor: CORES.branco }}>
         <View style={styles.modalHeader}>
           <TouchableOpacity onPress={onFechar} style={styles.btnFechar}>
@@ -424,7 +424,7 @@ function ModalEstatisticas({
             {campo("Titular", "jogosTitular")}
           </View>
 
-          <Text style={styles.secaoTitulo}>⚽ Ofensivo</Text>
+          <Text style={styles.secaoTitulo}>⚽ Ofensivo (Linha 1)</Text>
           <View style={styles.gridCampos}>
             {campo("Gol", "gol")}
             {campo("Ass", "assistencia")}
@@ -434,6 +434,10 @@ function ModalEstatisticas({
             {campo("Pass E", "passeErrado")}
             {campo("Pass F", "passeFinalizacao")}
             {campo("Crz C", "cruzamentoCerto")}
+          </View>
+
+          <Text style={styles.secaoTitulo}>⚽ Ofensivo (Linha 2)</Text>
+          <View style={styles.gridCampos}>
             {campo("Crz E", "cruzamentoErrado")}
             {campo("PL C", "passeLongoCerto")}
             {campo("PL E", "passeLongoErrado")}
@@ -443,7 +447,7 @@ function ModalEstatisticas({
             {campo("FS", "faltaSofrida")}
           </View>
 
-          <Text style={styles.secaoTitulo}>🛡 Defensivo</Text>
+          <Text style={styles.secaoTitulo}>🛡 Defensivo (Linha 1)</Text>
           <View style={styles.gridCampos}>
             {campo("Des", "desarme")}
             {campo("Aer G", "jogoAereoGanho")}
@@ -453,6 +457,10 @@ function ModalEstatisticas({
             {campo("FC", "faltaCometida")}
             {campo("BR", "bolaRecuperada")}
             {campo("FI", "finalizacaoInterceptada")}
+          </View>
+
+          <Text style={styles.secaoTitulo}>🛡 Defensivo (Linha 2)</Text>
+          <View style={styles.gridCampos}>
             {campo("DC G", "duelChaoGanho")}
             {campo("DC P", "duelChaoPerdido")}
           </View>
@@ -1157,30 +1165,6 @@ export default function MarcilioScreen() {
                 </React.Fragment>
               );
             })}
-            {/* Notas */}
-            {[
-              { label: "Nota Técnica", chave: "notaTecnica" as keyof EstatisticasTemporada },
-              { label: "Nota Física", chave: "notaFisica" as keyof EstatisticasTemporada },
-              { label: "Nota Tática", chave: "notaTatica" as keyof EstatisticasTemporada },
-
-            ].map((campo, idx) => {
-              const valores = atletasSelecionados.map(a => parseFloat((a.estatisticas?.[campo.chave] as string) || "0"));
-              const maximo = Math.max(...valores);
-              return (
-                <View key={campo.chave} style={[styles.tabelaRow, (campos.length + idx) % 2 === 0 && { backgroundColor: CORES.cinzaClaro }]}>
-                  <Text style={[styles.tabelaCelula, styles.tabelaLabelCol, { color: CORES.cinzaTexto }]}>{campo.label}</Text>
-                  {atletasSelecionados.map(a => {
-                    const val = parseFloat((a.estatisticas?.[campo.chave] as string) || "0");
-                    const destaque = val === maximo && maximo > 0;
-                    return (
-                      <Text key={a.id} style={[styles.tabelaCelula, styles.tabelaAtletaCol, destaque && { color: CORES.verde, fontWeight: "bold" }]}>
-                        {val > 0 ? val.toFixed(1) : "—"}
-                      </Text>
-                    );
-                  })}
-                </View>
-              );
-            })}
           </View>
         </ScrollView>
         <Text style={{ color: CORES.cinzaTexto, fontSize: 11, marginTop: 8, textAlign: "center" }}>
@@ -1620,26 +1604,24 @@ export default function MarcilioScreen() {
                 };
                 return (
                   <View key={atletaId} style={{ backgroundColor: CORES.branco, borderRadius: 10, borderWidth: 1, borderColor: CORES.cinzaMedio, marginBottom: 10, padding: 10 }}>
-                    {/* Cabeçalho do atleta */}
-                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                      <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flex: 1 }}>
+                    {/* Linha de tabela: Atleta + Valências */}
+                    <View style={{ flexDirection: "row", borderBottomWidth: 1, borderBottomColor: CORES.cinzaMedio, paddingVertical: 8 }}>
+                      {/* Coluna fixa: Atleta */}
+                      <View style={{ width: 120, paddingRight: 8, borderRightWidth: 1, borderRightColor: CORES.cinzaMedio }}>
                         <TouchableOpacity
-                          style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: (scout as any).titular ? CORES.azulEscuro : CORES.cinzaMedio, backgroundColor: (scout as any).titular ? CORES.azulEscuro : "transparent" }}
+                          style={{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: (scout as any).titular ? CORES.azulEscuro : CORES.cinzaMedio, backgroundColor: (scout as any).titular ? CORES.azulEscuro : "transparent", marginBottom: 4 }}
                           onPress={() => setScout("titular", !(scout as any).titular)}
                         >
-                          <Text style={{ fontSize: 10, fontWeight: "700", color: (scout as any).titular ? CORES.branco : CORES.cinzaTexto }}>TIT</Text>
+                          <Text style={{ fontSize: 8, fontWeight: "700", color: (scout as any).titular ? CORES.branco : CORES.cinzaTexto, textAlign: "center" }}>TIT</Text>
                         </TouchableOpacity>
-                        <Text style={{ fontSize: 13, fontWeight: "700", color: CORES.preto, flex: 1 }}>{atleta.nome}</Text>
-                      </View>
-                      <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                        <Text style={{ fontSize: 10, color: CORES.azulClaro, fontWeight: "600" }}>{atleta.posicao}</Text>
-                        <View style={{ width: 52 }}>
-                          <Text style={{ fontSize: 9, color: CORES.cinzaTexto, textAlign: "center" }}>Min</Text>
+                        <Text style={{ fontSize: 11, fontWeight: "700", color: CORES.preto, marginBottom: 3 }} numberOfLines={2}>{atleta.nome}</Text>
+                        <Text style={{ fontSize: 8, color: CORES.azulClaro, fontWeight: "600", marginBottom: 3 }}>{atleta.posicao}</Text>
+                        <View style={{ borderTopWidth: 1, borderTopColor: CORES.cinzaMedio, paddingTop: 3 }}>
+                          <Text style={{ fontSize: 8, color: CORES.cinzaTexto, textAlign: "center", marginBottom: 2 }}>Min</Text>
                           <TextInput
-                            style={{ borderWidth: 1, borderColor: CORES.cinzaMedio, borderRadius: 6, paddingHorizontal: 4, paddingVertical: 3, fontSize: 12, fontWeight: "700", textAlign: "center", backgroundColor: CORES.cinzaClaro, color: CORES.preto }}
+                            style={{ borderWidth: 1, borderColor: CORES.cinzaMedio, borderRadius: 4, paddingHorizontal: 3, paddingVertical: 2, fontSize: 10, fontWeight: "700", textAlign: "center", backgroundColor: CORES.cinzaClaro, color: CORES.preto }}
                             value={(scout as any).minutosJogados === 0 || (scout as any).minutosJogados == null ? "" : String((scout as any).minutosJogados)}
                             onChangeText={v => {
-                              // Permite digitar livremente; converte para número apenas ao sair do campo
                               if (v === "" || v === null) {
                                 setScout("minutosJogados", 0);
                               } else {
@@ -1651,67 +1633,91 @@ export default function MarcilioScreen() {
                           />
                         </View>
                       </View>
-                    </View>
 
-                    {/* Ofensivo - linha 1 (4 campos) */}
-                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-                      <Text style={{ fontSize: 9, color: CORES.azulClaro, fontWeight: "700", textTransform: "uppercase" }}>Ofensivo</Text>
-                      <Text style={{ fontSize: 9, color: CORES.azulClaro, fontWeight: "600" }}>
-                        Total: {((scout as any).gols || 0) + ((scout as any).assistencias || 0) + ((scout as any).finalizacoes || 0) + ((scout as any).cruzamentos || 0) + ((scout as any).passes || 0) + ((scout as any).passesCompletos || 0) + ((scout as any).faltasSofridas || 0) + ((scout as any).dribles || 0)}
-                      </Text>
-                    </View>
-                    <View style={{ flexDirection: "row", gap: 4, marginBottom: 4 }}>
-                      {campoCompacto("Gol", "gols")}
-                      {campoCompacto("Ass", "assistencias")}
-                      {campoCompacto("Fin C", "finalizacoes")}
-                      {campoCompacto("Cruz C", "cruzamentos")}
-                    </View>
-                    {/* Ofensivo - linha 2 (4 campos) */}
-                    <View style={{ flexDirection: "row", gap: 4, marginBottom: 8 }}>
-                      {campoCompacto("Pass C", "passes")}
-                      {campoCompacto("Pass E", "passesCompletos")}
-                      {campoCompacto("Falt S", "faltasSofridas")}
-                      {campoCompacto("Drib C", "dribles")}
-                    </View>
-
-                    {/* Defensivo - linha 1 (4 campos) */}
-                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-                      <Text style={{ fontSize: 9, color: CORES.verde, fontWeight: "700", textTransform: "uppercase" }}>Defensivo</Text>
-                      <Text style={{ fontSize: 9, color: CORES.verde, fontWeight: "600" }}>
-                        Total: {((scout as any).desarmes || 0) + ((scout as any).interceptacoes || 0) + ((scout as any).duelos || 0) + ((scout as any).duelosGanhos || 0) + ((scout as any).jogosAereos || 0) + ((scout as any).duelosAereosPerdidos || 0) + ((scout as any).faltasCometidas || 0) + ((scout as any).bolasRecuperadas || 0)}
-                      </Text>
-                    </View>
-                    <View style={{ flexDirection: "row", gap: 4, marginBottom: 4 }}>
-                      {campoCompacto("Des", "desarmes")}
-                      {campoCompacto("Inter", "interceptacoes")}
-                      {campoCompacto("Duel G", "duelos")}
-                      {campoCompacto("Duel G", "duelosGanhos")}
-                    </View>
-                    {/* Defensivo - linha 2 (4 campos) */}
-                    <View style={{ flexDirection: "row", gap: 4, marginBottom: 8 }}>
-                      {campoCompacto("Aer G", "jogosAereos")}
-                      {campoCompacto("Aer P", "duelosAereosPerdidos")}
-                      {campoCompacto("Fal C", "faltasCometidas")}
-                      {campoCompacto("Recu", "bolasRecuperadas")}
-                    </View>
-
-                    {/* Linha 3: Disciplina + Notas */}
-                    <View style={{ flexDirection: "row", gap: 8 }}>
-                      <View style={{ flex: 1 }}>
-                        <Text style={{ fontSize: 9, color: "#b45309", fontWeight: "700", textTransform: "uppercase", marginBottom: 4 }}>Disciplina</Text>
-                        <View style={{ flexDirection: "row", gap: 4 }}>
-                          {campoCompacto("🟨 Amar.", "cartoesAmarelos")}
-                          {campoCompacto("🟥 Verm.", "cartoesVermelhos")}
+                      {/* ScrollView horizontal com as 25 valências */}
+                      <ScrollView horizontal showsHorizontalScrollIndicator={true} style={{ flex: 1 }}>
+                        <View style={{ flexDirection: "row", gap: 2 }}>
+                          {/* Ofensivo */}
+                          {["gol", "assistencia", "finalizacaoCerta", "finalizacaoErrada", "passeCerto", "passeErrado", "passeFinalizacao", "cruzamentoCerto", "cruzamentoErrado", "passeLongoCerto", "passeLongoErrado", "dribleCerto", "dribleErrado", "desperdicio", "faltaSofrida"].map((chave) => {
+                            const labels: Record<string, string> = {
+                              gol: "Gol", assistencia: "Ass", finalizacaoCerta: "Fin C", finalizacaoErrada: "Fin E",
+                              passeCerto: "Pass C", passeErrado: "Pass E", passeFinalizacao: "Pass F",
+                              cruzamentoCerto: "Crz C", cruzamentoErrado: "Crz E",
+                              passeLongoCerto: "PL C", passeLongoErrado: "PL E",
+                              dribleCerto: "Drib C", dribleErrado: "Drib E", desperdicio: "Desp", faltaSofrida: "FS"
+                            };
+                            return (
+                              <View key={chave} style={{ width: 50, alignItems: "center" }}>
+                                <Text style={{ fontSize: 7, color: CORES.azulClaro, fontWeight: "700", marginBottom: 2, textAlign: "center" }}>{labels[chave]}</Text>
+                                <TextInput
+                                  style={{ borderWidth: 1, borderColor: CORES.cinzaMedio, borderRadius: 4, paddingHorizontal: 3, paddingVertical: 3, fontSize: 10, fontWeight: "700", textAlign: "center", backgroundColor: CORES.cinzaClaro, color: CORES.preto, width: 45 }}
+                                  value={(scout as any)[chave] === 0 || (scout as any)[chave] == null ? "" : String((scout as any)[chave])}
+                                  onChangeText={v => {
+                                    if (v === "" || v === null) {
+                                      setScout(chave, 0);
+                                    } else {
+                                      const num = parseInt(v);
+                                      setScout(chave, isNaN(num) ? 0 : num);
+                                    }
+                                  }}
+                                  keyboardType="numeric" placeholder="-"
+                                />
+                              </View>
+                            );
+                          })}
+                          {/* Defensivo */}
+                          {["desarme", "jogoAereoGanho", "jogoAereoPerdido", "bolaAreaGanha", "bolaAreaPerdida", "faltaCometida", "bolaRecuperada", "finalizacaoInterceptada", "duelChaoGanho", "duelChaoPerdido"].map((chave) => {
+                            const labels: Record<string, string> = {
+                              desarme: "Des", jogoAereoGanho: "Aer G", jogoAereoPerdido: "Aer P",
+                              bolaAreaGanha: "Área G", bolaAreaPerdida: "Área P",
+                              faltaCometida: "FC", bolaRecuperada: "BR", finalizacaoInterceptada: "FI",
+                              duelChaoGanho: "DC G", duelChaoPerdido: "DC P"
+                            };
+                            return (
+                              <View key={chave} style={{ width: 50, alignItems: "center" }}>
+                                <Text style={{ fontSize: 7, color: CORES.verde, fontWeight: "700", marginBottom: 2, textAlign: "center" }}>{labels[chave]}</Text>
+                                <TextInput
+                                  style={{ borderWidth: 1, borderColor: CORES.cinzaMedio, borderRadius: 4, paddingHorizontal: 3, paddingVertical: 3, fontSize: 10, fontWeight: "700", textAlign: "center", backgroundColor: CORES.cinzaClaro, color: CORES.preto, width: 45 }}
+                                  value={(scout as any)[chave] === 0 || (scout as any)[chave] == null ? "" : String((scout as any)[chave])}
+                                  onChangeText={v => {
+                                    if (v === "" || v === null) {
+                                      setScout(chave, 0);
+                                    } else {
+                                      const num = parseInt(v);
+                                      setScout(chave, isNaN(num) ? 0 : num);
+                                    }
+                                  }}
+                                  keyboardType="numeric" placeholder="-"
+                                />
+                              </View>
+                            );
+                          })}
+                          {/* Disciplina */}
+                          {["cartoesAmarelos", "cartoesVermelhos"].map((chave) => {
+                            const labels: Record<string, string> = {
+                              cartoesAmarelos: "Amar", cartoesVermelhos: "Verm"
+                            };
+                            return (
+                              <View key={chave} style={{ width: 50, alignItems: "center" }}>
+                                <Text style={{ fontSize: 7, color: "#b45309", fontWeight: "700", marginBottom: 2, textAlign: "center" }}>{labels[chave]}</Text>
+                                <TextInput
+                                  style={{ borderWidth: 1, borderColor: CORES.cinzaMedio, borderRadius: 4, paddingHorizontal: 3, paddingVertical: 3, fontSize: 10, fontWeight: "700", textAlign: "center", backgroundColor: CORES.cinzaClaro, color: CORES.preto, width: 45 }}
+                                  value={(scout as any)[chave] === 0 || (scout as any)[chave] == null ? "" : String((scout as any)[chave])}
+                                  onChangeText={v => {
+                                    if (v === "" || v === null) {
+                                      setScout(chave, 0);
+                                    } else {
+                                      const num = parseInt(v);
+                                      setScout(chave, isNaN(num) ? 0 : num);
+                                    }
+                                  }}
+                                  keyboardType="numeric" placeholder="-"
+                                />
+                              </View>
+                            );
+                          })}
                         </View>
-                      </View>
-                      <View style={{ flex: 3 }}>
-                        <Text style={{ fontSize: 9, color: "#7c3aed", fontWeight: "700", textTransform: "uppercase", marginBottom: 4 }}>Notas (0-10)</Text>
-                        <View style={{ flexDirection: "row", gap: 4 }}>
-                          {campoCompacto("Téc.", "notaTecnica")}
-                          {campoCompacto("Fís.", "notaFisica")}
-                          {campoCompacto("Tát.", "notaTatica")}
-                        </View>
-                      </View>
+                      </ScrollView>
                     </View>
                   </View>
                 );
@@ -2175,12 +2181,12 @@ const styles = StyleSheet.create({
     fontSize: 13, fontWeight: "700", color: CORES.azulEscuro,
     marginTop: 16, marginBottom: 8,
   },
-  gridCampos: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  campoPar: { minWidth: 100, flex: 1 },
-  labelCampo: { fontSize: 11, color: CORES.cinzaTexto, marginBottom: 3, flexWrap: "wrap" },
+  gridCampos: { flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "space-between" },
+  campoPar: { width: "23%", minHeight: 70 },
+  labelCampo: { fontSize: 10, color: CORES.cinzaTexto, marginBottom: 4, flexWrap: "wrap", textAlign: "center" },
   inputCampo: {
-    borderWidth: 1, borderColor: CORES.cinzaMedio, borderRadius: 8,
-    padding: 8, fontSize: 14, color: CORES.preto, backgroundColor: CORES.cinzaClaro,
+    borderWidth: 1, borderColor: CORES.cinzaMedio, borderRadius: 6,
+    padding: 6, fontSize: 13, color: CORES.preto, backgroundColor: CORES.cinzaClaro, textAlign: "center",
   },
   tabelaRow: { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: CORES.cinzaMedio },
   tabelaHeader: { backgroundColor: CORES.azulEscuro },
