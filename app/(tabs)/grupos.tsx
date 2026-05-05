@@ -460,7 +460,7 @@ export default function RadarScreen() {
             ) : (
               <FlatList
                 data={atletasDoGrupoQuery.data as any[]}
-                keyExtractor={(item) => item.atletaId.toString()}
+                keyExtractor={(item) => (item?.atletaId || item?.id || Math.random()).toString()}
                 style={{ flex: 1, minHeight: 0 }}
                 contentContainerStyle={{ padding: 10, paddingBottom: 80, flexGrow: 1 }}
                 renderItem={({ item, index }) => {
