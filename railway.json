@@ -4,7 +4,7 @@
     "builder": "dockerfile"
   },
   "deploy": {
-    "startCommand": "node server-simple.js",
+    "startCommand": "pnpm start",
     "restartPolicyMaxRetries": 5
   }
 }

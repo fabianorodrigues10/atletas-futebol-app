@@ -3,6 +3,12 @@
   publish = "dist/web"
 
 [[redirects]]
+  from = "/api/*"
+  to = "https://3000-i06tppms6c5tptkrbotfm-7bb24874.us1.manus.computer/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
