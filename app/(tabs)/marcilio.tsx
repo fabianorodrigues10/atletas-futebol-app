@@ -703,9 +703,28 @@ export default function MarcilioScreen() {
     try {
       const base = getApiBaseUrl();
       const payload: any = { ...jogoEditando };
-      if (payload.placarMandante !== "") payload.placarMandante = parseInt(payload.placarMandante) || 0;
-      if (payload.placarVisitante !== "") payload.placarVisitante = parseInt(payload.placarVisitante) || 0;
-      if (payload.publico !== "") payload.publico = parseInt(payload.publico) || 0;
+      // Converter campos numéricos corretamente
+      if (payload.placarMandante !== "") {
+        const parsed = parseInt(payload.placarMandante, 10);
+        payload.placarMandante = isNaN(parsed) ? null : parsed;
+      } else {
+        payload.placarMandante = null;
+      }
+      if (payload.placarVisitante !== "") {
+        const parsed = parseInt(payload.placarVisitante, 10);
+        payload.placarVisitante = isNaN(parsed) ? null : parsed;
+      } else {
+        payload.placarVisitante = null;
+      }
+      if (payload.publico !== "") {
+        // Remove pontos e vírgulas, depois converte para número
+        const cleaned = payload.publico.toString().replace(/[.,]/g, '');
+        const parsed = parseInt(cleaned, 10);
+        payload.publico = isNaN(parsed) ? null : parsed;
+      } else {
+        payload.publico = null;
+      }
+      console.log('[DEBUG] Payload sendo enviado:', JSON.stringify(payload, null, 2));
       let resp;
       if (jogoEditando.id) {
         resp = await fetch(`${base}/api/jogos/${jogoEditando.id}`, {
@@ -1251,6 +1270,8 @@ export default function MarcilioScreen() {
                     const [aaaa, mm, dd] = dataISO.split("-");
                     dataExibicao = `${dd}/${mm}/${aaaa}`;
                   }
+                  console.log('[DEBUG] Jogo carregado do banco:', jogo);
+                  console.log('[DEBUG] jogo.publico:', jogo.publico, 'tipo:', typeof jogo.publico);
                   setJogoEditando({
                     ...JOGO_VAZIO,
                     ...jogo,
@@ -1260,6 +1281,7 @@ export default function MarcilioScreen() {
                     data: dataISO,
                     dataExibicao,
                   });
+                  console.log('[DEBUG] jogoEditando após setJogoEditando:', { publico: jogo.publico?.toString() ?? "" });
                   setModalJogoVisivel(true);
                 }}
               >

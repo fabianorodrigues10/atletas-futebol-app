@@ -19,8 +19,10 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "qr": "node scripts/generate_qr.mjs",
+    "keep-alive": "node scripts/keep-alive.js",
     "vercel-build": "pnpm build:web",
-    "vercel-start": "node server.js"
+    "vercel-start": "node server.js",
+    "keep-alive:prod": "BACKEND_URL=https://atletas-futebol-app.netlify.app node scripts/keep-alive.js"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
