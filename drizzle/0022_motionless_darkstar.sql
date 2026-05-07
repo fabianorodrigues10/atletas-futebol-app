@@ -1,0 +1,1 @@
+ALTER TABLE `jogos` MODIFY COLUMN `publico` varchar(100);

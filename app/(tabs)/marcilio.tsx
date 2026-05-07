@@ -716,12 +716,8 @@ export default function MarcilioScreen() {
       } else {
         payload.placarVisitante = null;
       }
-      if (payload.publico !== "") {
-        // Remove pontos e vírgulas, depois converte para número
-        const cleaned = payload.publico.toString().replace(/[.,]/g, '');
-        const parsed = parseInt(cleaned, 10);
-        payload.publico = isNaN(parsed) ? null : parsed;
-      } else {
+      // publico agora é VARCHAR, então salva como string
+      if (payload.publico === "") {
         payload.publico = null;
       }
       console.log('[DEBUG] Payload sendo enviado:', JSON.stringify(payload, null, 2));

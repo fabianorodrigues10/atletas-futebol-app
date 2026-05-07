@@ -230,7 +230,7 @@ export const jogos = mysqlTable("jogos", {
   assistente1: varchar("assistente1", { length: 255 }),
   assistente2: varchar("assistente2", { length: 255 }),
   renda: varchar("renda", { length: 100 }),
-  publico: int("publico"),
+  publico: varchar("publico", { length: 100 }),
   gols: text("gols"), // texto livre: "Davi Torres 23', Alan Costa 67'"
   placarMandante: int("placarMandante"),
   placarVisitante: int("placarVisitante"),
