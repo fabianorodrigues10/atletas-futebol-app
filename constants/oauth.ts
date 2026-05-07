@@ -29,8 +29,9 @@ export const API_BASE_URL = env.apiBaseUrl;
  * Get the API base URL by deriving from the current connection.
  * 
  * Strategy:
- * 1. On web: Replace port 8081 with 3000 in the hostname
- * 2. On native (Expo Go): Use hardcoded URL (works reliably in Manus environment)
+ * 1. On web (Netlify): Use local API proxy
+ * 2. On web (dev): Replace port 8081 with 3000 in the hostname
+ * 3. On native (Expo Go): Use hardcoded URL (works reliably in Manus environment)
  */
 export function getApiBaseUrl(): string {
   console.log('[getApiBaseUrl] Platform:', ReactNative.Platform.OS);
@@ -39,6 +40,12 @@ export function getApiBaseUrl(): string {
   if (ReactNative.Platform.OS === "web" && typeof window !== "undefined" && window.location) {
     const { protocol, hostname } = window.location;
     console.log('[getApiBaseUrl] Web hostname:', hostname);
+    
+    // On Netlify, use local API proxy (configured in netlify.toml)
+    if (hostname.includes("netlify.app")) {
+      console.log('[getApiBaseUrl] Using local API proxy on Netlify');
+      return "";
+    }
     
     // Handle local development: 127.0.0.1:8081 -> 127.0.0.1:3000
     if (hostname.includes("127.0.0.1") || hostname.includes("localhost")) {
@@ -51,12 +58,16 @@ export function getApiBaseUrl(): string {
       console.log('[getApiBaseUrl] Derived API hostname:', apiHostname);
       return `${protocol}//${apiHostname}`;
     }
+    
+    // For Manus sandbox: use localhost backend
+    console.log('[getApiBaseUrl] Using localhost backend URL');
+    return 'http://localhost:3000';
   }
 
-  // On native (Expo Go), use hardcoded URL - this is the most reliable approach
+  // On native (Expo Go), use public backend URL
   if (ReactNative.Platform.OS !== "web") {
-    const hardcodedApiUrl = "https://3000-ibvr91xzqokolokpeserq-cc9ce21a.us1.manus.computer";
-    console.log('[getApiBaseUrl] Using hardcoded API URL for native:', hardcodedApiUrl);
+    const hardcodedApiUrl = "https://3000-i06tppms6c5tptkrbotfm-7bb24874.us1.manus.computer";
+    console.log('[getApiBaseUrl] Using public backend URL for native:', hardcodedApiUrl);
     return hardcodedApiUrl;
   }
 
@@ -67,7 +78,7 @@ export function getApiBaseUrl(): string {
   }
 
   // Final fallback
-  return "https://3000-ibvr91xzqokolokpeserq-cc9ce21a.us1.manus.computer";
+  return "https://3000-i06tppms6c5tptkrbotfm-7bb24874.us1.manus.computer";
 }
 
 export const SESSION_TOKEN_KEY = "app_session_token";

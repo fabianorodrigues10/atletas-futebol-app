@@ -135,6 +135,7 @@ export default function HomeScreen() {
 
   // Carregar atletas na primeira vez
   useEffect(() => {
+    console.log("[HOME] useEffect triggered, calling refetch");
     refetch();
   }, [refetch]);
 
