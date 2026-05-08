@@ -1,0 +1,19 @@
+{
+  "query": "SELECT DISTINCT jogoId FROM scoutJogo WHERE gols > 0 OR assistencias > 0 OR finalizacoes > 0 OR passes > 0 OR passesCompletos > 0 OR cruzamentos > 0 OR desarmes > 0 ORDER BY jogoId DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT DISTINCT jogoId FROM scoutJogo WHERE gols > 0 OR assistencias > 0 OR finalizacoes > 0 OR passes > 0 OR passesCompletos > 0 OR cruzamentos > 0 OR desarmes > 0 ORDER BY jogoId DESC LIMIT 10;",
+  "rows": [
+    {
+      "jogoId": "90001"
+    },
+    {
+      "jogoId": "60001"
+    },
+    {
+      "jogoId": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "jogoId\n90001\n60001\n1\n",
+  "stderr": "",
+  "execution_time_ms": 574
+}

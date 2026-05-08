@@ -1,4 +1,4 @@
-import { eq, and, like, gte, lte, or, desc, asc, inArray } from "drizzle-orm";
+import { eq, and, like, gte, lte, or, desc, asc, inArray, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   InsertUser,
@@ -265,7 +265,7 @@ export async function searchAtletas(
   const conditions = [eq(atletas.userId, userId)];
   
   if (filtros.nome) {
-    conditions.push(like(atletas.nome, `%${filtros.nome}%`));
+    conditions.push(like(sql`LOWER(${atletas.nome})`, `%${filtros.nome.toLowerCase()}%`));
   }
   
   if (filtros.posicao) {
@@ -303,10 +303,6 @@ export async function searchAtletas(
   
   if (filtros.escala) {
     conditions.push(eq(atletas.escala, filtros.escala));
-  }
-  
-  if (filtros) {
-    conditions.push(eq(atletas, filtros));
   }
   
   const query = db

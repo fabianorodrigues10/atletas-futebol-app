@@ -1,0 +1,22 @@
+{
+  "query": "SELECT id, mandante, visitante, data FROM jogos WHERE id IN (90001, 60001, 1) ORDER BY id DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT id, mandante, visitante, data FROM jogos WHERE id IN (90001, 60001, 1) ORDER BY id DESC;",
+  "rows": [
+    {
+      "id": "90001",
+      "mandante": "MARCÍLIO DIAS",
+      "visitante": "São José/RS",
+      "data": "2026-04-18"
+    },
+    {
+      "id": "60001",
+      "mandante": "Azuriz/PR",
+      "visitante": "MARCÍLIO DIAS",
+      "data": "2026-04-11"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tmandante\tvisitante\tdata\n90001\tMARCÍLIO DIAS\tSão José/RS\t2026-04-18\n60001\tAzuriz/PR\tMARCÍLIO DIAS\t2026-04-11\n",
+  "stderr": "",
+  "execution_time_ms": 573
+}

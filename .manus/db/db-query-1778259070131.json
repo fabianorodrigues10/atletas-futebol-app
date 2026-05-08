@@ -1,0 +1,19 @@
+{
+  "query": "SELECT * FROM grupos WHERE nome = 'Goleiro';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT * FROM grupos WHERE nome = 'Goleiro';",
+  "rows": [
+    {
+      "id": "60001",
+      "userId": "1",
+      "nome": "Goleiro",
+      "descricao": "NULL",
+      "cor": "#F59E0B",
+      "createdAt": "2026-03-30 18:05:00",
+      "updatedAt": "2026-03-30 18:05:00"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tuserId\tnome\tdescricao\tcor\tcreatedAt\tupdatedAt\n60001\t1\tGoleiro\tNULL\t#F59E0B\t2026-03-30 18:05:00\t2026-03-30 18:05:00\n",
+  "stderr": "",
+  "execution_time_ms": 650
+}

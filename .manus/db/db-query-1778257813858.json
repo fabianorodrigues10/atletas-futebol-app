@@ -1,0 +1,15 @@
+{
+  "query": "SELECT id, nome, userId FROM atletas WHERE nome LIKE '%Iago Hass%' LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT id, nome, userId FROM atletas WHERE nome LIKE '%Iago Hass%' LIMIT 5;",
+  "rows": [
+    {
+      "id": "2910001",
+      "nome": "Iago Hass",
+      "userId": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnome\tuserId\n2910001\tIago Hass\t1\n",
+  "stderr": "",
+  "execution_time_ms": 574
+}

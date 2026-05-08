@@ -1,0 +1,13 @@
+{
+  "query": "SELECT COUNT(*) as total_with_data FROM scoutJogo WHERE gols > 0 OR assistencias > 0 OR finalizacoes > 0 OR passes > 0 OR passesCompletos > 0 OR cruzamentos > 0 OR desarmes > 0;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT COUNT(*) as total_with_data FROM scoutJogo WHERE gols > 0 OR assistencias > 0 OR finalizacoes > 0 OR passes > 0 OR passesCompletos > 0 OR cruzamentos > 0 OR desarmes > 0;",
+  "rows": [
+    {
+      "total_with_data": "33"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_with_data\n33\n",
+  "stderr": "",
+  "execution_time_ms": 568
+}

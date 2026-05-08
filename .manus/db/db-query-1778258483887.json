@@ -1,0 +1,28 @@
+{
+  "query": "SELECT id, nome, posicao, clube FROM atletas WHERE nome LIKE '%Iago%' OR nome LIKE '%Hass%' LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT id, nome, posicao, clube FROM atletas WHERE nome LIKE '%Iago%' OR nome LIKE '%Hass%' LIMIT 20;",
+  "rows": [
+    {
+      "id": "2734097",
+      "nome": "Iago Fabricio",
+      "posicao": "Zagueiro",
+      "clube": "Ferroviario/CE"
+    },
+    {
+      "id": "2734281",
+      "nome": "Iago Felipe",
+      "posicao": "Volante",
+      "clube": "Maguary/PE"
+    },
+    {
+      "id": "2910001",
+      "nome": "Iago Hass",
+      "posicao": "Goleiro",
+      "clube": "Águia/PA"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnome\tposicao\tclube\n2734097\tIago Fabricio\tZagueiro\tFerroviario/CE\n2734281\tIago Felipe\tVolante\tMaguary/PE\n2910001\tIago Hass\tGoleiro\tÁguia/PA\n",
+  "stderr": "",
+  "execution_time_ms": 669
+}

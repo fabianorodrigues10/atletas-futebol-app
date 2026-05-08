@@ -1,0 +1,21 @@
+{
+  "query": "SELECT id, mandante, visitante, data, horario, placarMandante, placarVisitante, createdAt, updatedAt FROM jogos WHERE visitante LIKE '%São Joseense%' OR visitante LIKE '%Joseense%' ORDER BY data DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT id, mandante, visitante, data, horario, placarMandante, placarVisitante, createdAt, updatedAt FROM jogos WHERE visitante LIKE '%São Joseense%' OR visitante LIKE '%Joseense%' ORDER BY data DESC LIMIT 5;",
+  "rows": [
+    {
+      "id": "30002",
+      "mandante": "MARCÍLIO DIAS",
+      "visitante": "São Joseense/PR",
+      "data": "2026-04-05",
+      "horario": "16:00",
+      "placarMandante": "0",
+      "placarVisitante": "0",
+      "createdAt": "2026-04-01 16:27:59",
+      "updatedAt": "2026-05-07 19:54:36"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tmandante\tvisitante\tdata\thorario\tplacarMandante\tplacarVisitante\tcreatedAt\tupdatedAt\n30002\tMARCÍLIO DIAS\tSão Joseense/PR\t2026-04-05\t16:00\t0\t0\t2026-04-01 16:27:59\t2026-05-07 19:54:36\n",
+  "stderr": "",
+  "execution_time_ms": 562
+}

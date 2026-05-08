@@ -333,7 +333,7 @@ export default function AtletaFormScreen() {
       // Fallback: tenta via servidor
       try {
         const apiBaseUrl = getApiBaseUrl();
-        const serverUrl = `${apiBaseUrl}/api/ogol/scrape`;
+        const serverUrl = apiBaseUrl ? `${apiBaseUrl}/api/ogol/scrape` : '/api/ogol/scrape';
         console.log("[Ogol] Trying server URL:", serverUrl);
         const response = await fetch(serverUrl, {
           method: "POST",

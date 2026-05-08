@@ -104,7 +104,7 @@ export default function RadarScreen() {
     setPosicaoSelecionada(pos);
     const grupoExistente = gruposPorPosicao.get(pos.nome);
     if (grupoExistente) {
-      setGrupoAtual(grupoExistente as Grupo);
+      setGrupoAtual({ ...grupoExistente, id: Number(grupoExistente.id) } as Grupo);
     } else {
       createMutation.mutate({ nome: pos.nome, cor: pos.cor });
       setGrupoAtual(null);
@@ -112,15 +112,24 @@ export default function RadarScreen() {
   };
 
   const handleAddAtleta = (atletaId: number) => {
-    if (!grupoAtual) return;
+    console.log('[DEBUG] handleAddAtleta chamado com atletaId:', atletaId, 'grupoAtual:', grupoAtual);
+    if (!grupoAtual) {
+      console.log('[DEBUG] grupoAtual é nulo, retornando');
+      return;
+    }
     const qtd = (atletasDoGrupoQuery.data ?? []).length;
     if (qtd >= LIMITE_POR_POSICAO) {
       Alert.alert("Limite atingido", `Máximo de ${LIMITE_POR_POSICAO} atletas por posição.`);
       return;
     }
     const jaEsta = (atletasDoGrupoQuery.data ?? []).some((a: any) => a.atletaId === atletaId);
-    if (jaEsta) return;
+    if (jaEsta) {
+      console.log('[DEBUG] Atleta já está no grupo');
+      return;
+    }
+    console.log('[DEBUG] Chamando addAtletaMutation com:', { atletaId, grupoId: grupoAtual.id });
     addAtletaMutation.mutate({ atletaId, grupoId: grupoAtual.id });
+
   };
 
   const handleRemoveAtleta = (atletaId: number) => {
@@ -187,20 +196,21 @@ export default function RadarScreen() {
     try {
       const baseUrl = getApiBaseUrl();
 
-      // Buscar atletas de cada posição selecionada
+      // Buscar atletas de cada posição selecionada usando tRPC
       const posicoesComAtletas: Array<{ nome: string; ids: number[] }> = [];
       for (const pos of posicoesSelecionadas) {
         const grupo = gruposPorPosicao.get(pos.nome);
         if (!grupo) continue;
-        const res = await fetch(
-          `${baseUrl}/api/trpc/grupos.getAtletas?input=${encodeURIComponent(JSON.stringify({ grupoId: grupo.id }))}`,
-          { headers: { "Content-Type": "application/json" } }
-        );
-        if (!res.ok) continue;
-        const json = await res.json();
-        const atletas: any[] = json?.result?.data ?? [];
-        if (atletas.length === 0) continue;
-        posicoesComAtletas.push({ nome: pos.nome, ids: atletas.map((a: any) => a.atletaId) });
+        try {
+          // Use tRPC client directly to query athletes for this position
+          const atletas = await trpc.grupos.getAtletas.query({ grupoId: grupo.id });
+          if (atletas && atletas.length > 0) {
+            posicoesComAtletas.push({ nome: pos.nome, ids: atletas.map((a: any) => a.atletaId) });
+          }
+        } catch (err) {
+          console.error(`Erro ao buscar atletas da posição ${pos.nome}:`, err);
+          continue;
+        }
       }
 
       if (posicoesComAtletas.length === 0) {

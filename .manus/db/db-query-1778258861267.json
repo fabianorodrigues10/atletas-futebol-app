@@ -1,0 +1,45 @@
+{
+  "query": "SELECT * FROM atletasEmGrupos LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT * FROM atletasEmGrupos LIMIT 5;",
+  "rows": [
+    {
+      "id": "60001",
+      "atletaId": "2734834",
+      "grupoId": "60001",
+      "createdAt": "2026-04-29 21:38:49",
+      "posicaoOrdem": "0"
+    },
+    {
+      "id": "60002",
+      "atletaId": "2910001",
+      "grupoId": "60001",
+      "createdAt": "2026-04-29 21:39:03",
+      "posicaoOrdem": "1"
+    },
+    {
+      "id": "60003",
+      "atletaId": "2940002",
+      "grupoId": "60001",
+      "createdAt": "2026-04-29 21:39:31",
+      "posicaoOrdem": "2"
+    },
+    {
+      "id": "60004",
+      "atletaId": "2734390",
+      "grupoId": "60001",
+      "createdAt": "2026-04-29 21:39:46",
+      "posicaoOrdem": "3"
+    },
+    {
+      "id": "60005",
+      "atletaId": "2734296",
+      "grupoId": "60001",
+      "createdAt": "2026-04-29 21:39:50",
+      "posicaoOrdem": "4"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tatletaId\tgrupoId\tcreatedAt\tposicaoOrdem\n60001\t2734834\t60001\t2026-04-29 21:38:49\t0\n60002\t2910001\t60001\t2026-04-29 21:39:03\t1\n60003\t2940002\t60001\t2026-04-29 21:39:31\t2\n60004\t2734390\t60001\t2026-04-29 21:39:46\t3\n60005\t2734296\t60001\t2026-04-29 21:39:50\t4\n",
+  "stderr": "",
+  "execution_time_ms": 586
+}

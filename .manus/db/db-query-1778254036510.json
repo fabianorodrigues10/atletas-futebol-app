@@ -1,0 +1,16 @@
+{
+  "query": "SELECT COUNT(*) as total, SUM(gols) as total_gols, SUM(assistencias) as total_assists, SUM(passes) as total_passes FROM scoutJogo WHERE jogoId = 30002;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT COUNT(*) as total, SUM(gols) as total_gols, SUM(assistencias) as total_assists, SUM(passes) as total_passes FROM scoutJogo WHERE jogoId = 30002;",
+  "rows": [
+    {
+      "total": "16",
+      "total_gols": "2",
+      "total_assists": "2",
+      "total_passes": "312"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\ttotal_gols\ttotal_assists\ttotal_passes\n16\t2\t2\t312\n",
+  "stderr": "",
+  "execution_time_ms": 604
+}

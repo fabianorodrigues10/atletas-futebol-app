@@ -1,0 +1,130 @@
+{
+  "query": "SELECT id, atletaId, gols, assistencias, finalizacoes, passes, passesCompletos, cruzamentos, desarmes, interceptacoes FROM scoutJogo WHERE jogoId = 30002 ORDER BY id LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2xkKgzjDtwmdn7p.root --database 7XTarzVUuQNAxDd5Eu29wi --execute SELECT id, atletaId, gols, assistencias, finalizacoes, passes, passesCompletos, cruzamentos, desarmes, interceptacoes FROM scoutJogo WHERE jogoId = 30002 ORDER BY id LIMIT 10;",
+  "rows": [
+    {
+      "id": "150001",
+      "atletaId": "2760001",
+      "gols": "NULL",
+      "assistencias": "NULL",
+      "finalizacoes": "NULL",
+      "passes": "NULL",
+      "passesCompletos": "NULL",
+      "cruzamentos": "NULL",
+      "desarmes": "NULL",
+      "interceptacoes": "NULL"
+    },
+    {
+      "id": "150002",
+      "atletaId": "2850001",
+      "gols": "NULL",
+      "assistencias": "NULL",
+      "finalizacoes": "NULL",
+      "passes": "NULL",
+      "passesCompletos": "NULL",
+      "cruzamentos": "NULL",
+      "desarmes": "NULL",
+      "interceptacoes": "NULL"
+    },
+    {
+      "id": "150003",
+      "atletaId": "2790007",
+      "gols": "NULL",
+      "assistencias": "NULL",
+      "finalizacoes": "NULL",
+      "passes": "NULL",
+      "passesCompletos": "NULL",
+      "cruzamentos": "NULL",
+      "desarmes": "NULL",
+      "interceptacoes": "NULL"
+    },
+    {
+      "id": "150004",
+      "atletaId": "2735049",
+      "gols": "NULL",
+      "assistencias": "NULL",
+      "finalizacoes": "NULL",
+      "passes": "NULL",
+      "passesCompletos": "NULL",
+      "cruzamentos": "NULL",
+      "desarmes": "NULL",
+      "interceptacoes": "NULL"
+    },
+    {
+      "id": "150005",
+      "atletaId": "2790006",
+      "gols": "NULL",
+      "assistencias": "NULL",
+      "finalizacoes": "NULL",
+      "passes": "NULL",
+      "passesCompletos": "NULL",
+      "cruzamentos": "NULL",
+      "desarmes": "NULL",
+      "interceptacoes": "NULL"
+    },
+    {
+      "id": "150006",
+      "atletaId": "2850003",
+      "gols": "NULL",
+      "assistencias": "NULL",
+      "finalizacoes": "NULL",
+      "passes": "NULL",
+      "passesCompletos": "NULL",
+      "cruzamentos": "NULL",
+      "desarmes": "NULL",
+      "interceptacoes": "NULL"
+    },
+    {
+      "id": "150007",
+      "atletaId": "2734026",
+      "gols": "NULL",
+      "assistencias": "NULL",
+      "finalizacoes": "NULL",
+      "passes": "NULL",
+      "passesCompletos": "NULL",
+      "cruzamentos": "NULL",
+      "desarmes": "NULL",
+      "interceptacoes": "NULL"
+    },
+    {
+      "id": "150008",
+      "atletaId": "2734184",
+      "gols": "NULL",
+      "assistencias": "NULL",
+      "finalizacoes": "NULL",
+      "passes": "NULL",
+      "passesCompletos": "NULL",
+      "cruzamentos": "NULL",
+      "desarmes": "NULL",
+      "interceptacoes": "NULL"
+    },
+    {
+      "id": "150009",
+      "atletaId": "2734961",
+      "gols": "NULL",
+      "assistencias": "NULL",
+      "finalizacoes": "NULL",
+      "passes": "NULL",
+      "passesCompletos": "NULL",
+      "cruzamentos": "NULL",
+      "desarmes": "NULL",
+      "interceptacoes": "NULL"
+    },
+    {
+      "id": "150010",
+      "atletaId": "2880002",
+      "gols": "NULL",
+      "assistencias": "NULL",
+      "finalizacoes": "NULL",
+      "passes": "NULL",
+      "passesCompletos": "NULL",
+      "cruzamentos": "NULL",
+      "desarmes": "NULL",
+      "interceptacoes": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tatletaId\tgols\tassistencias\tfinalizacoes\tpasses\tpassesCompletos\tcruzamentos\tdesarmes\tinterceptacoes\n150001\t2760001\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\n150002\t2850001\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\n150003\t2790007\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\n150004\t2735049\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\n150005\t2790006\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\n150006\t2850003\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\n150007\t2734026\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\n150008\t2734184\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\n150009\t2734961\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\n150010\t2880002\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 600
+}
