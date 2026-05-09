@@ -38,6 +38,12 @@ export const appRouter = router({
         const atleta = await db.getAtletaById(input.id, userId);
         return atleta;
       }),
+    // Listar atletas de um grupo
+    getAtletas: publicProcedure
+      .input(z.object({ grupoId: z.number() }))
+      .query(({ ctx, input }) => {
+        return db.getAtletasDoGrupo(input.grupoId);
+      }),
 
     // Buscar atletas sem data de nascimento/idade
     getSemData: publicProcedure.query(({ ctx }) => {
@@ -202,6 +208,12 @@ export const appRouter = router({
       .query(({ ctx, input }) => {
         const userId = ctx.user?.id || 1;
         return db.getGrupoById(input.id, userId);
+      }),
+    // Listar atletas de um grupo
+    getAtletas: publicProcedure
+      .input(z.object({ grupoId: z.number() }))
+      .query(({ ctx, input }) => {
+        return db.getAtletasDoGrupo(input.grupoId);
       }),
 
     // Criar novo grupo
@@ -434,6 +446,43 @@ export const appRouter = router({
   }),
 
   // ==================== UTILITÁRIOS ====================
+  // ==================== MIDIAS ====================
+  midias: router({
+    // Upload de foto
+    uploadFoto: publicProcedure
+      .input(z.object({
+        atletaId: z.number(),
+        fileName: z.string(),
+        mimeType: z.string(),
+        base64Data: z.string(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const userId = ctx.user?.id || 1;
+        return db.uploadFoto(input.atletaId, userId, input.fileName, input.mimeType, input.base64Data);
+      }),
+    // Listar midias de um atleta
+    getByAtleta: publicProcedure
+      .input(z.object({ atletaId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const userId = ctx.user?.id || 1;
+        return db.getMidiasDoAtleta(input.atletaId, userId);
+      }),
+    // Deletar midia
+    delete: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const userId = ctx.user?.id || 1;
+        return db.deleteMidia(input.id, userId);
+      }),
+    // Buscar midia por ID
+    getById: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const userId = ctx.user?.id || 1;
+        return db.getMidiaById(input.id, userId);
+      }),
+  }),
+
   utils: router({
     // Corrigir alturas (converter de cm para m se necessário)
     corrigirAlturas: publicProcedure.mutation(async ({ ctx }) => {

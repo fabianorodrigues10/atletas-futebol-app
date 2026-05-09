@@ -82,6 +82,15 @@ async function startServer() {
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
+  // Mount tRPC middleware FIRST before any REST routes
+  app.use(
+    "/api/trpc",
+    createExpressMiddleware({
+      router: appRouter,
+      createContext,
+    }),
+  );
+
   registerOAuthRoutes(app);
   registerAuthRoutes(app);
   registerPdfRoutes(app);
@@ -719,14 +728,6 @@ async function startServer() {
       res.status(500).json({ error: error.message });
     }
   });
-
-  app.use(
-    "/api/trpc",
-    createExpressMiddleware({
-      router: appRouter,
-      createContext,
-    }),
-  );
 
   const preferredPort = parseInt(process.env.PORT || "3000");
   const port = await findAvailablePort(preferredPort);

@@ -1,3 +1,4 @@
+import { storagePut } from "./storage";
 import { eq, and, like, gte, lte, or, desc, asc, inArray, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
@@ -821,4 +822,55 @@ export async function getAtletasSemData(userId: number) {
       )
     )
     .limit(100);
+}
+
+/**
+ * Upload de foto para o atleta
+ */
+export async function uploadFoto(
+  atletaId: number,
+  userId: number,
+  fileName: string,
+  mimeType: string,
+  base64Data: string
+) {
+  try {
+    // Importar storagePut dinamicamente para evitar erros de circular dependency
+    
+    
+    // Converter base64 para Buffer
+    const buffer = Buffer.from(base64Data, "base64");
+    
+    // Gerar um nome único para o arquivo
+    const timestamp = Date.now();
+    const randomStr = Math.random().toString(36).substring(2, 8);
+    const ext = fileName.split(".").pop() || "jpg";
+    const storagePath = `atletas/${atletaId}/fotos/${timestamp}_${randomStr}.${ext}`;
+    
+    // Fazer upload para o S3
+    const { url } = await storagePut(storagePath, buffer, mimeType);
+    
+    // Criar registro na tabela midias
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+    
+    const result = await db.insert(midias).values({
+      atletaId,
+      userId,
+      tipo: "foto",
+      url,
+      nome: fileName,
+      s3Key: storagePath,
+      mimeType,
+    });
+    
+    return {
+      success: true,
+      midiaId: Number(result[0].insertId),
+      url,
+    };
+  } catch (error: any) {
+    console.error("Upload foto error:", error);
+    throw new Error(`Falha ao fazer upload da foto: ${error.message}`);
+  }
 }
