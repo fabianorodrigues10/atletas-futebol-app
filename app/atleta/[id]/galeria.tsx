@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import {
   View,
@@ -15,6 +15,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
+import { getApiBaseUrl } from "@/constants/oauth";
 
 export default function GaleriaScreen() {
   const router = useRouter();
@@ -29,21 +30,48 @@ export default function GaleriaScreen() {
     { enabled: Boolean(id) }
   );
 
-  const { data: midias, isLoading: midiasLoading } = trpc.midias.getByAtleta.useQuery(
-    { atletaId: Number(id) },
-    { enabled: Boolean(id) }
-  );
+  const [midias, setMidias] = useState<any[]>([]);
+  const [midiasLoading, setMidiasLoading] = useState(false);
 
-  const uploadFoto = trpc.midias.uploadFoto.useMutation({
-    onSuccess: () => {
-      utils.midias.getByAtleta.invalidate({ atletaId: Number(id) });
-      utils.atletas.getById.invalidate({ id: Number(id) });
-      Alert.alert("Sucesso", "Foto adicionada com sucesso!");
-    },
-    onError: (err) => {
-      Alert.alert("Erro", err.message || "Falha ao fazer upload da foto");
-    },
-  });
+  // Carregar fotos via REST endpoint
+  const loadMidias = async () => {
+    try {
+      setMidiasLoading(true);
+      const apiUrl = getApiBaseUrl();
+      const url = `${apiUrl}/api/atletas/${id}/fotos`;
+      const response = await fetch(url);
+      if (response.ok) {
+        const data = await response.json();
+        setMidias(data || []);
+      }
+    } catch (err) {
+      console.error("Erro ao carregar fotos:", err);
+    } finally {
+      setMidiasLoading(false);
+    }
+  };
+
+  // Carregar fotos quando o componente montar ou quando o ID mudar
+  useEffect(() => {
+    if (id) {
+      loadMidias();
+    }
+  }, [id]);
+
+  // Use REST endpoint for upload instead of tRPC
+  const uploadFotoREST = async (payload: any) => {
+    const apiUrl = getApiBaseUrl();
+    const url = `${apiUrl}/api/atletas/${id}/foto`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      throw new Error("Upload failed");
+    }
+    return response.json();
+  };
 
   const deleteMidia = trpc.midias.delete.useMutation({
     onSuccess: () => {
@@ -85,12 +113,15 @@ export default function GaleriaScreen() {
     try {
       setUploading(true);
       const base64Data = await uriToBase64(uri);
-      await uploadFoto.mutateAsync({
-        atletaId: Number(id),
+      await uploadFotoREST({
         fileName,
         mimeType,
         base64Data,
       });
+      // Recarregar fotos após o upload
+      await loadMidias();
+      utils.atletas.getById.invalidate({ id: Number(id) });
+      Alert.alert("Sucesso", "Foto adicionada com sucesso!");
     } catch (err: any) {
       console.error("Upload error:", err);
       Alert.alert("Erro", "Falha ao processar a imagem. Tente novamente.");

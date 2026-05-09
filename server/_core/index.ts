@@ -253,6 +253,25 @@ async function startServer() {
     }
   });
 
+  // Endpoint para listar fotos de um atleta
+  app.get("/api/atletas/:id/fotos", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const userId = 1;
+      
+      console.log("[API] Listando fotos do atleta:", id);
+      
+      // Buscar fotos do banco de dados
+      const fotos = await db.getMidiasDoAtleta(id, userId);
+      console.log("[API] Fotos encontradas:", fotos?.length || 0);
+      
+      res.json(fotos || []);
+    } catch (error: any) {
+      console.error("[API] Erro ao listar fotos:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Endpoint para deletar foto
   app.delete("/api/atletas/:id/foto/:fotoId", async (req, res) => {
     try {
