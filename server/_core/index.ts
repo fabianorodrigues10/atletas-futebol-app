@@ -112,15 +112,27 @@ async function startServer() {
       const total = atletas.length;
       
       // Converter URLs S3 em URLs completas
-      const atletasComUrls = atletas.map((atleta: any) => {
-        if (atleta.midias && Array.isArray(atleta.midias)) {
-          atleta.midias = atleta.midias.map((midia: any) => ({
-            ...midia,
-            url: midia.s3Key ? `https://manus-storage.s3.amazonaws.com/${midia.s3Key}` : midia.url,
-          }));
-        }
-        return atleta;
-      });
+      const atletasComUrls = await Promise.all(
+        atletas.map(async (atleta: any) => {
+          // Garantir que fotoUrl seja uma URL pública
+          if (atleta.fotoUrl && !atleta.fotoUrl.startsWith('http')) {
+            try {
+              const urlData = await storageGet(atleta.fotoUrl);
+              atleta.fotoUrl = urlData.url || atleta.fotoUrl;
+            } catch (err) {
+              console.warn("[API] Erro ao converter fotoUrl:", atleta.id, err);
+            }
+          }
+          
+          if (atleta.midias && Array.isArray(atleta.midias)) {
+            atleta.midias = atleta.midias.map((midia: any) => ({
+              ...midia,
+              url: midia.s3Key ? `https://manus-storage.s3.amazonaws.com/${midia.s3Key}` : midia.url,
+            }));
+          }
+          return atleta;
+        })
+      );
       
       res.json({
         data: atletasComUrls,

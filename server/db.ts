@@ -233,11 +233,55 @@ export async function getAtletaById(id: number, userId: number) {
   const fotos = todasMidias.filter((m: any) => m.tipo === 'foto');
   const videosData = todasMidias.filter((m: any) => m.tipo === 'video');
   
+  // Converter s3Key em URLs públicas para fotos
+  const fotosComUrl = await Promise.all(
+    fotos.map(async (foto: any) => {
+      try {
+        if (foto.s3Key) {
+          const urlData = await storageGet(foto.s3Key);
+          return {
+            ...foto,
+            url: urlData.url || foto.url,
+          };
+        }
+        return foto;
+      } catch (err) {
+        console.warn("[DB] Erro ao gerar URL para foto:", foto.id, err);
+        return foto;
+      }
+    })
+  );
+  
+  // Converter s3Key em URLs públicas para vídeos
+  const videosComUrl = await Promise.all(
+    videosData.map(async (video: any) => {
+      try {
+        if (video.s3Key) {
+          const urlData = await storageGet(video.s3Key);
+          return {
+            ...video,
+            url: urlData.url || video.url,
+          };
+        }
+        return video;
+      } catch (err) {
+        console.warn("[DB] Erro ao gerar URL para vídeo:", video.id, err);
+        return video;
+      }
+    })
+  );
+  
+  // Converter fotoUrl principal em URL pública
+  let fotoUrlPublica = null;
+  if (fotosComUrl[0]?.url) {
+    fotoUrlPublica = fotosComUrl[0].url;
+  }
+  
   return {
     ...atleta,
-    fotoUrl: fotos[0]?.url || null,
-    midias: todasMidias,
-    videos: videosData.map((v: any) => v.url)
+    fotoUrl: fotoUrlPublica,
+    midias: [...fotosComUrl, ...videosComUrl],
+    videos: videosComUrl.map((v: any) => v.url)
   };
 }
 
