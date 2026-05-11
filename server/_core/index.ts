@@ -146,12 +146,25 @@ async function startServer() {
         return res.status(404).json({ error: "Atleta nao encontrado" });
       }
       
-      // Converter URLs S3 em URLs completas
+      // Converter URLs S3 em URLs completas usando storageGet
       if (atleta.midias && Array.isArray(atleta.midias)) {
-        atleta.midias = atleta.midias.map((midia: any) => ({
-          ...midia,
-          url: midia.s3Key ? `https://manus-storage.s3.amazonaws.com/${midia.s3Key}` : midia.url,
-        }));
+        atleta.midias = await Promise.all(
+          atleta.midias.map(async (midia: any) => {
+            try {
+              if (midia.s3Key) {
+                const urlData = await storageGet(midia.s3Key);
+                return {
+                  ...midia,
+                  url: urlData.url || midia.url,
+                };
+              }
+              return midia;
+            } catch (err) {
+              console.warn("[API] Erro ao gerar URL para midia:", midia.id, err);
+              return midia;
+            }
+          })
+        );
       }
       
       res.json(atleta);
