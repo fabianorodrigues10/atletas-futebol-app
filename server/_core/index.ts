@@ -167,6 +167,17 @@ async function startServer() {
         );
       }
       
+      // Converter fotoUrl (chave S3) em URL publica
+      if (atleta.fotoUrl && typeof atleta.fotoUrl === 'string' && atleta.fotoUrl.startsWith('fotos/')) {
+        try {
+          const urlData = await storageGet(atleta.fotoUrl);
+          atleta.fotoUrl = urlData.url || atleta.fotoUrl;
+        } catch (err) {
+          console.warn("[API] Erro ao gerar URL para fotoUrl:", err);
+          // Manter a chave S3 como fallback
+        }
+      }
+      
       res.json(atleta);
     } catch (error: any) {
       console.error("[API] Erro ao obter atleta:", error);
