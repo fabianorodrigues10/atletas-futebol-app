@@ -1,4 +1,4 @@
-import { storagePut } from "./storage";
+import { storagePut, storageGet } from "./storage";
 import { eq, and, like, gte, lte, or, desc, asc, inArray, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
@@ -722,11 +722,30 @@ export async function getMidiasDoAtleta(atletaId: number, userId: number) {
   const db = await getDb();
   if (!db) return [];
   
-  return db
+  const midiasData = await db
     .select()
     .from(midias)
     .where(and(eq(midias.atletaId, atletaId), eq(midias.userId, userId)))
     .orderBy(desc(midias.createdAt));
+  
+  // Converter s3Key em URLs publicas
+  return Promise.all(
+    midiasData.map(async (midia: any) => {
+      try {
+        if (midia.s3Key) {
+          const urlData = await storageGet(midia.s3Key);
+          return {
+            ...midia,
+            url: urlData.url || midia.url,
+          };
+        }
+        return midia;
+      } catch (err) {
+        console.warn("[DB] Erro ao gerar URL para midia:", midia.id, err);
+        return midia;
+      }
+    })
+  );
 }
 
 /**
