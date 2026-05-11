@@ -13,7 +13,7 @@ import { registerOgolRoutes } from "../ogol-scraper";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import * as db from "../db";
-import { storagePut } from "../storage";
+import { storagePut, storageGet, storageDelete } from "../storage";
 
 // Normaliza string removendo acentos, espaços extras e convertendo para minúsculas
 function normalizeStr(str: string): string {
@@ -265,7 +265,27 @@ async function startServer() {
       const fotos = await db.getMidiasDoAtleta(id, userId);
       console.log("[API] Fotos encontradas:", fotos?.length || 0);
       
-      res.json(fotos || []);
+      // Converter s3Key para URLs públicas
+      const fotosComUrls = await Promise.all(
+        fotos?.map(async (foto: any) => {
+          try {
+            // Se a foto tem s3Key, gerar URL pública
+            if (foto.s3Key) {
+              const urlData = await storageGet(foto.s3Key);
+              return {
+                ...foto,
+                url: urlData.url || foto.url, // Usar URL gerada ou fallback para URL existente
+              };
+            }
+            return foto;
+          } catch (err) {
+            console.warn("[API] Erro ao gerar URL para foto:", foto.id, err);
+            return foto;
+          }
+        }) || []
+      );
+      
+      res.json(fotosComUrls);
     } catch (error: any) {
       console.error("[API] Erro ao listar fotos:", error);
       res.status(500).json({ error: error.message });
@@ -280,6 +300,23 @@ async function startServer() {
       const userId = 1;
       
       console.log("[API] Deletando foto:", fotoId, "do atleta:", id);
+      
+      // Buscar a foto para obter a chave S3
+      const foto = await db.getMidiaById(fotoId, userId);
+      if (!foto) {
+        return res.status(404).json({ error: "Foto nao encontrada" });
+      }
+      
+      // Deletar do S3 se houver s3Key
+      if (foto.s3Key) {
+        try {
+          await storageDelete(foto.s3Key);
+          console.log("[API] Foto deletada do S3:", foto.s3Key);
+        } catch (storageErr: any) {
+          console.warn("[API] Aviso ao deletar do S3:", storageErr.message);
+          // Continuar mesmo se falhar no S3 - ainda vamos deletar do banco
+        }
+      }
       
       // Deletar do banco de dados
       await db.deleteMidia(fotoId, userId);
