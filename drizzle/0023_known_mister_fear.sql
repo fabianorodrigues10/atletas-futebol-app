@@ -1,0 +1,1 @@
+ALTER TABLE `jogos` ADD `visualizadoNoEstadio` boolean DEFAULT false NOT NULL;

@@ -5,6 +5,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import * as db from "./db";
+import * as dbJogos from "./db-jogos";
 import { storagePut } from "./storage";
 
 export const appRouter = router({
@@ -515,6 +516,155 @@ export const appRouter = router({
         };
       }
     }),
+  }),
+
+  // ==================== MONITORAMENTO (JOGOS) ====================
+  monitoramento: router({
+    // Listar todos os jogos do usuário
+    listJogos: publicProcedure.query(({ ctx }) => {
+      const userId = ctx.user?.id || 1;
+      return dbJogos.getJogos(userId);
+    }),
+
+    // Buscar jogo por ID
+    getJogo: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const userId = ctx.user?.id || 1;
+        return dbJogos.getJogoById(input.id, userId);
+      }),
+
+    // Listar jogos por período
+    getJogosPorPeriodo: publicProcedure
+      .input(
+        z.object({
+          dataInicio: z.string(), // ISO date string
+          dataFim: z.string(), // ISO date string
+        })
+      )
+      .query(async ({ ctx, input }) => {
+        const userId = ctx.user?.id || 1;
+        const dataInicio = new Date(input.dataInicio);
+        const dataFim = new Date(input.dataFim);
+        return dbJogos.getJogosPorPeriodo(userId, dataInicio, dataFim);
+      }),
+
+    // Criar novo jogo
+    createJogo: publicProcedure
+      .input(
+        z.object({
+          mandante: z.string().max(255),
+          visitante: z.string().max(255),
+          competicao: z.string().max(255).optional(),
+          data: z.string(), // ISO date string
+          horario: z.string().max(10).optional(),
+          local: z.string().max(255).optional(),
+          arbitro: z.string().max(255).optional(),
+          assistente1: z.string().max(255).optional(),
+          assistente2: z.string().max(255).optional(),
+          renda: z.string().max(100).optional(),
+          publico: z.string().max(100).optional(),
+          gols: z.string().optional(),
+          placarMandante: z.number().optional(),
+          placarVisitante: z.number().optional(),
+          visualizadoNoEstadio: z.boolean().default(false),
+          observacoes: z.string().optional(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const userId = ctx.user?.id || 1;
+        const jogoId = await dbJogos.createJogo({
+          userId,
+          mandante: input.mandante,
+          visitante: input.visitante,
+          competicao: input.competicao || null,
+          data: new Date(input.data),
+          horario: input.horario || null,
+          local: input.local || null,
+          arbitro: input.arbitro || null,
+          assistente1: input.assistente1 || null,
+          assistente2: input.assistente2 || null,
+          renda: input.renda || null,
+          publico: input.publico || null,
+          gols: input.gols || null,
+          placarMandante: input.placarMandante || null,
+          placarVisitante: input.placarVisitante || null,
+          visualizadoNoEstadio: input.visualizadoNoEstadio,
+          observacoes: input.observacoes || null,
+        });
+        return { id: jogoId };
+      }),
+
+    // Atualizar jogo
+    updateJogo: publicProcedure
+      .input(
+        z.object({
+          id: z.number(),
+          mandante: z.string().max(255).optional(),
+          visitante: z.string().max(255).optional(),
+          competicao: z.string().max(255).optional(),
+          data: z.string().optional(),
+          horario: z.string().max(10).optional(),
+          local: z.string().max(255).optional(),
+          arbitro: z.string().max(255).optional(),
+          assistente1: z.string().max(255).optional(),
+          assistente2: z.string().max(255).optional(),
+          renda: z.string().max(100).optional(),
+          publico: z.string().max(100).optional(),
+          gols: z.string().optional(),
+          placarMandante: z.number().optional(),
+          placarVisitante: z.number().optional(),
+          visualizadoNoEstadio: z.boolean().optional(),
+          observacoes: z.string().optional(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const userId = ctx.user?.id || 1;
+        const { id, ...data } = input;
+        const updateData: any = {};
+        if (data.mandante !== undefined) updateData.mandante = data.mandante;
+        if (data.visitante !== undefined) updateData.visitante = data.visitante;
+        if (data.competicao !== undefined) updateData.competicao = data.competicao;
+        if (data.data !== undefined) updateData.data = new Date(data.data);
+        if (data.horario !== undefined) updateData.horario = data.horario;
+        if (data.local !== undefined) updateData.local = data.local;
+        if (data.arbitro !== undefined) updateData.arbitro = data.arbitro;
+        if (data.assistente1 !== undefined) updateData.assistente1 = data.assistente1;
+        if (data.assistente2 !== undefined) updateData.assistente2 = data.assistente2;
+        if (data.renda !== undefined) updateData.renda = data.renda;
+        if (data.publico !== undefined) updateData.publico = data.publico;
+        if (data.gols !== undefined) updateData.gols = data.gols;
+        if (data.placarMandante !== undefined) updateData.placarMandante = data.placarMandante;
+        if (data.placarVisitante !== undefined) updateData.placarVisitante = data.placarVisitante;
+        if (data.visualizadoNoEstadio !== undefined) updateData.visualizadoNoEstadio = data.visualizadoNoEstadio;
+        if (data.observacoes !== undefined) updateData.observacoes = data.observacoes;
+        await dbJogos.updateJogo(id, userId, updateData);
+        return { success: true };
+      }),
+
+    // Deletar jogo
+    deleteJogo: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const userId = ctx.user?.id || 1;
+        await dbJogos.deleteJogo(input.id, userId);
+        return { success: true };
+      }),
+
+    // Obter estatísticas de um período
+    getEstatisticasPeriodo: publicProcedure
+      .input(
+        z.object({
+          dataInicio: z.string(),
+          dataFim: z.string(),
+        })
+      )
+      .query(async ({ ctx, input }) => {
+        const userId = ctx.user?.id || 1;
+        const dataInicio = new Date(input.dataInicio);
+        const dataFim = new Date(input.dataFim);
+        return dbJogos.getEstatisticasPeriodo(userId, dataInicio, dataFim);
+      }),
   }),
 });
 

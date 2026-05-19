@@ -234,6 +234,7 @@ export const jogos = mysqlTable("jogos", {
   gols: text("gols"), // texto livre: "Davi Torres 23', Alan Costa 67'"
   placarMandante: int("placarMandante"),
   placarVisitante: int("placarVisitante"),
+  visualizadoNoEstadio: boolean("visualizadoNoEstadio").default(false).notNull(), // true se visto no estádio, false se visto por outro meio
   observacoes: text("observacoes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
