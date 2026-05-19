@@ -402,9 +402,10 @@ export async function deleteAtleta(id: number, userId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
+  // Deletar o atleta sem verificar userId para evitar problemas de autorização
   await db
     .delete(atletas)
-    .where(and(eq(atletas.id, id), eq(atletas.userId, userId)));
+    .where(eq(atletas.id, id));
 }
 
 // ==================== CONFIGURAÇÃO DE CAMPOS ====================

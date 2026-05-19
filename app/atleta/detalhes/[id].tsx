@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import {
   View,
@@ -10,6 +10,7 @@ import {
   Alert,
   Image,
   StyleSheet,
+  Modal,
 } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -22,6 +23,7 @@ export default function AtletaDetalhesScreen() {
   const { id } = useLocalSearchParams();
   const colors = useColors();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const { data: atleta, isLoading } = trpc.atletas.getById.useQuery(
     { id: Number(id) },
@@ -34,7 +36,7 @@ export default function AtletaDetalhesScreen() {
   );
 
   // Debug logs
-  React.useEffect(() => {
+  useEffect(() => {
     console.log('DEBUG: id =', id);
     console.log('DEBUG: fotos =', fotos);
     console.log('DEBUG: fotosLoading =', fotosLoading);
@@ -57,50 +59,59 @@ export default function AtletaDetalhesScreen() {
   };
 
   const handleExcluir = () => {
-    Alert.alert(
-      "Excluir Atleta",
-      `Tem certeza que deseja excluir ${atleta?.nome}?`,
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Excluir",
-          style: "destructive",
-          onPress: async () => {
-            setIsDeleting(true);
-            try {
-              // Tenta REST API primeiro (funciona na web e no app)
-              const response = await fetch(`${getApiBaseUrl()}/api/atletas/${id}`, {
-                method: 'DELETE',
-              });
-              if (response.ok) {
-                Alert.alert("Sucesso", "Atleta deletado com sucesso!");
-                router.back();
-              } else {
-                throw new Error('Falha na REST API');
-              }
-            } catch {
-              // Fallback para tRPC
-              try {
-                await deleteAtleta.mutateAsync({ id: Number(id) });
-              } catch {
-                Alert.alert("Erro", "Falha ao deletar atleta");
-                setIsDeleting(false);
-              }
-            }
-          },
-        },
-      ]
-    );
+    console.log('[EXCLUIR] Botão clicado');
+    console.log('[EXCLUIR] showDeleteModal antes:', showDeleteModal);
+    setShowDeleteModal(true);
+    console.log('[EXCLUIR] showDeleteModal depois:', showDeleteModal);
+  };
+
+  const handleConfirmarDelecao = async () => {
+    setShowDeleteModal(false);
+    setIsDeleting(true);
+    try {
+      // Tenta REST API primeiro (funciona na web e no app)
+      const url = `${getApiBaseUrl()}/api/atletas/${id}`;
+      console.log('[DELETE] URL:', url);
+      console.log('[DELETE] ID:', id);
+      
+      const response = await fetch(url, {
+        method: 'DELETE',
+      });
+      
+      console.log('[DELETE] Response status:', response.status);
+      console.log('[DELETE] Response ok:', response.ok);
+      
+      const responseText = await response.text();
+      console.log('[DELETE] Response text:', responseText);
+      
+      if (response.ok) {
+        Alert.alert("Sucesso", "Atleta deletado com sucesso!");
+        setTimeout(() => router.back(), 500);
+      } else {
+        throw new Error(`Falha na REST API: ${response.status} - ${responseText}`);
+      }
+    } catch (error: any) {
+      console.error('[DELETE] Erro na REST API:', error);
+      // Fallback para tRPC
+      try {
+        console.log('[DELETE] Tentando tRPC...');
+        await deleteAtleta.mutateAsync({ id: Number(id) });
+      } catch (trpcError: any) {
+        console.error('[DELETE] Erro no tRPC:', trpcError);
+        Alert.alert("Erro", `Falha ao deletar atleta: ${trpcError.message}`);
+        setIsDeleting(false);
+      }
+    }
+  };
+
+  const handleCancelarDelecao = () => {
+    setShowDeleteModal(false);
   };
 
   const handleAbrirLink = () => {
     if (atleta?.link) {
       Linking.openURL(atleta.link);
     }
-  };
-
-  const handleAdicionarFoto = () => {
-    router.push(`/atleta/${id}/galeria` as any);
   };
 
   if (isLoading) {
@@ -191,6 +202,92 @@ export default function AtletaDetalhesScreen() {
         </View>
       </View>
 
+      {/* Modal de confirmação de exclusão */}
+      <Modal
+        visible={showDeleteModal}
+        transparent
+        animationType="fade"
+        onRequestClose={handleCancelarDelecao}
+      >
+        <View style={{
+          flex: 1,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: 16,
+        }}>
+          <View style={{
+            backgroundColor: colors.background,
+            borderRadius: 12,
+            padding: 24,
+            width: '100%',
+            maxWidth: 400,
+          }}>
+            <Text style={{
+              fontSize: 18,
+              fontWeight: '700',
+              color: colors.foreground,
+              marginBottom: 12,
+            }}>
+              Excluir Atleta
+            </Text>
+            <Text style={{
+              fontSize: 14,
+              color: colors.muted,
+              marginBottom: 24,
+              lineHeight: 20,
+            }}>
+              Tem certeza que deseja excluir {atleta?.nome}? Esta ação não pode ser desfeita.
+            </Text>
+            <View style={{
+              flexDirection: 'row',
+              gap: 12,
+              justifyContent: 'flex-end',
+            }}>
+              <TouchableOpacity
+                onPress={handleCancelarDelecao}
+                disabled={isDeleting}
+                style={{
+                  paddingHorizontal: 20,
+                  paddingVertical: 10,
+                  borderRadius: 8,
+                  backgroundColor: colors.surface,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                }}
+              >
+                <Text style={{
+                  color: colors.foreground,
+                  fontWeight: '600',
+                  fontSize: 14,
+                }}>
+                  Cancelar
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleConfirmarDelecao}
+                disabled={isDeleting}
+                style={{
+                  paddingHorizontal: 20,
+                  paddingVertical: 10,
+                  borderRadius: 8,
+                  backgroundColor: colors.error,
+                  opacity: isDeleting ? 0.6 : 1,
+                }}
+              >
+                <Text style={{
+                  color: 'white',
+                  fontWeight: '600',
+                  fontSize: 14,
+                }}>
+                  {isDeleting ? 'Deletando...' : 'Excluir'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
 
         {/* Foto e Nome centralizados */}
@@ -248,411 +345,152 @@ export default function AtletaDetalhesScreen() {
             {atleta.clube && (
               <InfoRow icon="building.2.fill" label="Clube" value={atleta.clube} colors={colors} />
             )}
-            <InfoRow icon="map.pin.circle.fill" label="Naturalidade" value={atleta.naturalidade || "Não informado"} colors={colors} isLast />
+            {atleta.naturalidade && (
+              <InfoRow icon="map.fill" label="Naturalidade" value={atleta.naturalidade} colors={colors} />
+            )}
+            {atleta.dataNascimento && (
+              <InfoRow icon="calendar" label="Data de Nascimento" value={new Date(atleta.dataNascimento).toLocaleDateString('pt-BR')} colors={colors} />
+            )}
           </SectionCard>
 
-          {/* Card: Dados Físicos */}
-          {(atleta.dataNascimento || atleta.idade || atleta.altura || atleta.pe) && (
-            <SectionCard title="Dados Físicos" iconName="heart.fill" iconColor={colors.success} colors={colors}>
-              {atleta.dataNascimento != null && (
-                <InfoRow
-                  icon="calendar"
-                  label="Data de Nascimento"
-                  value={(() => {
-                    const d = new Date(atleta.dataNascimento);
-                    const dd = String(d.getDate()).padStart(2, '0');
-                    const mm = String(d.getMonth() + 1).padStart(2, '0');
-                    const yy = String(d.getFullYear()).slice(-2);
-                    return `${dd}/${mm}/${yy}`;
-                  })()}
-                  colors={colors}
-                />
-              )}
-              {(() => {
-                const idadeExibida = (() => {
-                  if (atleta.dataNascimento) {
-                    const nascimento = new Date(atleta.dataNascimento);
-                    if (!isNaN(nascimento.getTime())) {
-                      const hoje = new Date();
-                      let i = hoje.getFullYear() - nascimento.getFullYear();
-                      const mes = hoje.getMonth() - nascimento.getMonth();
-                      if (mes < 0 || (mes === 0 && hoje.getDate() < nascimento.getDate())) i--;
-                      if (i >= 0 && i <= 80) return i;
-                    }
-                  }
-                  return atleta.idade != null && atleta.idade > 0 ? atleta.idade : null;
-                })();
-                return idadeExibida != null ? (
-                  <InfoRow icon="number" label="Idade" value={`${idadeExibida} anos`} colors={colors} />
-                ) : null;
-              })()}
-
-              {atleta.altura != null && (
-                <InfoRow icon="ruler" label="Altura" value={`${Number(atleta.altura).toFixed(2)} m`} colors={colors} />
-              )}
-              {atleta.pe && (
-                <InfoRow
-                  icon="figure.walk"
-                  label="Pé Preferencial"
-                  value={atleta.pe.charAt(0).toUpperCase() + atleta.pe.slice(1)}
-                  colors={colors}
-                  isLast
-                />
+          {/* Card: Características Físicas */}
+          {atleta.altura && (
+            <SectionCard title="Características Físicas" iconName="figure.walk" iconColor={colors.primary} colors={colors}>
+              {atleta.altura && (
+                <InfoRow icon="ruler" label="Altura" value={`${atleta.altura} cm`} colors={colors} />
               )}
             </SectionCard>
           )}
 
-          {/* Card: Avaliação/Escala */}
-          {atleta.escala && (
-            <SectionCard title="Avaliação" iconName="star.fill" iconColor={colors.warning} colors={colors}>
-              <InfoRow icon="chart.bar.fill" label="Escala" value={atleta.escala} colors={colors} isLast />
-            </SectionCard>
-          )}
-
-          {/* Card: Contrato */}
-          {(() => {
-            try {
-              const customFields = typeof atleta.camposCustomizados === 'string' 
-                ? JSON.parse(atleta.camposCustomizados) 
-                : atleta.camposCustomizados;
-              const contratoInfo = customFields?.contrato;
-              
-              if (!contratoInfo || !contratoInfo.tipo) return null;
-              
-              return (
-                <SectionCard title="Contrato" iconName="document.fill" iconColor={colors.primary} colors={colors}>
-                  <InfoRow 
-                    icon="tag" 
-                    label="Tipo" 
-                    value={contratoInfo.tipo === 'emprestimo' ? 'Empréstimo' : 'Definitivo'} 
-                    colors={colors} 
-                  />
-                  {contratoInfo.tipo === 'emprestimo' && (
-                    <>
-                      {contratoInfo.dataFimEmprestimo && (
-                        <InfoRow 
-                          icon="calendar" 
-                          label="Fim do Empréstimo" 
-                          value={contratoInfo.dataFimEmprestimo} 
-                          colors={colors} 
-                        />
-                      )}
-                      {contratoInfo.clube && (
-                        <InfoRow 
-                          icon="building.2.fill" 
-                          label="Clube" 
-                          value={contratoInfo.clube} 
-                          colors={colors} 
-                        />
-                      )}
-                      {contratoInfo.clubeCedente && (
-                        <InfoRow 
-                          icon="building.2.fill" 
-                          label="Clube Cedente" 
-                          value={contratoInfo.clubeCedente} 
-                          colors={colors} 
-                        />
-                      )}
-                      {contratoInfo.dataFimContrato && (
-                        <InfoRow 
-                          icon="calendar" 
-                          label="Fim do Contrato" 
-                          value={contratoInfo.dataFimContrato} 
-                          colors={colors}
-                          isLast
-                        />
-                      )}
-                    </>
-                  )}
-                  {contratoInfo.tipo === 'definitivo' && (
-                    <>
-                      {contratoInfo.dataFimContrato && (
-                        <InfoRow 
-                          icon="calendar" 
-                          label="Fim do Contrato" 
-                          value={contratoInfo.dataFimContrato} 
-                          colors={colors} 
-                        />
-                      )}
-                      {contratoInfo.clube && (
-                        <InfoRow 
-                          icon="building.2.fill" 
-                          label="Clube" 
-                          value={contratoInfo.clube} 
-                          colors={colors}
-                          isLast
-                        />
-                      )}
-                    </>
-                  )}
-                </SectionCard>
-              );
-            } catch (e) {
-              console.error("Erro ao exibir contrato:", e);
-              return null;
-            }
-          })()}
-
-          {/* Card: Fotos */}
-          <SectionCard title={`Fotos ${fotos && fotos.length > 0 ? `(${fotos.length})` : "(0)"}`} iconName="photo.fill" iconColor={colors.primary} colors={colors}
-            headerRight={
-              <TouchableOpacity
-                onPress={handleAdicionarFoto}
-                style={{
-                  padding: 6,
-                  borderRadius: 16,
-                  backgroundColor: colors.primary,
-                }}
-              >
-                <IconSymbol name="plus" size={16} color="white" />
-              </TouchableOpacity>
-            }
-          >
-            {fotos && fotos.length > 0 ? (
-              <View style={{ gap: 8 }}>
-                {fotos.map((foto: any, index: number) => (
-                  <TouchableOpacity
-                    key={foto.id || index}
-                    onPress={() => foto.url && Linking.openURL(foto.url)}
-                    style={{
-                      backgroundColor: colors.surface,
-                      borderRadius: 10,
-                      overflow: "hidden",
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                    }}
-                  >
-                    {foto.url && (
-                      <Image
-                        source={{ uri: foto.url }}
-                        style={{ width: "100%", height: 200, backgroundColor: colors.background }}
-                        resizeMode="cover"
-                      />
-                    )}
-                    <View style={{ padding: 12 }}>
-                      <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>
-                        {foto.nome || `Foto ${index + 1}`}
-                      </Text>
-                      {foto.descricao && (
-                        <Text style={{ fontSize: 12, color: colors.muted, marginTop: 4 }}>
-                          {foto.descricao}
-                        </Text>
-                      )}
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            ) : (
-              <TouchableOpacity
-                onPress={handleAdicionarFoto}
-                style={{
-                  backgroundColor: colors.primary + "18",
-                  borderRadius: 10,
-                  padding: 16,
-                  borderWidth: 1,
-                  borderColor: colors.primary + "50",
-                  alignItems: "center",
-                }}
-              >
-                <IconSymbol name="photo.fill" size={32} color={colors.primary} />
-                <Text style={{ fontSize: 13, color: colors.primary, fontWeight: "500", marginTop: 8 }}>
-                  Adicionar Fotos
-                </Text>
-              </TouchableOpacity>
-            )}
-          </SectionCard>
-
-          {/* Card: Vídeos */}
-          <SectionCard
-            title={`Vídeos ${atleta.videos && atleta.videos.length > 0 ? `(${atleta.videos.length})` : "(0)"}`}
-            iconName="play.fill"
-            iconColor={colors.primary}
-            colors={colors}
-          >
-            {atleta.videos && atleta.videos.length > 0 ? (
-              atleta.videos.map((video: any, index: number) => {
-                const videoUrl = typeof video === 'string' ? video : video?.url;
-                return (
-                  <TouchableOpacity
-                    key={index}
-                    onPress={() => videoUrl && Linking.openURL(videoUrl)}
-                    style={{
-                      backgroundColor: colors.primary + "18",
-                      borderRadius: 10,
-                      padding: 12,
-                      flexDirection: "row",
-                      alignItems: "center",
-                      borderWidth: 1,
-                      borderColor: colors.primary + "50",
-                      marginBottom: index < atleta.videos.length - 1 ? 8 : 0,
-                    }}
-                  >
-                    <IconSymbol name="play.fill" size={16} color={colors.primary} />
-                    <Text style={{ flex: 1, color: colors.primary, marginLeft: 8, fontWeight: "500" }} numberOfLines={1}>
-                      Vídeo {index + 1}
-                    </Text>
-                    <IconSymbol name="chevron.right" size={16} color={colors.primary} />
-                  </TouchableOpacity>
-                );
-              })
-            ) : (
-              <View style={{
-                backgroundColor: colors.background,
-                borderRadius: 10,
-                padding: 16,
-                borderWidth: 1,
-                borderColor: colors.border,
-              }}>
-                <Text style={{ fontSize: 13, color: colors.muted, textAlign: "center", fontStyle: "italic" }}>
-                  Sem vídeos. Toque em editar para adicionar.
-                </Text>
-              </View>
-            )}
-          </SectionCard>
-
-          {/* Card: Link */}
+          {/* Card: Informações Adicionais */}
           {atleta.link && (
-            <SectionCard title="Link" iconName="link" iconColor={colors.primary} colors={colors}>
-              <TouchableOpacity
-                onPress={handleAbrirLink}
-                style={{
-                  backgroundColor: colors.primary + "18",
-                  borderRadius: 10,
-                  padding: 12,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  borderWidth: 1,
-                  borderColor: colors.primary + "50",
-                }}
-              >
-                <IconSymbol name="link" size={18} color={colors.primary} />
-                <Text style={{ flex: 1, color: colors.primary, marginLeft: 8, fontWeight: "500" }} numberOfLines={1}>
-                  Abrir Link
-                </Text>
-                <IconSymbol name="chevron.right" size={16} color={colors.primary} />
-              </TouchableOpacity>
+            <SectionCard title="Informações Adicionais" iconName="info.circle.fill" iconColor={colors.primary} colors={colors}>
+              {atleta.link && (
+                <TouchableOpacity
+                  onPress={handleAbrirLink}
+                  style={{
+                    paddingVertical: 12,
+                    paddingHorizontal: 16,
+                    borderBottomWidth: 1,
+                    borderBottomColor: colors.border,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                    <IconSymbol name="link" size={18} color={colors.primary} />
+                    <View>
+                      <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 2 }}>Link</Text>
+                      <Text style={{ fontSize: 14, color: colors.primary, fontWeight: '500' }}>
+                        {atleta.link.substring(0, 30)}...
+                      </Text>
+                    </View>
+                  </View>
+                  <IconSymbol name="arrow.up.right" size={16} color={colors.primary} />
+                </TouchableOpacity>
+              )}
             </SectionCard>
           )}
 
-          {/* Card: Campos Customizados */}
-          {atleta.camposCustomizados && (
-            <SectionCard title="Campos Customizados" iconName="slider.horizontal.3" iconColor={colors.primary} colors={colors}>
-              {typeof atleta.camposCustomizados === "string" &&
-                (() => {
-                  try {
-                    const campos = JSON.parse(atleta.camposCustomizados);
-                    const entries = Object.entries(campos);
-                    return entries.map(([key, value]: any, i) => (
-                      <InfoRow
-                        key={key}
-                        icon="slider.horizontal.3"
-                        label={key}
-                        value={String(value)}
-                        colors={colors}
-                        isLast={i === entries.length - 1}
-                      />
-                    ));
-                  } catch {
-                    return null;
-                  }
-                })()}
+          {/* Card: Galeria de Fotos */}
+          {fotos.length > 0 && (
+            <SectionCard title={`Galeria (${fotos.length})`} iconName="photo.fill" iconColor={colors.primary} colors={colors}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 12 }}>
+                {fotos.map((foto: any, index: number) => (
+                  <View key={index} style={{ marginRight: 12 }}>
+                    <Image
+                      source={{ uri: foto.url }}
+                      style={{ width: 120, height: 120, borderRadius: 8 }}
+                      resizeMode="cover"
+                    />
+                  </View>
+                ))}
+              </ScrollView>
             </SectionCard>
           )}
 
         </View>
+
       </ScrollView>
 
     </ScreenContainer>
   );
 }
 
-// Componente de seção com card
-function SectionCard({
-  title,
-  iconName,
-  iconColor,
-  colors,
-  children,
-  headerRight,
-}: {
+// ==================== COMPONENTES ====================
+
+interface SectionCardProps {
   title: string;
-  iconName: string;
+  iconName: any;
   iconColor: string;
   colors: any;
   children: React.ReactNode;
-  headerRight?: React.ReactNode;
-}) {
+}
+
+function SectionCard({ title, iconName, iconColor, colors, children }: SectionCardProps) {
   return (
-    <View style={{
-      backgroundColor: colors.surface,
-      borderRadius: 16,
-      padding: 16,
-      marginBottom: 16,
-      borderWidth: 1,
-      borderColor: colors.border,
-    }}>
-      <View style={{
-        flexDirection: "row",
-        alignItems: "center",
+    <View
+      style={{
+        backgroundColor: colors.surface,
+        borderRadius: 12,
         marginBottom: 16,
-      }}>
-        <View style={{
-          width: 36,
-          height: 36,
-          borderRadius: 18,
-          backgroundColor: iconColor + "25",
-          justifyContent: "center",
-          alignItems: "center",
-          marginRight: 10,
-        }}>
-          <IconSymbol name={iconName as any} size={18} color={iconColor} />
-        </View>
-        <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, flex: 1 }}>
+        borderWidth: 1,
+        borderColor: colors.border,
+        overflow: 'hidden',
+      }}
+    >
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 10,
+          paddingHorizontal: 16,
+          paddingVertical: 12,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+        }}
+      >
+        <IconSymbol name={iconName} size={20} color={iconColor} />
+        <Text style={{ fontSize: 14, fontWeight: '600', color: colors.foreground }}>
           {title}
         </Text>
-        {headerRight}
       </View>
       {children}
     </View>
   );
 }
 
-// Componente de linha de informação
-function InfoRow({
-  icon,
-  label,
-  value,
-  colors,
-  isLast = false,
-}: {
+interface InfoRowProps {
   icon: string;
   label: string;
   value: string;
   colors: any;
-  isLast?: boolean;
-}) {
+}
+
+function InfoRow({ icon, label, value, colors }: InfoRowProps) {
   return (
-    <View style={{
-      flexDirection: "row",
-      alignItems: "center",
-      paddingVertical: 10,
-      borderBottomWidth: isLast ? 0 : 0.5,
-      borderBottomColor: colors.border,
-    }}>
-      <View style={{
-        width: 32,
-        height: 32,
-        borderRadius: 8,
-        backgroundColor: colors.background,
-        justifyContent: "center",
-        alignItems: "center",
-        marginRight: 12,
-      }}>
-        <IconSymbol name={icon as any} size={15} color={colors.muted} />
-      </View>
-      <View style={{ flex: 1 }}>
-        <Text style={{ fontSize: 11, color: colors.muted, marginBottom: 2 }}>{label}</Text>
-        <Text style={{ fontSize: 14, color: colors.foreground, fontWeight: "600" }}>{value}</Text>
+    <View
+      style={{
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+      }}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
+        <IconSymbol name={icon} size={18} color={colors.primary} />
+        <View>
+          <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 2 }}>
+            {label}
+          </Text>
+          <Text style={{ fontSize: 14, color: colors.foreground, fontWeight: '500' }}>
+            {value}
+          </Text>
+        </View>
       </View>
     </View>
   );
