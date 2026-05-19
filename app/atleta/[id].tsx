@@ -55,6 +55,7 @@ export default function AtletaFormScreen() {
   const [pe, setPe] = useState("");
   const [link, setLink] = useState("");
   const [escala, setEscala] = useState("");
+  const [valencia, setValencia] = useState("");
   const [naturalidade, setNaturalidade] = useState("");
   
   // Estados de contrato
@@ -109,11 +110,6 @@ export default function AtletaFormScreen() {
   const updateMutation = trpc.atletas.update.useMutation();
   const deleteMutation = trpc.atletas.delete.useMutation();
   const uploadMutation = trpc.midias.uploadFoto.useMutation();
-  const createVideoMutation = trpc.midias.create.useMutation({
-    onError: (error) => {
-      console.error("[MUTATION ERROR] Erro na criação de vídeo:", error);
-    },
-  });
 
   // Query para listar todos os atletas (para validar duplicatas)
   const { data: todosAtletas = [] } = trpc.atletas.list.useQuery(
@@ -827,7 +823,13 @@ export default function AtletaFormScreen() {
                 };
                 console.log('[DEBUG] Payload do vídeo:', videoPayload);
                 try {
-                  const videoResult = await createVideoMutation.mutateAsync(videoPayload);
+                  const response = await fetch(`${getApiBaseUrl()}/api/midias`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(videoPayload),
+                  });
+                  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                  const videoResult = await response.json();
                   console.log("[DEBUG] Vídeo salvo com sucesso:", videoResult);
                 } catch (videoError) {
                   console.error("[DEBUG] Erro ao salvar vídeo individual:", videoError);

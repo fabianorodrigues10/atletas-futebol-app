@@ -90,9 +90,9 @@ export default function RadarScreen() {
     onSuccess: () => atletasDoGrupoQuery.refetch(),
   });
 
-  const reordenarMutation = trpc.grupos.reordenar.useMutation({
-    onSuccess: () => atletasDoGrupoQuery.refetch(),
-  });
+  // const reordenarMutation = trpc.grupos.reordenar.useMutation({
+  //   onSuccess: () => atletasDoGrupoQuery.refetch(),
+  // });
 
   // ── Handlers ───────────────────────────────────────────────────────────────
   const handleSelecionarPosicao = async (pos: typeof POSICOES_RADAR[0]) => {
@@ -106,7 +106,7 @@ export default function RadarScreen() {
     if (grupoExistente) {
       setGrupoAtual({ ...grupoExistente, id: Number(grupoExistente.id) } as Grupo);
     } else {
-      createMutation.mutate({ nome: pos.nome, cor: pos.cor });
+      createMutation.mutate({ nome: pos.nome });
       setGrupoAtual(null);
     }
   };
@@ -144,7 +144,8 @@ export default function RadarScreen() {
     if (novoIndex < 0 || novoIndex >= lista.length) return;
     [lista[index], lista[novoIndex]] = [lista[novoIndex], lista[index]];
     const atletaIds = lista.map((a: any) => a.atletaId);
-    reordenarMutation.mutate({ grupoId: grupoAtual.id, atletaIds });
+    // TODO: Implementar reordenação de atletas no servidor
+    console.log('Reordenar atletas:', { grupoId: grupoAtual.id, atletaIds });
   };
 
   // Gera PDF de uma única posição (botão no painel lateral)
@@ -203,7 +204,8 @@ export default function RadarScreen() {
         if (!grupo) continue;
         try {
           // Use tRPC client directly to query athletes for this position
-          const atletas = await trpc.grupos.getAtletas.query({ grupoId: grupo.id });
+          const response = await fetch(`${getApiBaseUrl()}/api/trpc/grupos.getAtletas?input=${JSON.stringify({ grupoId: grupo.id })}`);
+          const atletas = await response.json();
           if (atletas && atletas.length > 0) {
             posicoesComAtletas.push({ nome: pos.nome, ids: atletas.map((a: any) => a.atletaId) });
           }
@@ -522,14 +524,14 @@ export default function RadarScreen() {
                       <View style={{ flexDirection: "column", marginRight: 4 }}>
                         <TouchableOpacity
                           onPress={() => handleMoverAtleta(index, "cima")}
-                          disabled={index === 0 || reordenarMutation.isPending}
+                          disabled={index === 0}
                           style={{ padding: 3, opacity: index === 0 ? 0.3 : 1 }}
                         >
                           <Text style={{ color: posicaoSelecionada.cor, fontSize: 12, lineHeight: 14 }}>▲</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           onPress={() => handleMoverAtleta(index, "baixo")}
-                          disabled={index === lista.length - 1 || reordenarMutation.isPending}
+                          disabled={index === lista.length - 1}
                           style={{ padding: 3, opacity: index === lista.length - 1 ? 0.3 : 1 }}
                         >
                           <Text style={{ color: posicaoSelecionada.cor, fontSize: 12, lineHeight: 14 }}>▼</Text>

@@ -208,6 +208,7 @@ export default function MonitoramentoScreen() {
             <div class="jogos-list">
               ${jogos
                 .filter((j) => {
+                  if (!j.data) return false;
                   const dataJogo = new Date(j.data).toISOString().split("T")[0];
                   return dataJogo >= dataInicio && dataJogo <= dataFim;
                 })
@@ -216,7 +217,7 @@ export default function MonitoramentoScreen() {
                 <div class="jogo-item">
                   <div class="jogo-title">${jogo.mandante} vs ${jogo.visitante}</div>
                   <div class="jogo-info">
-                    <strong>Data:</strong> ${new Date(jogo.data).toLocaleDateString("pt-BR")}
+                    <strong>Data:</strong> ${jogo.data ? new Date(jogo.data).toLocaleDateString("pt-BR") : "N/A"}
                   </div>
                   ${jogo.competicao ? `<div class="jogo-info"><strong>Competição:</strong> ${jogo.competicao}</div>` : ""}
                   ${jogo.placarMandante !== null && jogo.placarVisitante !== null ? `<div class="jogo-info"><strong>Placar:</strong> ${jogo.placarMandante} x ${jogo.placarVisitante}</div>` : ""}

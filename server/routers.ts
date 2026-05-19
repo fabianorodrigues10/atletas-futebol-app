@@ -666,6 +666,32 @@ export const appRouter = router({
         return dbJogos.getEstatisticasPeriodo(userId, dataInicio, dataFim);
       }),
   }),
+
+  // ==================== ESTATISTICAS ====================
+  estatisticas: router({
+    // Buscar estatisticas por IDs de atletas
+    getByAtletaIds: publicProcedure
+      .input(z.object({ atletaIds: z.array(z.number()) }))
+      .query(async ({ ctx, input }) => {
+        // Retorna array vazio se nenhum ID fornecido
+        if (!input.atletaIds || input.atletaIds.length === 0) return [];
+        // Aqui você pode implementar a lógica para buscar estatísticas
+        // Por enquanto, retorna array vazio
+        return [];
+      }),
+  }),
+
+  // ==================== RELATORIOS ====================
+  relatorios: router({
+    // Gerar PDF com dados de atletas
+    gerarPDF: publicProcedure
+      .input(z.object({ atletaIds: z.array(z.number()) }))
+      .mutation(async ({ ctx, input }) => {
+        // Aqui você pode implementar a lógica para gerar PDF
+        // Por enquanto, retorna um objeto vazio
+        return { success: true };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

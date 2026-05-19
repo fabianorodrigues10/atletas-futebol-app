@@ -58,7 +58,7 @@ export function IconSymbol({
   style?: StyleProp<TextStyle>;
   weight?: any;
 }) {
-  const iconName = MAPPING[name];
+  const iconName = MAPPING[name] as any;
   
   if (!iconName) {
     console.warn(`Icon not found: ${name}`);
