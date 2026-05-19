@@ -1,5 +1,5 @@
 [build]
-  command = "rm -rf node_modules dist .expo .next .turbo .cache && pnpm install --force && pnpm build:web"
+  command = "rm -rf node_modules dist .expo .next .turbo .cache .expo-cli-cache .metro-cache && pnpm install && pnpm build:web"
   publish = "dist/web"
   timeout = 900
 [[redirects]]
