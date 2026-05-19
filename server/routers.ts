@@ -293,7 +293,7 @@ export const appRouter = router({
   }),
 
   // ==================== CAMPOS CUSTOMIZADOS ====================
-  camposCustomizados: router({
+  campos: router({
     // Listar campos customizados
     list: publicProcedure.query(({ ctx }) => {
       const userId = ctx.user?.id || 1;

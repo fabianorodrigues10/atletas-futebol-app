@@ -25,14 +25,14 @@ export default function CamposCustomizadosScreen() {
   const [nomeCampo, setNomeCampo] = useState("");
   const [tipoCampo, setTipoCampo] = useState<"text" | "number" | "select" | "date">("text");
   
-  const { data: campos, isLoading, refetch } = trpc.campos.listCustomizados.useQuery(
+  const { data: campos, isLoading, refetch } = trpc.campos.list.useQuery(
     undefined,
     { enabled: Boolean(isAuthenticated) }
   );
   
-  const createMutation = trpc.campos.createCustomizado.useMutation();
-  const updateMutation = trpc.campos.updateCustomizado.useMutation();
-  const deleteMutation = trpc.campos.deleteCustomizado.useMutation();
+  const createMutation = trpc.campos.create.useMutation();
+  const updateMutation = trpc.campos.update.useMutation();
+  const deleteMutation = trpc.campos.delete.useMutation();
   
   const handleNovoCampo = () => {
     setNomeCampo("");
@@ -51,7 +51,6 @@ export default function CamposCustomizadosScreen() {
       await createMutation.mutateAsync({
         nomeCampo: nomeCampo.trim(),
         tipoCampo,
-        ativo: true,
         ordem,
       });
       
