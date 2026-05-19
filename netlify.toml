@@ -1,6 +1,7 @@
 [build]
-  command = "rm -rf node_modules dist .expo .next .turbo && pnpm install && pnpm build:web"
+  command = "rm -rf node_modules dist .expo .next .turbo .cache && pnpm install --force && pnpm build:web"
   publish = "dist/web"
+  timeout = 900
 [[redirects]]
   from = "/api/*"
   to = "https://3000-i06tppms6c5tptkrbotfm-7bb24874.us1.manus.computer/api/:splat"
