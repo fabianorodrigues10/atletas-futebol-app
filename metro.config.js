@@ -3,9 +3,13 @@ const { withNativeWind } = require("nativewind/metro");
 
 const config = getDefaultConfig(__dirname);
 
+// For web builds (Netlify), disable forceWriteFileSystem to avoid cache issues
+// For native builds, keep it enabled for proper styling
+const isWebBuild = process.env.EXPO_OS === "web" || process.env.NODE_ENV === "production";
+
 module.exports = withNativeWind(config, {
   input: "./global.css",
-  // Force write CSS to file system instead of virtual modules
-  // This fixes iOS styling issues in development mode
-  forceWriteFileSystem: true,
+  // Only force write CSS to file system for native builds
+  // This prevents cache issues on Netlify web builds
+  forceWriteFileSystem: !isWebBuild,
 });
