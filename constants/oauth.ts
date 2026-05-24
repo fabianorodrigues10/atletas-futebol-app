@@ -29,7 +29,7 @@ export const API_BASE_URL = env.apiBaseUrl;
  * Get the API base URL by deriving from the current connection.
  * 
  * Strategy:
- * 1. On web (Netlify): Use local API proxy
+ * 1. On web (Netlify/Custom Domain): Use local API proxy (empty string for relative URLs)
  * 2. On web (dev): Replace port 8081 with 3000 in the hostname
  * 3. On native (Expo Go): Use hardcoded URL (works reliably in Manus environment)
  */
@@ -41,9 +41,10 @@ export function getApiBaseUrl(): string {
     const { protocol, hostname } = window.location;
     console.log('[getApiBaseUrl] Web hostname:', hostname);
     
-    // On Netlify, use local API proxy (configured in netlify.toml)
-    if (hostname.includes("netlify.app")) {
-      console.log('[getApiBaseUrl] Using local API proxy on Netlify');
+    // On Netlify or custom domain, use local API proxy (configured in netlify.toml)
+    // This includes: netlify.app, marciliodias.app.br, and any other production domain
+    if (hostname.includes("netlify.app") || hostname.includes("marciliodias.app.br") || hostname.includes("app.br")) {
+      console.log('[getApiBaseUrl] Using local API proxy on production domain');
       return "";
     }
     
