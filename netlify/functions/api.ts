@@ -53,7 +53,7 @@ const handler: Handler = async (event) => {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type",
-      },
+      } as Record<string, string | number | boolean>,
       body: responseBody,
     };
   } catch (error) {
@@ -64,7 +64,7 @@ const handler: Handler = async (event) => {
       headers: {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
-      },
+      } as Record<string, string | number | boolean>,
       body: JSON.stringify({
         error: "Erro ao conectar ao servidor backend",
         message:
