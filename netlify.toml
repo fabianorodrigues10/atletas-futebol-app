@@ -5,7 +5,7 @@
 
 [[redirects]]
   from = "/api/*"
-  to = "https://atletas-futebol-app.netlify.app/api/:splat"
+  to = "https://3000-i5kwitdmyqlrw6vnwa7mo-90ced762.us2.manus.computer/api/:splat"
   status = 200
   force = true
 [[redirects]]

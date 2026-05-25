@@ -72,3 +72,4 @@ dist/.cache
 
 # Local Netlify folder
 .netlify
+.project-config.json
