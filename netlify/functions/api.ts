@@ -1,4 +1,4 @@
-import { Handler } from "@netlify/functions";
+import type { Handler } from "@netlify/functions";
 
 // URL do servidor backend em produção
 const BACKEND_URL =
@@ -11,13 +11,15 @@ const BACKEND_URL =
  * Isso resolve o problema de CORS e permite que o frontend
  * acesse os dados do backend através do mesmo domínio.
  */
-const handler: Handler = async (event, context) => {
+const handler: Handler = async (event) => {
   try {
-    // Extrair o caminho da requisição (remover /api/)
+    // Extrair o caminho da requisição (remover /.netlify/functions/api)
     const path = event.path.replace("/.netlify/functions/api", "");
 
     // URL completa do backend
     const backendUrl = `${BACKEND_URL}${path}`;
+
+    console.log(`[API Proxy] ${event.httpMethod} ${backendUrl}`);
 
     // Headers para passar para o backend
     const headers: Record<string, string> = {};
@@ -40,6 +42,8 @@ const handler: Handler = async (event, context) => {
     // Ler o corpo da resposta
     const responseBody = await response.text();
 
+    console.log(`[API Proxy] Response: ${response.status}`);
+
     // Retornar a resposta com os headers apropriados
     return {
       statusCode: response.status,
@@ -53,7 +57,7 @@ const handler: Handler = async (event, context) => {
       body: responseBody,
     };
   } catch (error) {
-    console.error("Erro ao fazer proxy da requisição:", error);
+    console.error("[API Proxy] Erro ao fazer proxy da requisição:", error);
 
     return {
       statusCode: 500,
