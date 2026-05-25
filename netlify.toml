@@ -2,12 +2,14 @@
   command = "pnpm install && pnpm build:web"
   publish = "dist/web"
   timeout = 900
+  functions = "netlify/functions"
 
 [[redirects]]
   from = "/api/*"
-  to = "https://3000-i5kwitdmyqlrw6vnwa7mo-90ced762.us2.manus.computer/api/:splat"
+  to = "/.netlify/functions/api:splat"
   status = 200
   force = true
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
