@@ -6,27 +6,22 @@ on:
       - main
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Setup Node.js with pnpm
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          package-manager: 'pnpm@9'
+
+      - name: Install pnpm
+        run: npm install -g pnpm@9
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -34,14 +29,24 @@ jobs:
       - name: Build web
         run: pnpm build:web
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: 'dist/web'
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Deploy to gh-pages branch
+        run: |
+          git config --global user.email "ci@github.com"
+          git config --global user.name "GitHub CI"
+          
+          # Create or checkout gh-pages branch
+          git fetch origin gh-pages 2>/dev/null || echo "gh-pages branch does not exist"
+          git checkout --orphan gh-pages || git checkout gh-pages
+          
+          # Remove all files except .git
+          git rm -rf . || true
+          
+          # Copy built files
+          cp -r dist/web/* .
+          
+          # Add and commit
+          git add .
+          git commit -m "Deploy: $(date)" || echo "No changes to commit"
+          
+          # Push to gh-pages
+          git push -u origin gh-pages --force
