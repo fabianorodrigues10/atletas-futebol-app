@@ -6,6 +6,11 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -31,8 +36,8 @@ jobs:
 
       - name: Deploy to gh-pages branch
         run: |
-          git config --global user.email "ci@github.com"
-          git config --global user.name "GitHub CI"
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
           
           # Create or checkout gh-pages branch
           git fetch origin gh-pages 2>/dev/null || echo "gh-pages branch does not exist"
@@ -48,5 +53,7 @@ jobs:
           git add .
           git commit -m "Deploy: $(date)" || echo "No changes to commit"
           
-          # Push to gh-pages
+          # Push to gh-pages using GITHUB_TOKEN
           git push -u origin gh-pages --force
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
