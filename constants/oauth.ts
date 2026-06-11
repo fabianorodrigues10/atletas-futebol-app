@@ -67,7 +67,7 @@ export function getApiBaseUrl(): string {
 
   // On native (Expo Go), use public backend URL
   if (ReactNative.Platform.OS !== "web") {
-    const hardcodedApiUrl = "https://3000-i06tppms6c5tptkrbotfm-7bb24874.us1.manus.computer";
+    const hardcodedApiUrl = "https://3000-i5kwitdmyqlrw6vnwa7mo-90ced762.us2.manus.computer";
     console.log('[getApiBaseUrl] Using public backend URL for native:', hardcodedApiUrl);
     return hardcodedApiUrl;
   }
@@ -79,7 +79,7 @@ export function getApiBaseUrl(): string {
   }
 
   // Final fallback
-  return "https://3000-i06tppms6c5tptkrbotfm-7bb24874.us1.manus.computer";
+  return "https://3000-i5kwitdmyqlrw6vnwa7mo-90ced762.us2.manus.computer";
 }
 
 export const SESSION_TOKEN_KEY = "app_session_token";
