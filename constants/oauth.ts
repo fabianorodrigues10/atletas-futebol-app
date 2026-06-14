@@ -41,11 +41,11 @@ export function getApiBaseUrl(): string {
     const { protocol, hostname } = window.location;
     console.log('[getApiBaseUrl] Web hostname:', hostname);
     
-    // On Netlify or custom domain, use local API proxy (configured in netlify.toml)
-    // This includes: netlify.app, marciliodias.app.br, and any other production domain
+    // On production domains, use direct backend URL
+    // (Netlify Functions proxy was unreliable, using direct URL instead)
     if (hostname.includes("netlify.app") || hostname.includes("marciliodias.app.br") || hostname.includes("app.br")) {
-      console.log('[getApiBaseUrl] Using local API proxy on production domain');
-      return "";
+      console.log('[getApiBaseUrl] Using direct backend URL on production domain');
+      return "https://3000-i5kwitdmyqlrw6vnwa7mo-90ced762.us2.manus.computer";
     }
     
     // Handle local development: 127.0.0.1:8081 -> 127.0.0.1:3000
